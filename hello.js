@@ -22,10 +22,11 @@ var inputBox;
 const observer = new MutationObserver(waitForInputBox);
 observer.observe(document, {subtree: true, childList: true});
 
-const ke = new KeyboardEvent('keypress', {
+const ke = new KeyboardEvent('keydown', {
     bubbles: true, cancelable: true, keyCode: 13
 });
 
+document.addEventListener('keydown', stopListening);
 
 chrome.runtime.onMessage.addListener(function (message) {
     const { command_entered } = message;
@@ -42,6 +43,10 @@ chrome.runtime.onMessage.addListener(function (message) {
 recognition.onresult = function(event) {
 
 
+    /**
+     * TODO: save the values from the onresult function to a global variable. Take out the
+     * processing from this function, and have it fire on the 2nd keyboard event.
+     */
     var last = event.results.length - 1;
     var command = event.results[last][0].transcript;
     command = command.toLowerCase();
@@ -84,7 +89,7 @@ recognition.onresult = function(event) {
 };
 
 recognition.onspeechend = function() {
-    recognition.stop();
+    // recognition.stop();
 };
 
 recognition.onerror = function(event) {
@@ -161,12 +166,13 @@ function printReady(){
 async function submitMove(move){
 
     for(const coordinate of move){
+        
         inputBox.value = coordinate;
-        inputBox.dispatchEvent(ke);
-        await new Promise(r => setTimeout(r, 200));
-
+        // inputBox.dispatchEvent(ke);
+        // await new Promise(r => setTimeout(r, 200));
     }
 }
+
 
 function waitForInputBox(){
     if(document.getElementsByClassName('ready').length > 0){
@@ -177,3 +183,11 @@ function waitForInputBox(){
     }
 }
 
+function stopListening(e){
+
+    if(e.keyCode == 13){
+        console.log("do the thing");
+        recognition.stop();
+    }
+
+}
