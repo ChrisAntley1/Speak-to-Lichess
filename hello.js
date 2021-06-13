@@ -13,12 +13,42 @@ recognition.grammars = speechRecognitionGrammarList;
 recognition.lang = 'en-US';
 recognition.interimResults = false;
 
+
+/**
+ * TODO: problem and solution tables are kinda dumb
+ */
 var textNumbers = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
-var problemWords = ['won', 'to', 'too', 'for', 'v', 'sex', 'hate', 'ate'];
-var solutionWords = ['1', '2', '2', '4', '5', '6', '8', '8'];
+var problemWords = ['won', 'to', 'too', 'for', 'v', 'sex', 'hate', 'ate', 'ii'];
+var solutionWords = ['1', '2', '2', '4', '5', '6', '8', '8', '2'];
+// var chessPieces = ['king', 'queen', 'rook', 'bishop', 'knight'];
+var chessKeyWords = new Map();
+chessKeyWords.set('king', 'k');
+chessKeyWords.set('queen', 'q');
+chessKeyWords.set('rook', 'r');
+chessKeyWords.set('bishop', 'b');
+chessKeyWords.set('knight', 'n');
+chessKeyWords.set('capture', 'x');
+chessKeyWords.set('promote', '=');
+chessKeyWords.set('equals', '=');
+chessKeyWords.set('castle', '0-0');
+chessKeyWords.set('long', '0-');
+
+var fuzzyKeyWords = new Map();
+fuzzyKeyWords.set('night', 'n');
+fuzzyKeyWords.set('brooke', 'r');
+fuzzyKeyWords.set('kapture', 'x');
+fuzzyKeyWords.set('force', '4');
+fuzzyKeyWords.set('ford', '4');
+fuzzyKeyWords.set('clean', 'q');
+fuzzyKeyWords.set('sticks', '6');
+fuzzyKeyWords.set('iv', '4');
+fuzzyKeyWords.set('stix','6');
+
+
 
 var inputBox;
-var resultMove = [];
+// var resultMove = [];
+var resultMove = '';
 const observer = new MutationObserver(waitForInputBox);
 observer.observe(document, {subtree: true, childList: true});
 
@@ -46,47 +76,37 @@ chrome.runtime.onMessage.addListener(function (message) {
 
 recognition.onresult = function(event) {
 
-
-    /**
-     * TODO: save the values from the onresult function to a global variable. Take out the
-     * processing from this function, and have it fire on the 2nd keyboard event.
-     */
     var last = event.results.length - 1;
     var command = event.results[last][0].transcript;
+
+    console.log("Raw voice input: " + command);
     command = command.toLowerCase();
+    command = command.replace(/([^0-9])([0-9])/g, '$1 $2');
+    command = replacePunctuation(command);
 
     //save the last phrase heard, to show the user in pop_up window
-    chrome.storage.sync.set({last_command: command}, function(){
+    chrome.storage.local.set({last_command: command}, function(){
 
-        chrome.storage.sync.get(['last_command'], function(result){
+        chrome.storage.local.get(['last_command'], function(result){
             console.log(result);
         });
     });
-    command = replacePunctuation(command);
-
+    
+    /**
+     * TODO: handle word# (golf6) input
+     */
     var parsed = command.split(' ');
-    console.log('Voice Input: ' + command + '.');
-    console.log("parsed = " + parsed);
+    console.log('Formatted voice input: ' + command);
 
-    // for(var i = 0; i < parsed.length; i++){
-    //     resultMove += extractCharacter(parsed[i]);
-    // }
 
     resultMove = createChessMove(parsed);
 
-    if(resultMove == null){
-        console.log("failed to create valid chess move.");
+    if(resultMove == ''){
+        console.log("failed to create chess move.");
         return;
     }
-    console.log("result = " + resultMove.toString());
+    console.log("result = " + resultMove);
 
-    // if(resultMove.match(/[a-h][1-8][a-h][1-8]/)){
-    //     console.log("result is in the correct format!");
-    // }
-
-    // else console.log("result did not match regex.");
-
-    //input resulting move into Lichess text box
 };
 
 recognition.onspeechend = function() {
@@ -99,37 +119,56 @@ recognition.onerror = function(event) {
 
 function createChessMove(phrase){
 
-    var chessMove = [];
-    var coordinate = '';
+    var chessMove = '';
     for(const word of phrase){
-        coordinate += extractCharacter(word);
-        
-        if (coordinate.length == 2){
-           
-            chessMove.push(coordinate);
-
-            if(coordinate.match(/[a-h][1-8]/)){
-                coordinate = '';
-            }
-            
-            else {
-                console.log("bad square interpreted: " + chessMove);
-                return null;
-            }
-        }
+        chessMove += extractCharacter(word);
     }
-
     return chessMove;
 }
+
+// the create move function for when only coordinates were acceptable.
+// function createChessMove(phrase){
+
+//     var chessMove = [];
+//     var coordinate = '';
+//     for(const word of phrase){
+//         coordinate += extractCharacter(word);
+        
+//         if (coordinate.length == 2){
+           
+//             chessMove.push(coordinate);
+
+//             if(coordinate.match(/[a-h][1-8]/)){
+//                 coordinate = '';
+//             }
+            
+//             else {
+//                 console.log("bad square interpreted: " + chessMove);
+//                 return null;
+//             }
+//         }
+//     }
+
+//     return chessMove;
+// }
 
 function extractCharacter(word){
 
     var numberPattern = /\d/;
 
-    //All this logic is to try and figure out if the word is a spelled out version of a number, and to then convert it to it's decimal representation (still as a string though)
+    //All this logic is to try and figure out if:
+    //the word is a key chess word (or is supposed to be), OR:
+    //if the word is a spelled out version of a number, 
+    //and to then convert it to it's decimal representation (still as a string though)
     if(word.match(numberPattern) == null){
 
+        if(chessKeyWords.has(word)){
+            return chessKeyWords.get(word);
+        }
 
+        if(fuzzyKeyWords.has(word)){
+            return fuzzyKeyWords.get(word);
+        }
         //if the word falls within our problem set, return the correct character
         /**
          * TODO: currently behaves as if the only conflicting words are supposed to be numbers;
@@ -146,6 +185,8 @@ function extractCharacter(word){
             }
         }
     }
+
+    //if here: get first letter of word (or if word is a digit, get digit)
     return word.charAt(0);
 
 }
@@ -164,18 +205,13 @@ function printReady(){
 //     console.log(document.getElementsByClassName('ready').length);
 //   });
       
-async function submitMove(){
+function submitMove(){
 
     if(resultMove.length != 0){
-        for(const coordinate of resultMove){
         
-            inputBox.value = coordinate;
-            // inputBox.dispatchEvent(ke);
-            await new Promise(r => setTimeout(r, 20));
-    
-        }
-
-        resultMove = [];
+        inputBox.value = resultMove;
+        // inputBox.dispatchEvent(ke);
+        resultMove = '';
     }
 
     else console.log("no move stored yet.");
