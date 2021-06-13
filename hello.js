@@ -18,15 +18,19 @@ var problemWords = ['won', 'to', 'too', 'for', 'v', 'sex', 'hate', 'ate'];
 var solutionWords = ['1', '2', '2', '4', '5', '6', '8', '8'];
 
 var inputBox;
-
+var resultMove = [];
 const observer = new MutationObserver(waitForInputBox);
 observer.observe(document, {subtree: true, childList: true});
 
 const ke = new KeyboardEvent('keydown', {
-    bubbles: true, cancelable: true, keyCode: 13
+    bubbles: true, keyCode: 13
 });
 
-document.addEventListener('keydown', stopListening);
+document.addEventListener('keydown', enterMove);
+document.addEventListener('keydown', spaceDown);
+document.addEventListener('keyup', spaceUp);
+
+var downBool = false;
 
 chrome.runtime.onMessage.addListener(function (message) {
     const { command_entered } = message;
@@ -51,10 +55,8 @@ recognition.onresult = function(event) {
     var command = event.results[last][0].transcript;
     command = command.toLowerCase();
 
+    //save the last phrase heard, to show the user in pop_up window
     chrome.storage.sync.set({last_command: command}, function(){
-
-        //when set runs
-        console.log("value is set");
 
         chrome.storage.sync.get(['last_command'], function(result){
             console.log(result);
@@ -70,7 +72,7 @@ recognition.onresult = function(event) {
     //     resultMove += extractCharacter(parsed[i]);
     // }
 
-    var resultMove = createChessMove(parsed);
+    resultMove = createChessMove(parsed);
 
     if(resultMove == null){
         console.log("failed to create valid chess move.");
@@ -85,11 +87,10 @@ recognition.onresult = function(event) {
     // else console.log("result did not match regex.");
 
     //input resulting move into Lichess text box
-    submitMove(resultMove);
 };
 
 recognition.onspeechend = function() {
-    // recognition.stop();
+    recognition.stop();
 };
 
 recognition.onerror = function(event) {
@@ -163,14 +164,21 @@ function printReady(){
 //     console.log(document.getElementsByClassName('ready').length);
 //   });
       
-async function submitMove(move){
+async function submitMove(){
 
-    for(const coordinate of move){
+    if(resultMove.length != 0){
+        for(const coordinate of resultMove){
         
-        inputBox.value = coordinate;
-        // inputBox.dispatchEvent(ke);
-        // await new Promise(r => setTimeout(r, 200));
+            inputBox.value = coordinate;
+            // inputBox.dispatchEvent(ke);
+            await new Promise(r => setTimeout(r, 20));
+    
+        }
+
+        resultMove = [];
     }
+
+    else console.log("no move stored yet.");
 }
 
 
@@ -183,11 +191,29 @@ function waitForInputBox(){
     }
 }
 
-function stopListening(e){
+function enterMove(e){
 
     if(e.keyCode == 13){
         console.log("do the thing");
-        recognition.stop();
+
+
+        submitMove();
     }
 
+}
+
+function spaceDown(e){
+
+    if(e.keyCode == 32 && downBool == false && e.ctrlKey == true){
+        downBool = true;
+        recognition.start();
+    }
+}
+function spaceUp(e){
+
+    if(e.keyCode == 32 && downBool == true){
+        console.log("space up.");
+        downBool = false;
+        recognition.stop();
+    }
 }
