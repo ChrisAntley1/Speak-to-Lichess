@@ -1,0 +1,17 @@
+table {
+    width: 100%;
+}
+td, th {
+    border: 1px solid #616161;
+    text-align: left;
+    padding: 8px;
+}
+  
+tr:nth-child(even) {
+    background-color: #616161;
+}
+.scroll_table {
+    height: 500px;
+    width: 50%;
+    overflow-y:auto;
+}

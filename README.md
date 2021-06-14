@@ -4,7 +4,7 @@ dictate moves to lichess
 TODO:
 
 Create options page to allow users to manage their replaced words.
---
+--in progress!
 
 Inform content script when the user adds another word to the replace list from popup.
 --complete! (i think)
