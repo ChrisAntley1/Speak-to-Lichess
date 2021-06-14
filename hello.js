@@ -3,7 +3,6 @@ console.log("You are on Lichess!");
 var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
 var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
 
-// var grammar = '#JSGF V1.0; grammar pieces; public <pieces> = knight | bishop | pawn | rook | queen | king ;';
 var grammar = '#JSGF V1.0;';
 var recognition = new SpeechRecognition();
 var speechRecognitionGrammarList = new SpeechGrammarList();
@@ -13,14 +12,16 @@ recognition.grammars = speechRecognitionGrammarList;
 recognition.lang = 'en-US';
 recognition.interimResults = false;
 
+var numberMap = new Map();
+numberMap.set('one', '1');
+numberMap.set('two', '2');
+numberMap.set('three', '3');
+numberMap.set('four', '4');
+numberMap.set('five', '5');
+numberMap.set('six', '6');
+numberMap.set('seven', '7');
+numberMap.set('eight', '8');
 
-/**
- * TODO: problem and solution tables are kinda dumb
- */
-var textNumbers = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
-var problemWords = ['won', 'to', 'too', 'for', 'v', 'sex', 'hate', 'ate', 'ii'];
-var solutionWords = ['1', '2', '2', '4', '5', '6', '8', '8', '2'];
-// var chessPieces = ['king', 'queen', 'rook', 'bishop', 'knight'];
 var chessKeyWords = new Map();
 chessKeyWords.set('king', 'k');
 chessKeyWords.set('queen', 'q');
@@ -33,22 +34,21 @@ chessKeyWords.set('equals', '=');
 chessKeyWords.set('castle', '0-0');
 chessKeyWords.set('long', '0-');
 
-var fuzzyKeyWords = new Map();
-fuzzyKeyWords.set('night', 'n');
-fuzzyKeyWords.set('brooke', 'r');
-fuzzyKeyWords.set('kapture', 'x');
-fuzzyKeyWords.set('force', '4');
-fuzzyKeyWords.set('ford', '4');
-fuzzyKeyWords.set('clean', 'q');
-fuzzyKeyWords.set('sticks', '6');
-fuzzyKeyWords.set('iv', '4');
-fuzzyKeyWords.set('stix','6');
-
-
+// var fuzzyKeyWords = new Map();
+// fuzzyKeyWords.set('night', 'knight');
+// fuzzyKeyWords.set('brooke', 'rook');
+// fuzzyKeyWords.set('kapture', 'capture');
+// fuzzyKeyWords.set('force', '4');
+// fuzzyKeyWords.set('ford', '4');
+// fuzzyKeyWords.set('clean', 'queen');
+// fuzzyKeyWords.set('sticks', '6');
+// fuzzyKeyWords.set('iv', '4');
+// fuzzyKeyWords.set('stix','6');
 
 var inputBox;
-// var resultMove = [];
 var resultMove = '';
+var downBool = false;
+
 const observer = new MutationObserver(waitForInputBox);
 observer.observe(document, {subtree: true, childList: true});
 
@@ -60,19 +60,52 @@ document.addEventListener('keydown', enterMove);
 document.addEventListener('keydown', spaceDown);
 document.addEventListener('keyup', spaceUp);
 
-var downBool = false;
 
-chrome.runtime.onMessage.addListener(function (message) {
-    const { command_entered } = message;
+//retrieve trouble words/phrases list
+var fuzzyKeyWords_Object;
+chrome.storage.local.get(fuzzyKeyWords_Object, function(result){
 
-    if (command_entered === 'listen-for-move'){
+    fuzzyKeyWords_Object = result;
+    console.log(fuzzyKeyWords_Object);
 
-        console.log("you pressed ctrl space!");
-        recognition.start();
-    }
-
-    else console.log("apparently you pressed: " + pressed_key);
 });
+
+chrome.storage.onChanged.addListener(function(changes, area) {
+    console.log("Change in storage area: " + area);
+  
+    let changedItems = Object.keys(changes);
+  
+    for (let item of changedItems) {
+        
+
+        /**
+         * TODO: currently adding ALL changes made to our fuzzyKeyWords_Object. Including
+         * Last move changes! need to filter to only add new trouble words.
+         * UPDATE: actually...only effects key value pair of the key last_command... technically fine i guess!
+         * 
+         */
+        console.log(item + " has changed:");
+        console.log("Old value: ");
+        console.log(changes[item].oldValue);
+        console.log("New value: ");
+        console.log(changes[item].newValue);
+        fuzzyKeyWords_Object[item] = changes[item].newValue;
+    }
+});
+
+// Can probably remove this safely at this point; just using regular key events
+
+// chrome.runtime.onMessage.addListener(function (message) {
+//     const { command_entered } = message;
+
+//     if (command_entered === 'listen-for-move'){
+
+//         console.log("you pressed ctrl space!");
+//         recognition.start();
+//     }
+
+//     else console.log("apparently you pressed: " + pressed_key);
+// });
 
 recognition.onresult = function(event) {
 
@@ -80,26 +113,12 @@ recognition.onresult = function(event) {
     var command = event.results[last][0].transcript;
 
     console.log("Raw voice input: " + command);
-    command = command.toLowerCase();
-    command = command.replace(/([^0-9])([0-9])/g, '$1 $2');
-    command = replacePunctuation(command);
 
-    //save the last phrase heard, to show the user in pop_up window
-    chrome.storage.local.set({last_command: command}, function(){
-
-        chrome.storage.local.get(['last_command'], function(result){
-            console.log(result);
-        });
-    });
+    var processedCommand = processRawInput(command);
     
-    /**
-     * TODO: handle word# (golf6) input
-     */
-    var parsed = command.split(' ');
-    console.log('Formatted voice input: ' + command);
+    console.log('Processed voice input: ' + processedCommand);
 
-
-    resultMove = createChessMove(parsed);
+    resultMove = createChessMove(processedCommand);
 
     if(resultMove == ''){
         console.log("failed to create chess move.");
@@ -117,6 +136,23 @@ recognition.onerror = function(event) {
     message.textContent = 'Error occurred in recognition: ' + event.error;
 }        
 
+
+function processRawInput(command){
+    
+    command = command.toLowerCase();
+    command = command.replace(/([^0-9])([0-9])/g, '$1 $2');
+    command = replacePunctuation(command);
+
+    //save the phrase to show the user, still with potentially troublesome words
+    chrome.storage.local.set({last_command: command}, function(){
+
+        chrome.storage.local.get(['last_command'], function(result){
+            console.log(result);
+        });
+    });
+
+    return replaceTroubleWords(command.split(' '));
+}
 function createChessMove(phrase){
 
     var chessMove = '';
@@ -126,90 +162,55 @@ function createChessMove(phrase){
     return chessMove;
 }
 
-// the create move function for when only coordinates were acceptable.
-// function createChessMove(phrase){
+function replaceTroubleWords(wordArray){
 
-//     var chessMove = [];
-//     var coordinate = '';
-//     for(const word of phrase){
-//         coordinate += extractCharacter(word);
-        
-//         if (coordinate.length == 2){
-           
-//             chessMove.push(coordinate);
+    var result = [];
+    for(const word of wordArray){
+        if(fuzzyKeyWords_Object[word] != null){
 
-//             if(coordinate.match(/[a-h][1-8]/)){
-//                 coordinate = '';
-//             }
-            
-//             else {
-//                 console.log("bad square interpreted: " + chessMove);
-//                 return null;
-//             }
-//         }
-//     }
+            //replace with key value; implement check for multi word replacement later.
+            result.push(fuzzyKeyWords_Object[word]);
+        }
 
-//     return chessMove;
-// }
+        else result.push(word);
+    }
+
+    return result;
+}
 
 function extractCharacter(word){
 
-    var numberPattern = /\d/;
-
-    //All this logic is to try and figure out if:
-    //the word is a key chess word (or is supposed to be), OR:
-    //if the word is a spelled out version of a number, 
-    //and to then convert it to it's decimal representation (still as a string though)
-    if(word.match(numberPattern) == null){
+    if(word.match(/\d/) == null){
 
         if(chessKeyWords.has(word)){
             return chessKeyWords.get(word);
         }
 
-        if(fuzzyKeyWords.has(word)){
-            return fuzzyKeyWords.get(word);
-        }
-        //if the word falls within our problem set, return the correct character
-        /**
-         * TODO: currently behaves as if the only conflicting words are supposed to be numbers;
-         * could not handle a word replacing a word correctly.
-         */
-        if (problemWords.includes(word)) {
-            return solutionWords[problemWords.indexOf(word)];
-        }
-        else {
-            for(var i = 0; i < textNumbers.length; i++){
-                if (word.valueOf() === textNumbers[i].valueOf()){
-                    return (i + 1).toString();
-                }
-            }
+        else if(numberMap.has(word)){
+            return numberMap.get(word);
         }
     }
 
-    //if here: get first letter of word (or if word is a digit, get digit)
+    //if here: get first letter of word/get digit
     return word.charAt(0);
-
 }
 
 function replacePunctuation(word){
 
     return word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ');
-
 }
-
-function printReady(){
-    console.log(" the number of 'ready' elements is: " + document.getElementsByClassName('ready').length);
-}
-// document.addEventListener('DOMContentLoaded', (event) => {
-//     //the event occurred
-//     console.log(document.getElementsByClassName('ready').length);
-//   });
       
 function submitMove(){
 
     if(resultMove.length != 0){
         
-        inputBox.value = resultMove;
+        if(resultMove.match(/[a-h][1-8][a-h][1-8]/)){
+
+            //was getting ready to implement this, then remembered that 
+            //square-to-square format was failing on Lichess =\
+            console.log("Square to square format not yet supported. wompwomp =/");
+        }
+        else inputBox.value = resultMove;
         // inputBox.dispatchEvent(ke);
         resultMove = '';
     }
@@ -232,10 +233,8 @@ function enterMove(e){
     if(e.keyCode == 13){
         console.log("do the thing");
 
-
         submitMove();
     }
-
 }
 
 function spaceDown(e){
