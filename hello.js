@@ -84,12 +84,12 @@ chrome.storage.onChanged.addListener(function(changes, area) {
          * UPDATE: actually...only effects key value pair of the key last_command... technically fine i guess!
          * 
          */
-        console.log(item + " has changed:");
-        console.log("Old value: ");
-        console.log(changes[item].oldValue);
-        console.log("New value: ");
-        console.log(changes[item].newValue);
-        fuzzyKeyWords_Object[item] = changes[item].newValue;
+        // console.log(item + " has changed:");
+        // console.log("Old value: ");
+        // console.log(changes[item].oldValue);
+        // console.log("New value: ");
+        // console.log(changes[item].newValue);
+        if (item != 'last_command') fuzzyKeyWords_Object[item] = changes[item].newValue;
     }
 });
 
@@ -165,11 +165,16 @@ function createChessMove(phrase){
 function replaceTroubleWords(wordArray){
 
     var result = [];
+    var replacementPhrase = '';
     for(const word of wordArray){
         if(fuzzyKeyWords_Object[word] != null){
 
-            //replace with key value; implement check for multi word replacement later.
-            result.push(fuzzyKeyWords_Object[word]);
+            //split replacement phrase. if just a single word, replacementPhrase will be an array of length 1; 
+            //no additional code should be needed.
+            replacementPhrase = fuzzyKeyWords_Object[word].split(' ');
+            for(const subWord of replacementPhrase){
+                result.push(subWord);
+            }
         }
 
         else result.push(word);

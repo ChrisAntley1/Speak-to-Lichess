@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Popup!</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+
 </head>
 <body>
     <h1>hello Lichess</h1>
@@ -10,13 +12,16 @@
     <span id = 'command'></span>
     <br><br>
         
-    <label for="trouble_phrase">Replace this word or phrase:</label>
-    <input type="text" id="trouble_phrase" name="trouble_phrase"><br><br>
-    <label for="correct_phrase">with this word or phrase:</label>
-    <input type="text" id="correct_phrase" name="correct_phrase"><br><br>
+    <label for="trouble_input">Replace this word:</label>
+    <input type="text" id="trouble_input" name="trouble_input"><br><br>
+    <label for="correct_input">with this word or phrase:</label>
+    <input type="text" id="correct_input" name="correct_input"><br><br>
     <input type="button" value="Submit" id="submit"> 
     <input type="button" value="Manage phrases" id="manage"> 
-      
+    <br><br>
+
+    <span id = 'display_result'></span>
+
     <script src="popup.js"></script>
 </body>
 </html>
