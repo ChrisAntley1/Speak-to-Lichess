@@ -4,7 +4,7 @@ dictate moves to lichess
 TODO:
 
 Create options page to allow users to manage their replaced words.
---in progress!
+--complete! though not pretty
 
 Inform content script when the user adds another word to the replace list from popup.
 --complete! (i think)
@@ -14,7 +14,11 @@ Replace arrays of spelled out numbers, other word arrays with maps (probably).
 
 Check the spoken phrase such that the iterable list of words can have trouble words replaced; especially
 such that trouble words can be replaced by more than one word if needed.
---complete! (i think)
+--complete! 
+
+Toggle options for user, such as: always listening toggle; 
+
+Update "matches" in manifest so that script only runs on games (or at least a little more precisely).
 
 Consider other options for default keybindings.
 

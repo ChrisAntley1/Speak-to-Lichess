@@ -9,21 +9,42 @@
     <link rel="stylesheet" href="options.css">
     <title>Options Page</title>
 </head>
-<body class="bootstrap-dark"></bodyclass>
+<body class="bootstrap-dark">
     <h1>Lichess Speech-to-text Options page</h1>
     
-    <p>What it do young blood</p>
+    <p>Replacement words table</p>
 
     <div class="scroll_table">
         <table id="replacement_table">
             <tr>
-                <th>Problem Word</th>
-                <th>Correct Phrase</th>
-                <th>Edit</th>
+                <th>Dictation hears...</th>
+                <th>when it should hear:</th>
+                <!-- <th>Edit</th> -->
             </tr>
         </table>
     </div>
-    <input type="button" value="Submit" id="submit">    
+
+    <div class="input_div">
+        <label for="trouble_input">Replace this word:</label>
+        <input type="text" id="trouble_input" name="trouble_input">
+
+        <label for="correct_input">with this word or phrase:</label>
+        <input type="text" id="correct_input" name="correct_input">
+
+        <input type="button" value="Submit" id="submit"> 
+        <br><br>
+       
+        <label for="trouble_input">Delete this word entry:</label>
+        <input type="text" id="delete_input" name="delete_input">
+        <input type="button" value="Delete word" id="delete"> 
+    
+    </div>
+    <div>
+
+        <span id="update_message"></span>
+        <br><br>
+        <span id="refresh_message"></span>
+    </div>
     <script src="options.js"></script>
 </body>
 </html>

@@ -1,3 +1,7 @@
+body {
+    align-self: center;
+}
+
 table {
     width: 100%;
 }
@@ -15,3 +19,4 @@ tr:nth-child(even) {
     width: 50%;
     overflow-y:auto;
 }
+

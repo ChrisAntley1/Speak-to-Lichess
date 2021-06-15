@@ -1,28 +1,22 @@
-// chrome.commands.onCommand.addListener(function(command) {
-//     console.log('Command:', command);
-
-//     const command_entered = command;
-//     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-//         chrome.tabs.sendMessage(tabs[0].id, { command_entered });
-//     });
-
-
-// });
 
 chrome.runtime.onInstalled.addListener((details)=>{
     console.log("The extension has been installed!");
 
     var speech_to_text_Lichess_fuzzy_words = {
         "night": "knight",
+        "knights": "knight",
         "brooke": "rook",
         "kapture": "capture",
         "clean": "queen",
-    
+        "echosex": "echo six",
         "won": "1",
+
         "to": "2",
         "too": "2",
         "ii": "2",
-    
+        
+        "iii": "3",
+
         "for": "4",
         "force": "4",
         "ford": "4",
@@ -33,8 +27,12 @@ chrome.runtime.onInstalled.addListener((details)=>{
         "sticks": "6",
         "stix": "6",
         "sex": "6",
+        "vi": "6",
+
+        "vii": "7",
         "hate": "8",
-        "ate": "8"
+        "ate": "8",
+        "viii": "8"
             
     };
 
