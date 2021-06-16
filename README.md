@@ -1,65 +1,4 @@
-# Speech-to-Text-Lichess
-dictate moves to lichess
-
-Initial Release TODO:
-
-Toggle options for user, such as: always listening toggle; 
-
-Find an icon!
-
-Allow users to choose different keybindings
-
-Make sure full range of possible text commands is covered (draw offer, resign?, etc.); if not available, implement them by finding element resign/draw/takeback buttons in document!
---complete! simpler than expected!
-
-Other/completed TODO:
-
-Create options page to allow users to manage their replaced words.
---complete! though not pretty
-
-Inform content script when the user adds another word to the replacement list from popup.
---complete! (i think)
-
-Replace arrays of spelled out numbers, other word arrays with maps (probably).
---complete
-
-Check the spoken phrase such that the iterable list of words can have trouble words replaced; especially
-such that trouble words can be replaced by more than one word if needed.
---complete! 
-
-Update "matches" in manifest so that script only runs on games (or at least a little more precisely).
---this seems more complicated than expected
-
-Revisit Square-to-square moves.
-
-Consider adding problem-word fields to lichess document body.
-
-UCI format setting
---If we can't get Lichess to play nice with our current implementation.
-
-Create option for user to change language; perhaps a new default trouble word set as well.
-
-Learn how to format your own project, what to include in the published README, learn how to make a project open source.
-
-Consider guiding images to help use extension effectively.
---Maybe a video?
-
-Hide chess board for blind play? Like that dude's sweet chess.com extension.
-
-from opensource.guide:
-
-READMEs do more than explain how to use your project. They also explain why your project matters, and what your users can do with it.
-
-In your README, try to answer the following questions:
-
-What does this project do?
-Why is this project useful?
-How do I get started?
-Where can I get more help, if I need it?
-You can use your README to answer other questions, like how you handle contributions, what the goals of the project are, and information about licenses and attribution. If you don’t want to accept contributions, or your project is not yet ready for production, write this information down.
-
-
-Initial release README:
+Speak to Lichess
 
 An extension to facilitate dictating moves to Lichess. Takes advantage of text input to submit SAN format moves. Does require simple keyboard input. Uses the Web Speech API to process spoken word into chess moves (with a little extra processing by the extension to more accurately recognize moves).
 
@@ -76,7 +15,7 @@ Download this project; then go to chrome://extensions, toggle on developer mode 
 
 Quick steps:
 1. On Lichess, enable text input by going to https://lichess.org/account/preferences/game-behavior and enabling "Input moves with the keyboard". Optional: to turn on move playback, enter a game and click on your name in the top right-> sound -> Speech. Necessary for blindfolded play!
-2. Make sure the extension is listening for your input by either holding ctrl + space or by turning on continuous listening.
+2. Make sure the extension is listening for your input by either holding ctrl or by turning on toggle listening in the popup menu (upper right of chrome, click the puzzle piece icon, find Speak to Lichess in the list, and pin it. then click the Speak to Lichess icon to view the popup menu).
 3. Say your move in SAN format. For the letter portion a square's coordinates, say a word that starts with that letter; the letter itself will most likely be misinterpreted!
 4. The app will process your move and display it in SAN format below the text input box. If it is the command you were describing, press enter to submit it! If not, you may try to dictate your command again, or click the icon in your browser to see (and possibly replace) the word that was incorrectly recognized. 
 Accepts input in Standard Algebraic Notation (SAN)*. 
