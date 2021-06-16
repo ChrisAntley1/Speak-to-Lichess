@@ -41,15 +41,19 @@ chessKeyWords.set('short', '');
 var inputBox;
 var display_move = document.createElement('strong');
 display_move.innerHTML = "Your move will appear here."
+var display_listen_status = document.createElement('strong');
+
 // display_move.style.fontSize = '13px';
 var resultMove = '';
 var downBool = false;
 var input_found_flag = false;
-var hide_flag = true;
 var found_underboard_flag = false;
+var found_material_bottom_flag = false;
 var submit_function;
 
 const LISTEN_KEY_CODE = 17;
+var TOGGLE_LISTEN;
+var LISTENING = false;
 const observer = new MutationObserver(waitForInputBox);
 observer.observe(document, {subtree: true, childList: true});
 
@@ -58,16 +62,29 @@ const ke = new KeyboardEvent('keydown', {
 });
 
 document.addEventListener('keydown', enterMove);
-document.addEventListener('keydown', spaceDown);
-document.addEventListener('keyup', spaceUp);
+document.addEventListener('keydown', listen_key_down);
+document.addEventListener('keyup', listen_key_up);
 
-
+recognition.addEventListener('end', function() {
+    if (LISTENING == true) recognition.start();
+});
+  
 //retrieve trouble words/phrases list
 var fuzzyKeyWords_Object;
 chrome.storage.local.get(fuzzyKeyWords_Object, function(result){
 
     fuzzyKeyWords_Object = result;
     console.log(fuzzyKeyWords_Object);
+    // TOGGLE_LISTEN = fuzzyKeyWords_Object['_TOGGLE_LISTEN'];
+    // console.log(TOGGLE_LISTEN);
+});
+
+chrome.storage.local.get(TOGGLE_LISTEN, function(result){
+
+    TOGGLE_LISTEN = result;
+    console.log(TOGGLE_LISTEN['__toggle']);
+    if(TOGGLE_LISTEN['__toggle']) display_listen_status.innerHTML = "Press ctrl to toggle on/off dictation";
+    else display_listen_status.innerHTML = "Press and hold ctrl to dictate";
 
 });
 
@@ -75,10 +92,17 @@ chrome.storage.onChanged.addListener(function(changes, area) {
     console.log("Change in storage area: " + area);
   
     let changedItems = Object.keys(changes);
-  
     for (let item of changedItems) {
         
-        if (item != 'last_command') fuzzyKeyWords_Object[item] = changes[item].newValue;
+        if(item === '__toggle'){
+            TOGGLE_LISTEN[item] = changes[item].newValue;
+            
+            if(TOGGLE_LISTEN['__toggle']) display_listen_status.innerHTML = "Press ctrl to toggle on/off dictation";
+            else display_listen_status.innerHTML = "Press and hold ctrl to dictate";
+
+            recognition.stop();
+        } 
+        else if (item != 'last_command') fuzzyKeyWords_Object[item] = changes[item].newValue;
     }
 });
 
@@ -143,7 +167,7 @@ recognition.onspeechend = function() {
 };
 
 recognition.onerror = function(event) {
-    message.textContent = 'Error occurred in recognition: ' + event.error;
+    console.log('Speech recognition error detected: ' + event.error);
 }        
 
 
@@ -248,53 +272,62 @@ function waitForInputBox(){
         input_found_flag = true;
     }
 
-    if(input_found_flag && document.getElementsByClassName('round__underboard').length > 0){
+    else if(!found_underboard_flag && document.getElementsByClassName('round__underboard').length > 0){
         
         document.getElementsByClassName('round__underboard')[0].appendChild(display_move);
         found_underboard_flag = true;
-        observer.disconnect();
     }
 
-    // if(hide_flag && found_underboard_flag && document.getElementsByClassName('round__app__board main-board').length > 0){
-    //     var elementToCover = document.getElementsByClassName('round__app__board main-board')[0];
-    //     var rect = elementToCover.getBoundingClientRect();
-
-    //     var overlayElement = document.createElement("div");
-    //     overlayElement.id = "big square";
-    //     overlayElement.style.position = "absolute";
-    //     overlayElement.style.zIndex = "999";
-    //     overlayElement.style.top = rect.top + "px";
-    //     overlayElement.style.left = rect.top + "px";
-    //     overlayElement.style.width = (rect.right - rect.left) + "px";
-    //     overlayElement.style.height = (rect.bottom - rect.top) + "px";
-    //     observer.disconnect();
-    //     elementToCover.parentElement.appendChild(overlayElement);
-
-    // }
+    else if(!found_material_bottom_flag && (document.getElementsByClassName('material material-bottom').length > 0)){
+        
+        document.getElementsByClassName('material material-bottom')[0].appendChild(display_listen_status);        
+        found_material_bottom_flag = true;
+        observer.disconnect();
+    }
 }
 
 function enterMove(e){
 
     if(e.keyCode == 13){
-        // console.log("do the thing");
-
         submitMove();
     }
 }
 
-function spaceDown(e){
+function listen_key_down(e){
 
-    if(e.keyCode == LISTEN_KEY_CODE && downBool == false){
-        downBool = true;
-        recognition.start();
+    if(e.keyCode == LISTEN_KEY_CODE){
+        if(TOGGLE_LISTEN['__toggle']){
+        
+            if(!LISTENING){
+                recognition.start();
+                LISTENING = true;
+                display_listen_status.innerHTML = "Listening...";
+            }
+    
+            else {
+                recognition.stop();
+                LISTENING = false;
+                display_listen_status.innerHTML = "Press ctrl to toggle on/off dictation";
+
+            }
+        }
+        else if(downBool == false){
+            downBool = true;
+            recognition.start();
+            display_listen_status.innerHTML = "Listening...";
+
+        }
+    
     }
 }
-function spaceUp(e){
+function listen_key_up(e){
 
-    if(e.keyCode == LISTEN_KEY_CODE && downBool == true){
+    if(e.keyCode == LISTEN_KEY_CODE && downBool == true && TOGGLE_LISTEN['__toggle'] == false){
         // console.log("space up.");
         downBool = false;
         recognition.stop();
+        display_listen_status.innerHTML = "Press and hold ctrl to dictate";
+
     }
 }
 

@@ -32,10 +32,13 @@ chrome.runtime.onInstalled.addListener((details)=>{
         "vii": "7",
         "hate": "8",
         "ate": "8",
-        "viii": "8"
-            
+        "viii": "8",
+
+        //settings? because why not? and also setting TOGGLE_LISTEN by itself didnt seem to work
     };
 
+    var TOGGLE_LISTEN = {'__toggle': false};
     chrome.storage.local.set(speech_to_text_Lichess_fuzzy_words);
+    chrome.storage.local.set(TOGGLE_LISTEN);
     
 });

@@ -5,11 +5,19 @@
     <title>Popup!</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
     <link id="dark-theme-style" rel="stylesheet" href="https://bootswatch.com/5/darkly/bootstrap.min.css"/>
-
+    <link rel="stylesheet" href="popup.css">
 </head>
 <body class="bootstrap-dark">
     <h1>hello Lichess</h1>
 
+    <span>Listen style:</span> <br>
+    <form>
+        <input type="radio" id="hold" name="listen_style" value="hold">
+        <label for="hold">Hold</label><br>
+        <input type="radio" id="toggle" name="listen_style" value="toggle">
+        <label for="toggle">Toggle</label><br>
+    </form>
+    <br>
     <span id = 'command'></span>
     <br><br>
         

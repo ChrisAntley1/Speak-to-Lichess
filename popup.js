@@ -5,17 +5,45 @@ var correct_input = document.querySelector('#correct_input');
 var submit = document.querySelector('#submit');
 var manage = document.querySelector('#manage');
 var display_result = document.querySelector('#display_result');
-var speech_to_text_Lichess_fuzzy_words;
+var hold_radio = document.querySelector('#hold');
+var toggle_radio = document.querySelector('#toggle');
 
+var speech_to_text_Lichess_fuzzy_words;
+var TOGGLE_LISTEN;
 chrome.storage.local.get(speech_to_text_Lichess_fuzzy_words, function(result){
     speech_to_text_Lichess_fuzzy_words = result;
+
 });
+
 
 chrome.storage.local.get(['last_command'], function(result){
-    command.textContent = "Speech Recognition heard: " + result['last_command'];
+
+    var last_command = result['last_command'];
+    if(last_command == undefined){
+        last_command = 'nothing yet!'
+    }
+    command.textContent = "Speech Recognition heard: " + last_command;
 });
 
+chrome.storage.local.get(TOGGLE_LISTEN, function(result){
+    TOGGLE_LISTEN = result;
 
+    if (TOGGLE_LISTEN['__toggle']) toggle_radio.checked = true;
+    else hold_radio.checked = true;
+
+});
+
+hold_radio.addEventListener("change", function(event){
+    console.log("toggle off");
+    TOGGLE_LISTEN['__toggle'] = false;
+    chrome.storage.local.set(TOGGLE_LISTEN);
+});
+
+toggle_radio.addEventListener("change", function(event){
+    console.log("toggle on");
+    TOGGLE_LISTEN['__toggle'] = true;
+    chrome.storage.local.set(TOGGLE_LISTEN);
+});
 submit.addEventListener("click", submitPhrase);
 manage.addEventListener("click", managePhrases);
 
