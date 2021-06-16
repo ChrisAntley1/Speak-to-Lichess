@@ -1,8 +1,8 @@
 {
-    "name": "Hello Lichess!",
+    "name": "Speak to Lichess",
     "version": "1.0",
     "manifest_version": 3,
-    "description": "Says hello to Lichess!",
+    "description": "Dictate moves to Lichess in SAN format!",
     "options_page": "options.html",
     "host_permissions": ["*://*.lichess.org/*"],
     "content_scripts": [

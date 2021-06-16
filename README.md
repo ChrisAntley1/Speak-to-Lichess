@@ -72,7 +72,7 @@ How to use:
 
 Download the extension from chrome's extension store, or:
 
-Download this github repository, and open it as an unloaded package in chrome://extensions
+Download this project; then go to chrome://extensions, toggle on developer mode in the top right, and click 'load unpacked' on the top left; select the "Speech-to-Text-Lichess" folder.
 
 Quick steps:
 1. On Lichess, enable text input by going to https://lichess.org/account/preferences/game-behavior and enabling "Input moves with the keyboard". Optional: to turn on move playback, enter a game and click on your name in the top right-> sound -> Speech. Necessary for blindfolded play!
