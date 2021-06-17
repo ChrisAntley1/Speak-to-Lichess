@@ -7,6 +7,8 @@ chrome.runtime.onInstalled.addListener((details)=>{
         "knights": "knight",
         "brooke": "rook",
         "kapture": "capture",
+        "takes": "take",
+        "captures": "capture",
         "clean": "queen",
         "echosex": "echo six",
         "won": "1",

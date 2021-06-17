@@ -32,6 +32,7 @@ chessKeyWords.set('rook', 'r');
 chessKeyWords.set('bishop', 'b');
 chessKeyWords.set('knight', 'n');
 chessKeyWords.set('capture', 'x');
+chessKeyWords.set('take', 'x');
 chessKeyWords.set('promote', '=');
 chessKeyWords.set('equals', '=');
 chessKeyWords.set('castle', '0-0');
