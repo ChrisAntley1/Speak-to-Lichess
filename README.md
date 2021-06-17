@@ -1,5 +1,3 @@
-Speak to Lichess
-
 An extension to facilitate dictating moves to Lichess. Takes advantage of text input to submit SAN format moves. Does require simple keyboard input. Uses the Web Speech API to process spoken word into chess moves (with a little extra processing by the extension to more accurately recognize moves).
 
 Dictate your chess moves to Lichess! Great for blindfolded play or assisting with accessibility. Lichess does not currently have a method to submit moves via voice commands. This extension allows you to dictate your moves and requires no board interaction!*
