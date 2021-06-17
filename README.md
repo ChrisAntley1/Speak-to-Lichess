@@ -6,11 +6,11 @@ Great for blindfolded play or increasing accessibility. Lichess does not current
 
 Be sure to check out the How to Use section and example commands!
 
-**IMPORTANT: Speak to Lichess does require some keyboard input to submit moves and to record speech. In addition, trying to dictate a letter does NOT work well! Instead, say a word that begins with the letter, such as "delta" for the d column.**
+**IMPORTANT: Speak to Lichess does require some keyboard input to submit moves and to record speech. In addition,  to specify the letter of a square, you must say a word that begins with that letter, such as "delta" for the d column. The dictation software is very bad at understanding individual letters!**
 
 **Does not support the word "to"! Commands such as "bishop to hotel five" will be interpreted as "bishop 2 hotel 5", and will submit the move "b2h5".**
 
-Takes advantage of Lichess's optional text input to submit SAN format moves. Uses the Web Speech API to process spoken word into chess moves (with a little extra processing by the extension to more accurately recognize moves).
+Takes advantage of Lichess's optional text input box to submit SAN format moves. Uses the Web Speech API to process spoken word into chess moves (with a little extra processing by the extension to more accurately recognize moves).
 
 How to use:
 
