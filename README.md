@@ -1,6 +1,9 @@
 # Speech-to-Text-Lichess
 dictate moves to lichess
 
+
+new github name check
+
 Initial Release TODO:
 
 Toggle options for user, such as: always listening toggle; 
