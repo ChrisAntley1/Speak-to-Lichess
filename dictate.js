@@ -262,19 +262,23 @@ function inputMove(){
 function waitForInputBox(){
 
     if(!input_found_flag && document.getElementsByClassName('ready').length > 0){
+        console.log("input found.");
         inputBox = document.getElementsByClassName('ready')[0];
         document.body.dispatchEvent(ke);
         input_found_flag = true;
     }
 
-    else if(!found_underboard_flag && document.getElementsByClassName('round__underboard').length > 0){
+    else if(input_found_flag && !found_underboard_flag && document.getElementsByClassName('round__underboard').length > 0){
         
+        console.log("underboard found.");
         document.getElementsByClassName('round__underboard')[0].appendChild(display_move);
         found_underboard_flag = true;
     }
 
-    else if(!found_material_bottom_flag && (document.getElementsByClassName('material material-bottom').length > 0)){
+    else if(found_underboard_flag && !found_material_bottom_flag && (document.getElementsByClassName('material material-bottom').length > 0)){
         
+        console.log("material bottom found.");
+
         document.getElementsByClassName('material material-bottom')[0].appendChild(display_listen_status);        
         found_material_bottom_flag = true;
         observer.disconnect();
