@@ -74,7 +74,6 @@ var fuzzyKeyWords_Object;
 chrome.storage.local.get(fuzzyKeyWords_Object, function(result){
 
     fuzzyKeyWords_Object = result;
-    console.log(fuzzyKeyWords_Object);
     // TOGGLE_LISTEN = fuzzyKeyWords_Object['_TOGGLE_LISTEN'];
     // console.log(TOGGLE_LISTEN);
 });
@@ -82,14 +81,12 @@ chrome.storage.local.get(fuzzyKeyWords_Object, function(result){
 chrome.storage.local.get(TOGGLE_LISTEN, function(result){
 
     TOGGLE_LISTEN = result;
-    console.log(TOGGLE_LISTEN['__toggle']);
     if(TOGGLE_LISTEN['__toggle']) display_listen_status.innerHTML = "Press ctrl to toggle on/off dictation";
     else display_listen_status.innerHTML = "Press and hold ctrl to dictate";
 
 });
 
 chrome.storage.onChanged.addListener(function(changes, area) {
-    console.log("Change in storage area: " + area);
   
     let changedItems = Object.keys(changes);
     for (let item of changedItems) {
@@ -181,7 +178,6 @@ function processRawInput(command){
     chrome.storage.local.set({last_command: command}, function(){
 
         chrome.storage.local.get(['last_command'], function(result){
-            console.log(result);
         });
     });
 
@@ -266,20 +262,23 @@ function inputMove(){
 function waitForInputBox(){
 
     if(!input_found_flag && document.getElementsByClassName('ready').length > 0){
-        console.log(" the number of 'ready' elements is: " + document.getElementsByClassName('ready').length);
+        console.log("input found.");
         inputBox = document.getElementsByClassName('ready')[0];
         document.body.dispatchEvent(ke);
         input_found_flag = true;
     }
 
-    else if(!found_underboard_flag && document.getElementsByClassName('round__underboard').length > 0){
+    else if(input_found_flag && !found_underboard_flag && document.getElementsByClassName('round__underboard').length > 0){
         
+        console.log("underboard found.");
         document.getElementsByClassName('round__underboard')[0].appendChild(display_move);
         found_underboard_flag = true;
     }
 
-    else if(!found_material_bottom_flag && (document.getElementsByClassName('material material-bottom').length > 0)){
+    else if(found_underboard_flag && !found_material_bottom_flag && (document.getElementsByClassName('material material-bottom').length > 0)){
         
+        console.log("material bottom found.");
+
         document.getElementsByClassName('material material-bottom')[0].appendChild(display_listen_status);        
         found_material_bottom_flag = true;
         observer.disconnect();
@@ -323,7 +322,6 @@ function listen_key_down(e){
 function listen_key_up(e){
 
     if(e.keyCode == LISTEN_KEY_CODE && downBool == true && TOGGLE_LISTEN['__toggle'] == false){
-        // console.log("space up.");
         downBool = false;
         recognition.stop();
         display_listen_status.innerHTML = "Press and hold ctrl to dictate";
@@ -398,7 +396,6 @@ function draw(){
 }
 
 function accept_offer(){
-    console.log("accept");
     var accept_button = document.getElementsByClassName('accept')[0];
 
     if(accept_button == null){
@@ -410,7 +407,6 @@ function accept_offer(){
 }
 
 function decline_offer(){
-    console.log("decline");
     var decline_button = document.getElementsByClassName('decline')[0];
 
     if(decline_button == null){
