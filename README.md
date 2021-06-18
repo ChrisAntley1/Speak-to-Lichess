@@ -75,3 +75,13 @@ As a result, the largest part of this project was:
 The app does not interact with Lichess's chessboard directly; it simply creates a text command and submits it to the move input box. It does interact with the "resign", "abort", "draw", etc. buttons.
 
 My initial goal was to completely control the game with spoken word and require no keyboard input. However, the move input textbox does not automatically enter values without real keyboard input (Programmatic keyboard events were unable to trick the input box into submitting moves).
+
+### Known issues:
+
+The script does run on all Lichess.org pages It will (should) not interfere with use of non-game pages; however you will see that recording takes place when ctrl is pressed. 
+
+The list of replaced words in the options page does display certain setting values that are also saved in chrome local storage; I highly recommend NOT deleting or editing these values! 
+
+Speech Recognition will stop listening when it thinks the user is finished speaking. With toggle to listen this is not a problem: the service begins listening again immediately. However with hold-to-dictate, the service will not continue listening until the ctrl key has been released and held again. The "listening" message will be incorrect in this instance.
+
+Some unhandled errors may occur when tab changes occur while the service is listening.
