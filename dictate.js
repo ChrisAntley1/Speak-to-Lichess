@@ -52,6 +52,7 @@ var inputBox;
 var display_move = document.createElement('strong');
 var display_listen_status = document.createElement('strong');
 
+var toggle_hold_message = '';
 var result_command = '';
 var holding_listen_key = false;
 var input_found = false;
@@ -78,9 +79,10 @@ chrome.storage.local.get(word_replacement_list, function(result){
 chrome.storage.local.get(toggle_hold_selection, function(result){
 
     toggle_hold_selection = result;
-    if(toggle_hold_selection['__toggle']) display_listen_status.innerHTML = "Press ctrl to toggle on/off dictation";
-    else display_listen_status.innerHTML = "Press and hold ctrl to dictate";
+    if(toggle_hold_selection['__toggle']) toggle_hold_message = "Press ctrl to toggle on/off dictation";
+    else toggle_hold_message = "Press and hold ctrl to dictate";
 
+    display_listen_status.innerHTML = toggle_hold_message;
 });
 
 //listen for toggle setting change, or any new replacement words
@@ -92,9 +94,11 @@ chrome.storage.onChanged.addListener(function(changes, area) {
         if(item === '__toggle'){
             toggle_hold_selection[item] = changes[item].newValue;
             
-            if(toggle_hold_selection['__toggle']) display_listen_status.innerHTML = "Press ctrl to toggle on/off dictation";
-            else display_listen_status.innerHTML = "Press and hold ctrl to dictate";
+            if(toggle_hold_selection['__toggle']) toggle_hold_message = "Press ctrl to toggle on/off dictation";
+            else toggle_hold_message = "Press and hold ctrl to dictate";
+            display_listen_status.innerHTML = toggle_hold_message;
 
+            
             recognition.stop();
         } 
         else if (item != 'last_command') word_replacement_list[item] = changes[item].newValue;
@@ -312,7 +316,7 @@ function start_dictation(){
 
 function stop_dictation(){
     recognition.stop();
-    display_listen_status.innerHTML = "Press and hold ctrl to dictate";
+    display_listen_status.innerHTML = toggle_hold_message;
     is_listening = false;
 }
 
