@@ -64,14 +64,6 @@ const LISTEN_KEY_CODE = 17;
 const observer = new MutationObserver(waitForInputBox);
 observer.observe(document, {subtree: true, childList: true});
 
-document.addEventListener('keydown', enterMove);
-document.addEventListener('keydown', listen_key_down);
-document.addEventListener('keyup', listen_key_up);
-document.addEventListener('visibilitychange', function() {
-    stop_dictation();
-    holding_listen_key = false;
-});
-
 recognition.addEventListener('end', function() {
     if (is_listening == true) recognition.start();
 });
@@ -250,7 +242,16 @@ function waitForInputBox(){
         console.log("input found.");
 
         inputBox = document.getElementsByClassName('ready')[0];
+        document.addEventListener('keydown', enterMove);
+        document.addEventListener('keydown', listen_key_down);
+        document.addEventListener('keyup', listen_key_up);
+        document.addEventListener('visibilitychange', function() {
+            stop_dictation();
+            holding_listen_key = false;
+        });
+        
         input_found = true;
+
     }
 
     else if(input_found && !underboard_found && document.getElementsByClassName('round__underboard').length > 0){ 
