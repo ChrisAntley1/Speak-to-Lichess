@@ -39,124 +39,103 @@ chessKeyWords.set('castle', '0-0');
 chessKeyWords.set('long', '0-');
 chessKeyWords.set('short', '');
 
+var nonChessCommands = new Map();
+nonChessCommands.set('resign', resign);
+nonChessCommands.set('offer draw', draw);
+nonChessCommands.set('abort', abort);
+nonChessCommands.set('accept', accept_offer);
+nonChessCommands.set('decline', decline_offer);
+nonChessCommands.set('take back', take_back);
+
+
 var inputBox;
 var display_move = document.createElement('strong');
-display_move.innerHTML = "Your move will appear here."
 var display_listen_status = document.createElement('strong');
 
-// display_move.style.fontSize = '13px';
-var resultMove = '';
-var downBool = false;
-var input_found_flag = false;
-var found_underboard_flag = false;
-var found_material_bottom_flag = false;
+var result_command = '';
+var holding_listen_key = false;
+var input_found = false;
+var underboard_found = false;
+var material_bottom_found = false;
+var is_listening = false;
 var submit_function;
 
 const LISTEN_KEY_CODE = 17;
-var TOGGLE_LISTEN;
-var LISTENING = false;
 const observer = new MutationObserver(waitForInputBox);
 observer.observe(document, {subtree: true, childList: true});
-
-const ke = new KeyboardEvent('keydown', {
-    bubbles: true, keyCode: 13
-});
 
 document.addEventListener('keydown', enterMove);
 document.addEventListener('keydown', listen_key_down);
 document.addEventListener('keyup', listen_key_up);
+document.addEventListener('visibilitychange', function() {
+    stop_dictation();
+    holding_listen_key = false;
+});
 
 recognition.addEventListener('end', function() {
-    if (LISTENING == true) recognition.start();
-});
-  
-//retrieve trouble words/phrases list
-var fuzzyKeyWords_Object;
-chrome.storage.local.get(fuzzyKeyWords_Object, function(result){
-
-    fuzzyKeyWords_Object = result;
-    // TOGGLE_LISTEN = fuzzyKeyWords_Object['_TOGGLE_LISTEN'];
-    // console.log(TOGGLE_LISTEN);
+    if (is_listening == true) recognition.start();
 });
 
-chrome.storage.local.get(TOGGLE_LISTEN, function(result){
+var word_replacement_list;
+var toggle_hold_selection;
 
-    TOGGLE_LISTEN = result;
-    if(TOGGLE_LISTEN['__toggle']) display_listen_status.innerHTML = "Press ctrl to toggle on/off dictation";
+chrome.storage.local.get(word_replacement_list, function(result){
+    word_replacement_list = result;
+});
+
+chrome.storage.local.get(toggle_hold_selection, function(result){
+
+    toggle_hold_selection = result;
+    if(toggle_hold_selection['__toggle']) display_listen_status.innerHTML = "Press ctrl to toggle on/off dictation";
     else display_listen_status.innerHTML = "Press and hold ctrl to dictate";
 
 });
 
+//listen for toggle setting change, or any new replacement words
 chrome.storage.onChanged.addListener(function(changes, area) {
   
     let changedItems = Object.keys(changes);
     for (let item of changedItems) {
         
         if(item === '__toggle'){
-            TOGGLE_LISTEN[item] = changes[item].newValue;
+            toggle_hold_selection[item] = changes[item].newValue;
             
-            if(TOGGLE_LISTEN['__toggle']) display_listen_status.innerHTML = "Press ctrl to toggle on/off dictation";
+            if(toggle_hold_selection['__toggle']) display_listen_status.innerHTML = "Press ctrl to toggle on/off dictation";
             else display_listen_status.innerHTML = "Press and hold ctrl to dictate";
 
             recognition.stop();
         } 
-        else if (item != 'last_command') fuzzyKeyWords_Object[item] = changes[item].newValue;
+        else if (item != 'last_command') word_replacement_list[item] = changes[item].newValue;
     }
 });
 
+//when recognition decides it has heard an entire phrase:
 recognition.onresult = function(event) {
 
-    var last = event.results.length - 1;
-    var command = event.results[last][0].transcript;
+    var command = event.results[event.results.length - 1][0].transcript;
 
     console.log("Raw voice input: " + command);
 
-    var processedCommand_array = processRawInput(command);
-    
-    console.log('Processed voice input: ' + processedCommand_array);
-
-    if(processedCommand_array[0] === 'resign'){
-        resultMove = "resign";
-        submit_function = resign;
+    if(nonChessCommands.has(command)){
+        submit_function = nonChessCommands.get(command);
+        result_command = command;
     }
 
-    else if(processedCommand_array[0] === 'abort'){
-        resultMove = "abort";
-        submit_function = abort;
-    }
-
-    else if(processedCommand_array[0] === "offer" && processedCommand_array[1] === "draw"){
-        resultMove = "offer draw";
-        submit_function = draw;
-    }
-
-    else if(processedCommand_array[0] === "take" && processedCommand_array[1] === "back"){
-        resultMove = "take-back";
-        submit_function = takeBack;
-    }
-    else if(processedCommand_array[0] === 'accept'){
-        resultMove = "accept offer";
-        submit_function = accept_offer;
-
-    }
-
-    else if(processedCommand_array[0] === 'decline'){
-        resultMove = "decline offer";
-        submit_function = decline_offer;
-
-    }
-    
     else {
-        resultMove = createChessMove(processedCommand_array);
+        var processedCommand_array = processRawInput(command);
+        console.log('Processed voice input: ' + processedCommand_array);
+
+        result_command = createChessMove(processedCommand_array);
         submit_function = inputMove;
-    }
-    if(resultMove == ''){
-        console.log("failed to create chess move.");
-        return;
+        
+        if(result_command == ''){
+            console.log("failed to create command.");
+            return;
+        }
     }
 
-    console.log("result = " + resultMove);
-    display_move.innerHTML = "press enter to submit: " + resultMove;
+    console.log("result = " + result_command);
+    display_move.innerHTML = "press enter to submit: " + result_command;
 
 };
 
@@ -171,18 +150,21 @@ recognition.onerror = function(event) {
 
 function processRawInput(command){
     
+    //replace any capital letters;
+    //put a space between 'letter-number' instances;
+    //replace any punctuation with a space. 
     command = command.toLowerCase();
     command = command.replace(/([^0-9])([0-9])/g, '$1 $2');
-    command = replacePunctuation(command);
+    command = command.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ');
 
-    //save the phrase to show the user, still with potentially troublesome words
+    //save the phrase to show the user in popup what phrase was heard (before replacing any words)
     chrome.storage.local.set({last_command: command}, function(){
 
         chrome.storage.local.get(['last_command'], function(result){
         });
     });
 
-    return replaceTroubleWords(command.split(' '));
+    return replaceWords(command.split(' '));
 }
 function createChessMove(phrase){
 
@@ -193,16 +175,16 @@ function createChessMove(phrase){
     return chessMove;
 }
 
-function replaceTroubleWords(wordArray){
+function replaceWords(wordArray){
 
     var result = [];
     var replacementPhrase = '';
     for(const word of wordArray){
-        if(fuzzyKeyWords_Object[word] != null && fuzzyKeyWords_Object[word] != undefined){
+        if(word_replacement_list[word] != null && word_replacement_list[word] != undefined){
 
             //split replacement phrase. if just a single word, replacementPhrase will be an array of length 1; 
             //no additional code should be needed.
-            replacementPhrase = fuzzyKeyWords_Object[word].split(' ');
+            replacementPhrase = word_replacement_list[word].split(' ');
             for(const subWord of replacementPhrase){
                 result.push(subWord);
             }
@@ -238,10 +220,10 @@ function replacePunctuation(word){
       
 function submitMove(){
 
-    if(resultMove.length != 0){
+    if(result_command.length != 0){
         
         submit_function();
-        resultMove = '';
+        result_command = '';
         display_move.innerHTML = '';
     
     }
@@ -251,37 +233,42 @@ function submitMove(){
 
 function inputMove(){
 
-    if(resultMove.match(/[a-h][1-8][a-h][1-8]/)){
+    if(result_command.match(/[a-h][1-8][a-h][1-8]/)){
 
         //was getting ready to implement this, then remembered that 
         //square-to-square format was failing on Lichess =\
         console.log("Square to square format not yet supported. wompwomp =/");
     }
-    else inputBox.value = resultMove;
+    else inputBox.value = result_command;
 }
 
 function waitForInputBox(){
 
-    if(!input_found_flag && document.getElementsByClassName('ready').length > 0){
+
+    if(!input_found && document.getElementsByClassName('ready').length > 0){
+        
         console.log("input found.");
+
         inputBox = document.getElementsByClassName('ready')[0];
-        document.body.dispatchEvent(ke);
-        input_found_flag = true;
+        input_found = true;
     }
 
-    else if(input_found_flag && !found_underboard_flag && document.getElementsByClassName('round__underboard').length > 0){
+    else if(input_found && !underboard_found && document.getElementsByClassName('round__underboard').length > 0){ 
         
         console.log("underboard found.");
-        document.getElementsByClassName('round__underboard')[0].appendChild(display_move);
-        found_underboard_flag = true;
+
+        var under_board = document.getElementsByClassName('round__underboard')[0];
+        display_move.innerHTML = "Your move will appear here."
+        under_board.insertBefore(display_move, under_board.firstChild);
+        underboard_found = true;
     }
 
-    else if(found_underboard_flag && !found_material_bottom_flag && (document.getElementsByClassName('material material-bottom').length > 0)){
+    else if(underboard_found && !material_bottom_found && (document.getElementsByClassName('material material-bottom').length > 0)){
         
         console.log("material bottom found.");
 
         document.getElementsByClassName('material material-bottom')[0].appendChild(display_listen_status);        
-        found_material_bottom_flag = true;
+        material_bottom_found = true;
         observer.disconnect();
     }
 }
@@ -296,40 +283,37 @@ function enterMove(e){
 function listen_key_down(e){
 
     if(e.keyCode == LISTEN_KEY_CODE){
-        if(TOGGLE_LISTEN['__toggle']){
+        if(toggle_hold_selection['__toggle']){
         
-            if(!LISTENING){
-                recognition.start();
-                LISTENING = true;
-                display_listen_status.innerHTML = "Listening...";
-            }
-    
-            else {
-                recognition.stop();
-                LISTENING = false;
-                display_listen_status.innerHTML = "Press ctrl to toggle on/off dictation";
-
-            }
+            is_listening ? stop_dictation(): start_dictation();
         }
-        else if(downBool == false){
-            downBool = true;
-            recognition.start();
-            display_listen_status.innerHTML = "Listening...";
-
+        else if(!holding_listen_key
+        ){
+            holding_listen_key = true;
+            start_dictation();
         }
     
     }
 }
 function listen_key_up(e){
 
-    if(e.keyCode == LISTEN_KEY_CODE && downBool == true && TOGGLE_LISTEN['__toggle'] == false){
-        downBool = false;
-        recognition.stop();
-        display_listen_status.innerHTML = "Press and hold ctrl to dictate";
-
+    if(e.keyCode == LISTEN_KEY_CODE && holding_listen_key && toggle_hold_selection['__toggle'] == false){
+        holding_listen_key = false;
+        stop_dictation();
     }
 }
 
+function start_dictation(){
+    recognition.start();
+    display_listen_status.innerHTML = "Listening...";
+    is_listening = true;
+}
+
+function stop_dictation(){
+    recognition.stop();
+    display_listen_status.innerHTML = "Press and hold ctrl to dictate";
+    is_listening = false;
+}
 
 function resign(){
     var resign_button = document.getElementsByClassName('fbt resign')[0];
@@ -364,15 +348,15 @@ function abort(){
     else abort_button.click();
 }
 
-function takeBack(){
-    var takeBack_button = document.getElementsByClassName('fbt takeback-yes')[0];
+function take_back(){
+    var take_back_button = document.getElementsByClassName('fbt takeback-yes')[0];
 
-    if(takeBack_button == null){
+    if(take_back_button == null){
         console.log("did not find takeBack button.");
         return;
     }
 
-    else takeBack_button.click();
+    else take_back_button.click();
 
 }
 function draw(){
