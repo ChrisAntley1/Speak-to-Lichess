@@ -20,7 +20,8 @@ Download this project; then go to chrome://extensions, toggle on developer mode 
 
 ### How to Use:
 
-https://bit.ly/3qcPSpw 
+
+Demo: https://youtu.be/yqbm0kMNjAM
 
 1. On Lichess, enable text input by going to https://lichess.org/account/preferences/game-behavior and enabling "Input moves with the keyboard". Optional: to turn on move playback, enter a game and click on your name in the top right-> sound -> Speech.
 
@@ -69,7 +70,7 @@ https://bit.ly/3q7qtNV
 
 "offer draw" -> offers a draw to the opponent
 
-### Notes about the app:
+### Notes:
 
 Web Speech API (https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) is an experimental project and is able to listen for sets of words supplied in the form of grammar objects. However, this feature is broken in Chrome and has been for a while. As a result, the speech-to-text software often misinterprets the user's voice input. In addition, it seems most dictation software has a hard time discerning individual letters. For example, "B", "D", and "E" are often mistaken for one another. 
 
@@ -82,7 +83,10 @@ The app does not interact with Lichess's chessboard directly; it simply creates 
 
 My initial goal was to completely control the game with spoken word and require no keyboard input. However, the move input textbox does not automatically enter values without real keyboard input (Programmaticly triggering keyboard events failed to make the input box submit moves in my experience).
 
+Speak to Lichess is Open Source.
+
 ### Known issues:
 
 The list of replaced words in the options page does display certain setting values that are also saved in chrome local storage; I highly recommend NOT deleting or editing these values! 
 
+Holding the ctrl key while 'toggle' is set will set off a lot of errors. 

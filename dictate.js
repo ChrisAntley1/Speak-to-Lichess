@@ -48,9 +48,9 @@ nonChessCommands.set('decline', declineOffer);
 nonChessCommands.set('take back', takeBack);
 
 
-var inputBox;
 var display_move = document.createElement('strong');
 var display_listen_status = document.createElement('strong');
+var inputBox; 
 
 var toggle_hold_message = '';
 var result_command = '';
@@ -258,7 +258,7 @@ function waitForInputBox(){
 
     }
 
-    else if(input_found && !underboard_found && document.getElementsByClassName('round__underboard').length > 0){ 
+    if(input_found && !underboard_found && document.getElementsByClassName('round__underboard').length > 0){ 
         
         console.log("underboard found.");
 
@@ -268,7 +268,7 @@ function waitForInputBox(){
         underboard_found = true;
     }
 
-    else if(underboard_found && !material_bottom_found && (document.getElementsByClassName('material material-bottom').length > 0)){
+    if(underboard_found && !material_bottom_found && (document.getElementsByClassName('material material-bottom').length > 0)){
         
         console.log("material bottom found.");
 
@@ -292,8 +292,7 @@ function listenKeyDown(e){
         
             is_listening ? stopDictation(): startDictation();
         }
-        else if(!holding_listen_key
-        ){
+        else if(!holding_listen_key){
             holding_listen_key = true;
             startDictation();
         }
