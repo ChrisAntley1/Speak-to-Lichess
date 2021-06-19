@@ -16,6 +16,7 @@ chrome.storage.local.get(speech_to_text_Lichess_fuzzy_words, function(result){
 });
 
 
+
 chrome.storage.local.get(['last_command'], function(result){
 
     var last_command = result['last_command'];
