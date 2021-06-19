@@ -2,7 +2,7 @@
 
 ## Dictate your chess moves to Lichess!
 
-Great for blindfolded play or increasing accessibility. Lichess does not currently have a method to submit moves via voice commands. This extension allows you to dictate your moves and requires no board interaction.
+Lichess does not currently have a method to submit moves via voice commands. This extension allows you to dictate your moves and requires no board interaction. Great for blindfolded play or increasing accessibility. 
 
 Be sure to check out the How to Use section and example commands!
 
@@ -14,20 +14,23 @@ Takes advantage of Lichess's optional text input to submit SAN format moves. Use
 
 How to use:
 
-Download the extension from chrome's extension store, or:
+Download the extension from chrome's extension store (PENDING), or:
 
 Download this project; then go to chrome://extensions, toggle on developer mode in the top right, and click 'load unpacked' on the top left; select the "Speech-to-Text-Lichess" folder.
 
 ### How to Use:
+
+https://bit.ly/3qcPSpw 
+
 1. On Lichess, enable text input by going to https://lichess.org/account/preferences/game-behavior and enabling "Input moves with the keyboard". Optional: to turn on move playback, enter a game and click on your name in the top right-> sound -> Speech.
 
-2. Make sure the extension is listening for your input by either holding ctrl or by turning on toggle listening in the popup menu (upper right of chrome, click the puzzle piece icon, find Speak to Lichess in the list, and pin it. then click the Speak to Lichess icon to view the popup menu).
+2. Make sure the extension is listening for your input by either holding ctrl or by turning on toggle listening in the popup menu (upper right of chrome, click the puzzle piece icon, find Speak to Lichess in the extension list, and pin it. then click the Speak to Lichess icon to view the popup menu).
 
-3. Say your move in SAN format. For the letter portion a square's coordinates, say a word that starts with that letter, for example "Eric" for e or "delta" for d. Trying to say the letter itself will most likely be misinterpreted and is not recommended!
+3. Say your move in SAN format. For the letter portion a square's coordinates, say a word that starts with that letter; for example "Eric" for "e" or "delta" for "d". Trying to say the letter itself will most likely be misinterpreted and is not recommended!
 
-4. The app will process your move and display it in SAN format below the text input box. Simply press enter to submit it! If the move displayed is incorrect, you can try to dictate your command again, or click the icon in your browser to see (and possibly replace) the word that was incorrectly recognized. 
+4. The app will process your move and display it in SAN format below the text input box. Simply press enter to submit your move! If the move displayed is incorrect, you can try to dictate your command again, or click the icon in your browser to see (and possibly replace) the word that was incorrectly recognized. 
 
-In addition, the popup menu will display your last spoken phrase as the speech software understood it. If the speech recognition software often hears a particular word that you are NOT trying to say, the extension allows you to add this word to an exception list that will replace the word with the intended word or phrase (as set by you). 
+The popup menu will display your last spoken phrase as the speech software understood it (though slightly formatted). If the speech recognition software often hears a particular word that you are NOT trying to say, Speak to Lichess allows you to add this word to an exception list that will replace the word with the intended word or phrase. 
 
 Options page displays your entire exception list and allows adding, editing, and removing words. 
 
@@ -49,6 +52,9 @@ Additional, non-chess-move commands the user can also use:
 "decline"
 "abort"
 
+More command info:
+https://bit.ly/3q7qtNV
+
 ### Example Commands:
 
 "Beta four" -> b4
@@ -65,23 +71,18 @@ Additional, non-chess-move commands the user can also use:
 
 ### Notes about the app:
 
-Web Speech API (https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) is an experimental project and is supposed to be able to listen for set of words in the form of a grammar object. However this feature is broken when used with Chrome and has been for a while. As a result, the speech-to-text software often misinterprets the user's voice input. In addition, it seems most dictation software has a hard time discerning individual letters. For example, "B", "D", and "E" are often mistaken for one another. 
+Web Speech API (https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) is an experimental project and is able to listen for sets of words supplied in the form of grammar objects. However, this feature is broken in Chrome and has been for a while. As a result, the speech-to-text software often misinterprets the user's voice input. In addition, it seems most dictation software has a hard time discerning individual letters. For example, "B", "D", and "E" are often mistaken for one another. 
 
-As a result, the largest part of this project was:
+With that in mind, much of this project involved:
 
-1. Figuring out common mistakes the dictation software makes, and "fixing" the command with the correct word or phrase; and
+1. Processing user input supplied by the web speech API to reinterpret commonly misheard words; and
 2. Figuring out an easy way to specify square coordinates without having to say the letter.
 
-The app does not interact with Lichess's chessboard directly; it simply creates a text command and submits it to the move input box. It does interact with the "resign", "abort", "draw", etc. buttons.
+The app does not interact with Lichess's chessboard directly; it simply creates a text command and submits it to the move input box. It does interact with the "resign", "abort", "draw", etc. buttons. (See https://bit.ly/3q7qtNV)
 
-My initial goal was to completely control the game with spoken word and require no keyboard input. However, the move input textbox does not automatically enter values without real keyboard input (Programmatic keyboard events were unable to trick the input box into submitting moves).
+My initial goal was to completely control the game with spoken word and require no keyboard input. However, the move input textbox does not automatically enter values without real keyboard input (Programmaticly triggering keyboard events failed to make the input box submit moves in my experience).
 
 ### Known issues:
 
-The script does run on all Lichess.org pages It will (should) not interfere with use of non-game pages; however you will see that recording takes place when ctrl is pressed. 
-
 The list of replaced words in the options page does display certain setting values that are also saved in chrome local storage; I highly recommend NOT deleting or editing these values! 
 
-Speech Recognition will stop listening when it thinks the user is finished speaking. With toggle to listen this is not a problem: the service begins listening again immediately. However with hold-to-dictate, the service will not continue listening until the ctrl key has been released and held again. The "listening" message will be incorrect in this instance.
-
-Some unhandled errors may occur when tab changes occur while the service is listening.

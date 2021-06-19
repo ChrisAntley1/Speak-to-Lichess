@@ -41,11 +41,11 @@ chessKeyWords.set('short', '');
 
 var nonChessCommands = new Map();
 nonChessCommands.set('resign', resign);
-nonChessCommands.set('offer draw', draw);
+nonChessCommands.set('offer draw', offerDraw);
 nonChessCommands.set('abort', abort);
-nonChessCommands.set('accept', accept_offer);
-nonChessCommands.set('decline', decline_offer);
-nonChessCommands.set('take back', take_back);
+nonChessCommands.set('accept', acceptOffer);
+nonChessCommands.set('decline', declineOffer);
+nonChessCommands.set('take back', takeBack);
 
 
 var inputBox;
@@ -247,10 +247,10 @@ function waitForInputBox(){
 
         inputBox = document.getElementsByClassName('ready')[0];
         document.addEventListener('keydown', enterMove);
-        document.addEventListener('keydown', listen_key_down);
-        document.addEventListener('keyup', listen_key_up);
+        document.addEventListener('keydown', listenKeyDown);
+        document.addEventListener('keyup', listenKeyUp);
         document.addEventListener('visibilitychange', function() {
-            stop_dictation();
+            stopDictation();
             holding_listen_key = false;
         });
         
@@ -285,36 +285,36 @@ function enterMove(e){
     }
 }
 
-function listen_key_down(e){
+function listenKeyDown(e){
 
     if(e.keyCode == LISTEN_KEY_CODE){
         if(toggle_hold_selection['__toggle']){
         
-            is_listening ? stop_dictation(): start_dictation();
+            is_listening ? stopDictation(): startDictation();
         }
         else if(!holding_listen_key
         ){
             holding_listen_key = true;
-            start_dictation();
+            startDictation();
         }
     
     }
 }
-function listen_key_up(e){
+function listenKeyUp(e){
 
     if(e.keyCode == LISTEN_KEY_CODE && holding_listen_key && toggle_hold_selection['__toggle'] == false){
         holding_listen_key = false;
-        stop_dictation();
+        stopDictation();
     }
 }
 
-function start_dictation(){
+function startDictation(){
     recognition.start();
     display_listen_status.innerHTML = "Listening...";
     is_listening = true;
 }
 
-function stop_dictation(){
+function stopDictation(){
     recognition.stop();
     display_listen_status.innerHTML = toggle_hold_message;
     is_listening = false;
@@ -353,18 +353,18 @@ function abort(){
     else abort_button.click();
 }
 
-function take_back(){
-    var take_back_button = document.getElementsByClassName('fbt takeback-yes')[0];
+function takeBack(){
+    var takeBack_button = document.getElementsByClassName('fbt takeback-yes')[0];
 
-    if(take_back_button == null){
+    if(takeBack_button == null){
         console.log("did not find takeBack button.");
         return;
     }
 
-    else take_back_button.click();
+    else takeBack_button.click();
 
 }
-function draw(){
+function offerDraw(){
     var draw_button = document.getElementsByClassName('fbt draw-yes')[0];
 
     if(draw_button == null){
@@ -385,7 +385,7 @@ function draw(){
     }
 }
 
-function accept_offer(){
+function acceptOffer(){
     var accept_button = document.getElementsByClassName('accept')[0];
 
     if(accept_button == null){
@@ -396,7 +396,7 @@ function accept_offer(){
 
 }
 
-function decline_offer(){
+function declineOffer(){
     var decline_button = document.getElementsByClassName('decline')[0];
 
     if(decline_button == null){
