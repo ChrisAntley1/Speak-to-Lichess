@@ -23,7 +23,7 @@ chrome.storage.local.get(['last_command'], function(result){
     if(last_command == undefined){
         last_command = 'nothing yet!'
     }
-    command.textContent = "Speech Recognition heard: " + last_command;
+    command.textContent = last_command;
 });
 
 chrome.storage.local.get(TOGGLE_LISTEN, function(result){

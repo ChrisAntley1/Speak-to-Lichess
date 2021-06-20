@@ -1,17 +1,17 @@
-// var lichess_location = location.href;
-
-// if(lichess_location.match(/\/[a-zA-Z0-9]/))
 console.log("You are on Lichess! " + location.href);
 
+
+/**
+ * Have been unable to get grammar to work properly in chrome and other browsers. I believe it is
+ * a known issue, but I've seen conflicting reports. 
+ */
+// var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
+// var grammar = '#JSGF V1.0;';
+// var speechRecognitionGrammarList = new SpeechGrammarList();
+// speechRecognitionGrammarList.addFromString(grammar, 1);
+// recognition.grammars = speechRecognitionGrammarList;
 var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
-var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
-
-var grammar = '#JSGF V1.0;';
 var recognition = new SpeechRecognition();
-var speechRecognitionGrammarList = new SpeechGrammarList();
-speechRecognitionGrammarList.addFromString(grammar, 1);
-
-recognition.grammars = speechRecognitionGrammarList;
 recognition.lang = 'en-US';
 recognition.interimResults = false;
 
@@ -287,23 +287,24 @@ function enterMove(e){
 
 function listenKeyDown(e){
 
-    if(e.keyCode == LISTEN_KEY_CODE){
+    if(e.keyCode == LISTEN_KEY_CODE && !holding_listen_key){
         if(toggle_hold_selection['__toggle']){
         
             is_listening ? stopDictation(): startDictation();
         }
-        else if(!holding_listen_key){
-            holding_listen_key = true;
-            startDictation();
-        }
+
+        else startDictation();
+        if(!holding_listen_key) holding_listen_key = true;
     
     }
 }
 function listenKeyUp(e){
 
-    if(e.keyCode == LISTEN_KEY_CODE && holding_listen_key && toggle_hold_selection['__toggle'] == false){
+    if(e.keyCode == LISTEN_KEY_CODE && holding_listen_key){
         holding_listen_key = false;
-        stopDictation();
+
+        //if hold to listen
+        if(toggle_hold_selection['__toggle'] == false) stopDictation();
     }
 }
 

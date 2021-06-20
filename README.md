@@ -87,6 +87,6 @@ Speak to Lichess is Open Source.
 
 ### Known issues:
 
-The list of replaced words in the options page does display certain setting values that are also saved in chrome local storage; I highly recommend NOT deleting or editing these values! 
-
 Holding the ctrl key while 'toggle' is set will set off a lot of errors. 
+
+Some users have reported very poor recognition results; this will have to do with the speech recognition software. Until Speech Grammar works in chrome, this may be a persistent issue. The best advice I can give is to keep trying different words until you find a set that the software recognizes more consistently for you, and to make use of the word replacement feature. 
