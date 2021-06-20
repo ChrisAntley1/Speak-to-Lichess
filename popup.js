@@ -16,13 +16,14 @@ chrome.storage.local.get(speech_to_text_Lichess_fuzzy_words, function(result){
 });
 
 
+
 chrome.storage.local.get(['last_command'], function(result){
 
     var last_command = result['last_command'];
     if(last_command == undefined){
         last_command = 'nothing yet!'
     }
-    command.textContent = "Speech Recognition heard: " + last_command;
+    command.textContent = last_command;
 });
 
 chrome.storage.local.get(TOGGLE_LISTEN, function(result){

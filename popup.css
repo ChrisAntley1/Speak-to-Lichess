@@ -1,4 +1,9 @@
 body {
     width: 300px;
     height: 400px;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
 }
+

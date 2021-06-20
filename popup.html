@@ -8,9 +8,11 @@
     <link rel="stylesheet" href="popup.css">
 </head>
 <body class="bootstrap-dark">
-    <h1>hello Lichess</h1>
 
-    <span>Listen style:</span> <br>
+    <img src="images/Yellow Chess Talk 512.png" alt="image go brr" style="margin-top: 20px; width: 35%; height: auto;">
+    <!-- <h1>Speak to Lichess</h1> -->
+    <br><br>
+    <h3>Listen style:</h3>
     <form>
         <input type="radio" id="hold" name="listen_style" value="hold">
         <label for="hold">Hold</label><br>
@@ -18,12 +20,14 @@
         <label for="toggle">Toggle</label><br>
     </form>
     <br>
+    <h3 id =>Speach Recognition Heard:</h3>
     <span id = 'command'></span>
     <br><br>
         
-    <label for="trouble_input">Replace this word:</label>
+    
+    <h5 for="trouble_input">Replace this word:</h5>
     <input type="text" id="trouble_input" name="trouble_input"><br><br>
-    <label for="correct_input">with this word or phrase:</label>
+    <h5 for="correct_input">with this word or phrase:</h5>
     <input type="text" id="correct_input" name="correct_input"><br><br>
     <input type="button" value="Submit" id="submit"> 
     <input type="button" value="Manage phrases" id="manage"> 
