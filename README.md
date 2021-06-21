@@ -22,7 +22,7 @@ Takes advantage of Lichess's optional text input box to submit SAN format moves.
 
 2. Unzip the package; take note of where the resulting folder exists. 
 
-3, Go to chrome://extensions 
+3. Go to chrome://extensions 
 
 4. Toggle on developer mode in the top right, then click 'load unpacked' on the top left; select the "Speech-to-Text-Lichess" folder that you extracted in step 2.
 
@@ -38,7 +38,7 @@ Demo: https://youtu.be/yqbm0kMNjAM
 
 2. Make sure the extension is listening for your input by holding the ctrl key. You should see the "Press and hold ctrl to dictate" message on the game page change to "Listening...". You can also switch to "toggle to listen" mode in the popup menu.
 
-3. Say your move in SAN format. For pieces and numbers, simply say the piece or number. For the letter portion a square's coordinates, say a word that starts with that letter; for example "Eric" for "e" or "delta" for "d". Trying to say the letter itself will most likely be misinterpreted and is not recommended! NOTE: you can also use this "word that starts with desired letter" method to specify pieces if needed.
+3. Say your move in SAN format. For pieces and numbers, simply say the piece or number. For the letter portion of a square's coordinates, say a word that starts with that letter; for example "Eric" for "e" or "delta" for "d". Trying to say the letter itself will likely fail and is not recommended! NOTE: you can also use this "word that starts with desired letter" method to specify pieces if needed.
 
 4. The app will process your move and display it in SAN format below the text input box. Simply press enter to submit your move! If the move displayed is incorrect, you can try to dictate your command again, or you open the popup menu to see (and replace) the word that was incorrectly recognized. 
 
@@ -54,13 +54,13 @@ Piece -> Word -> Number
 
 To specify a square, say a word that starts with the letter of the coordinate you wish to specify followed by the number. For example, you could say "delta four" to specify the D4 square. The NATO phonetic alphabet is a great starting point for words that the speech recognition software consistently hears (I have run into a bit of trouble with 'foxtrot' though). Names also work well, ie "Frank six" to specify F6. 
 
-*Piece* to *square* phrases will not be interpreted correctly! 
+UCI format (*Square* to *square*) phrases will not be interpreted correctly! 
 
 "To" will always be interpreted as "2".
 
-Correctly processes "capture", "take", "short", "long", "castle", "promote", "equals" into chess notation. User could theoretically add additional chess related words they wish to use.
+Correctly processes "capture", "take", "short", "long", "castle", "promote", "equals" into chess notation. User could theoretically add additional chess related words using the "replace words" feature.
 
-Additional, non-chess-move commands the user can also use:
+Additional, non-move commands supported:
 
 "resign"
 "offer draw"
@@ -88,15 +88,15 @@ https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0T
 
 ### Notes:
 
-Web Speech API (https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) is an experimental project and is able to listen for sets of words supplied in the form of grammar objects. However, this feature is broken in Chrome and has been for a while. As a result, the speech-to-text software often misinterprets the user's voice input. In addition, it seems most dictation software has a hard time discerning individual letters. For example, "B", "D", and "E" are often mistaken for one another. 
+Web Speech API (https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) is an experimental project. It is normally able to listen for sets of words supplied in the form of grammar objects. However, this feature is broken in Chrome, and has been for a while. As a result, the speech-to-text software often misinterprets the user's voice input. In addition, it seems most dictation software has a hard time discerning individual letters. For example, "B", "D", and "E" are often mistaken for one another. 
 
-With that in mind, most of the work in this project was focused on taking user input supplied by speech recognition; formatting it; replacing words that were most likely not what the user intended; and extracting chess moves from that resulting phrase.
+With that in mind, most of the work in this project focused on taking user input supplied by speech recognition; formatting it; replacing words that were most likely not what the user intended; and extracting chess moves from that resulting phrase.
 
 The app does not interact with Lichess's chessboard directly; it simply creates a text command and submits it to the move input box. It does interact with the "resign", "abort", "draw", etc. buttons. (See https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0Tsxo/edit?usp=sharing)
 
 My initial goal was to completely control the game with spoken word and require no keyboard input. However, the move input textbox does not automatically enter values without real keyboard input (Programmaticly triggering keyboard events failed to make the input box submit moves in my experience).
 
-Hoping to implement the Lichess API in the future to make Speak to Lichess completely voice controlled and hands free!
+Hoping to implement the Lichess API in future updates to make Speak to Lichess completely voice controlled and hands free!
 
 Speak to Lichess is Open Source. Feedback welcome!
 
