@@ -47,7 +47,7 @@ nonChessCommands.set('accept', acceptOffer);
 nonChessCommands.set('decline', declineOffer);
 nonChessCommands.set('take back', takeBack);
 
-
+const display_message = "Your move will appear here.";
 var display_move = document.createElement('strong');
 var display_listen_status = document.createElement('strong');
 var inputBox; 
@@ -220,7 +220,7 @@ function submitMove(){
         
         submit_function();
         result_command = '';
-        display_move.innerHTML = '';
+        display_move.innerHTML = display_message;
     
     }
 
@@ -263,7 +263,7 @@ function waitForInputBox(){
         console.log("underboard found.");
 
         var under_board = document.getElementsByClassName('round__underboard')[0];
-        display_move.innerHTML = "Your move will appear here."
+        display_move.innerHTML = display_message
         under_board.insertBefore(display_move, under_board.firstChild);
         underboard_found = true;
     }
