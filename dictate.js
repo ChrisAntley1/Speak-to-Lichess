@@ -1,6 +1,25 @@
 console.log("You are on Lichess! " + location.href);
 
 
+var lichessLocation = location.href
+                    .replace('http://', '')
+                    .replace('https://', '')
+                    .replace('lichess.org/', '')
+                    .replace('lichess.org', '');
+
+const KNOWN_LOCATIONS = [
+                        'analysis',
+                        'streamer',
+                        'practice',
+                        'training'];
+
+console.log(lichessLocation);
+
+console.log(checkLocation(lichessLocation)); 
+//consider using a main function so that we can return instead of throwing an error.
+// throw new Error("This is not a game page. Aborting script.");
+
+console.log("we never get here!");
 /**
  * Have been unable to get grammar to work properly in chrome and other browsers. I believe it is
  * a known issue, but I've seen conflicting reports. 
@@ -15,6 +34,7 @@ var recognition = new SpeechRecognition();
 recognition.lang = 'en-US';
 recognition.interimResults = false;
 
+console.log("but we got here??");
 var numberMap = new Map();
 numberMap.set('one', '1');
 numberMap.set('two', '2');
@@ -405,4 +425,42 @@ function declineOffer(){
     }
     decline_button.click();
 
+}
+
+/**
+ * TODO: Previously played games will still return true! They use the entire 12 character id in the URL. 
+ * Can either only run script on 8 character games, or check if current game (possibly through API fetch)
+ */
+function checkLocation(location){
+    
+    numChars = location.length;
+    
+    //check if on home page (lichess.org/) or location is somehow null or undefined
+    if(numChars != null || numChars != undefined || numChars != 0){
+
+        //check if alphanumeric; if not, then can't be game page
+        /**
+         * TODO: Make sure the above condition is actually the case; not sure if options can be attached to game page url!
+         */
+        if(location.match(/^[a-z0-9]+$/i)){
+
+            //check length of alphanumeric string. if 8 or 12, then might be game page
+            if(numChars == 8 || numChars == 12){
+
+                //finally, make sure location is not in our known location list:
+
+                if(!KNOWN_LOCATIONS.includes(location)){
+                    
+                    
+                    //We know it is probably an ongoing game; Could now execute fetch request to see if it is an ongoing game. 
+                    //Executes much less, seems like a reasonable filter.
+                    console.log("do the thing!");
+                    return true;
+                }
+            }
+        }
+    }
+
+    console.log("don't do the thing!");
+    return false;
 }
