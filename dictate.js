@@ -1,25 +1,18 @@
 console.log("You are on Lichess! " + location.href);
 
 
-var lichessLocation = location.href
+let lichessLocation = location.href
                     .replace('http://', '')
                     .replace('https://', '')
                     .replace('lichess.org/', '')
                     .replace('lichess.org', '');
 
-const KNOWN_LOCATIONS = [
-                        'analysis',
-                        'streamer',
-                        'practice',
-                        'training'];
+if(!checkIfActiveGamePage(lichessLocation)){
+    //consider using a main function so that we can return instead of throwing an error.
+    throw new Error("This is not a game page. Aborting script.");
 
-console.log(lichessLocation);
+}
 
-console.log(checkLocation(lichessLocation)); 
-//consider using a main function so that we can return instead of throwing an error.
-// throw new Error("This is not a game page. Aborting script.");
-
-console.log("we never get here!");
 /**
  * Have been unable to get grammar to work properly in chrome and other browsers. I believe it is
  * a known issue, but I've seen conflicting reports. 
@@ -34,7 +27,6 @@ var recognition = new SpeechRecognition();
 recognition.lang = 'en-US';
 recognition.interimResults = false;
 
-console.log("but we got here??");
 var numberMap = new Map();
 numberMap.set('one', '1');
 numberMap.set('two', '2');
@@ -431,9 +423,16 @@ function declineOffer(){
  * TODO: Previously played games will still return true! They use the entire 12 character id in the URL. 
  * Can either only run script on 8 character games, or check if current game (possibly through API fetch)
  */
-function checkLocation(location){
+function checkIfActiveGamePage(location){
     
-    numChars = location.length;
+    //locations with 8 or 12 alphanumeric characters
+    const KNOWN_LOCATIONS = [
+        'analysis',
+        'streamer',
+        'practice',
+        'training'];
+
+    let numChars = location.length;
     
     //check if on home page (lichess.org/) or location is somehow null or undefined
     if(numChars != null || numChars != undefined || numChars != 0){
