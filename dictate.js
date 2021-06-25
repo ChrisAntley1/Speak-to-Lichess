@@ -1,293 +1,294 @@
-console.log("You are on Lichess! " + location.href);
+/**
+ * TODO: store and retrieve this from local storage
+ */
+const BOARD_API_TOKEN = 'NeycshINSAk7hQ2I';
 
-
-let lichessLocation = location.href
+const lichessLocation = location.href
                     .replace('http://', '')
                     .replace('https://', '')
                     .replace('lichess.org/', '')
                     .replace('lichess.org', '');
 
-if(!checkIfActiveGamePage(lichessLocation)){
-    //consider using a main function so that we can return instead of throwing an error.
-    throw new Error("This is not a game page. Aborting script.");
+// let isOngoingGame = false;
 
-}
+// if(checkIfGamePage(lichessLocation)){
+//     console.log("might be ongoing game...");
+//     isOngoingGame = checkIfActiveGame().then(res =>{
+//         console.log(res);
+//     });
+//     console.log(isOngoingGame);
+// }
 
-/**
- * Have been unable to get grammar to work properly in chrome and other browsers. I believe it is
- * a known issue, but I've seen conflicting reports. 
- */
-// var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
-// var grammar = '#JSGF V1.0;';
-// var speechRecognitionGrammarList = new SpeechGrammarList();
-// speechRecognitionGrammarList.addFromString(grammar, 1);
-// recognition.grammars = speechRecognitionGrammarList;
-var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
-var recognition = new SpeechRecognition();
-recognition.lang = 'en-US';
-recognition.interimResults = false;
+// if(!isOngoingGame) console.log("Not ongoing game page.");
 
-var numberMap = new Map();
-numberMap.set('one', '1');
-numberMap.set('two', '2');
-numberMap.set('three', '3');
-numberMap.set('four', '4');
-numberMap.set('five', '5');
-numberMap.set('six', '6');
-numberMap.set('seven', '7');
-numberMap.set('eight', '8');
+// else {
 
-var chessKeyWords = new Map();
-chessKeyWords.set('king', 'k');
-chessKeyWords.set('queen', 'q');
-chessKeyWords.set('rook', 'r');
-chessKeyWords.set('bishop', 'b');
-chessKeyWords.set('knight', 'n');
-chessKeyWords.set('capture', 'x');
-chessKeyWords.set('take', 'x');
-chessKeyWords.set('promote', '=');
-chessKeyWords.set('equals', '=');
-chessKeyWords.set('castle', '0-0');
-chessKeyWords.set('long', '0-');
-chessKeyWords.set('short', '');
+if(checkIfGamePage(lichessLocation)){
+    /**
+     * So here we know that the page may contain an active game. We need these variables declared outside of functions for global use.
+     * However, we could instantiate them in an async function that waits for the results of the API call; and if the API call returns negative, then 
+     * we can save some space and work by not initializing anything else. 
+     */
+    console.log("Might be ongoing game, doing the thing");
 
-var nonChessCommands = new Map();
-nonChessCommands.set('resign', resign);
-nonChessCommands.set('offer draw', offerDraw);
-nonChessCommands.set('abort', abort);
-nonChessCommands.set('accept', acceptOffer);
-nonChessCommands.set('decline', declineOffer);
-nonChessCommands.set('take back', takeBack);
+    // Grammar = broken
+    // var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
+    // var grammar = '#JSGF V1.0;';
+    // var speechRecognitionGrammarList = new SpeechGrammarList();
+    // speechRecognitionGrammarList.addFromString(grammar, 1);
+    // recognition.grammars = speechRecognitionGrammarList;
 
-const display_message = "Your move will appear here.";
-var display_move = document.createElement('strong');
-var display_listen_status = document.createElement('strong');
-var inputBox; 
+    //initializing speech recognition 
+    var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
+    var recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
 
-var toggle_hold_message = '';
-var result_command = '';
-var holding_listen_key = false;
-var input_found = false;
-var underboard_found = false;
-var material_bottom_found = false;
-var is_listening = false;
-var submit_function;
+    //Constants (declared as var for scope)
+    var LISTEN_KEY_CODE = 17;
+    var DISPLAY_MESSAGE = "Your move will appear here.";
 
-const LISTEN_KEY_CODE = 17;
-const observer = new MutationObserver(waitForInputBox);
-observer.observe(document, {subtree: true, childList: true});
+    //Maps for checking and handling key words
+    var numberMap;
+    var chessTermMap;
+    var commandFunctionMap;
 
-recognition.addEventListener('end', function() {
-    if (is_listening == true) recognition.start();
-});
+    //creating our key word maps
+    createKeyWordMaps();
 
-var word_replacement_list;
-var toggle_hold_selection;
+    //HTML elements. inputBox is created by another script most likely and is not yet created, even when script is run at document_end (in manifest)
+    var display_move = document.createElement('strong');
+    var display_listen_status = document.createElement('strong');
+    var inputBox; 
 
-chrome.storage.local.get(word_replacement_list, function(result){
-    word_replacement_list = result;
-});
+    //flags and other variables
+    var toggle_hold_message = '';
+    var result_command = '';
+    var holding_listen_key = false;
+    var input_found = false;
+    var underboard_found = false;
+    var material_bottom_found = false;
+    var is_listening = false;
 
-chrome.storage.local.get(toggle_hold_selection, function(result){
+    //function that will be called depending on spoken command/move
+    var submit_function;
 
-    toggle_hold_selection = result;
-    if(toggle_hold_selection['__toggle']) toggle_hold_message = "Press ctrl to toggle on/off dictation";
-    else toggle_hold_message = "Press and hold ctrl to dictate";
+    //document observer; observes DOM until inputBox (and a couple other elements) have been located.
+    var observer = new MutationObserver(waitForInputBox);
+    observer.observe(document, {subtree: true, childList: true});
 
-    display_listen_status.innerHTML = toggle_hold_message;
-});
-
-//listen for toggle setting change, or any new replacement words
-chrome.storage.onChanged.addListener(function(changes, area) {
-  
-    let changedItems = Object.keys(changes);
-    for (let item of changedItems) {
-        
-        if(item === '__toggle'){
-            toggle_hold_selection[item] = changes[item].newValue;
-            
-            if(toggle_hold_selection['__toggle']) toggle_hold_message = "Press ctrl to toggle on/off dictation";
-            else toggle_hold_message = "Press and hold ctrl to dictate";
-            display_listen_status.innerHTML = toggle_hold_message;
-
-            
-            recognition.stop();
-        } 
-        else if (item != 'last_command') word_replacement_list[item] = changes[item].newValue;
-    }
-});
-
-//when recognition decides it has heard an entire phrase:
-recognition.onresult = function(event) {
-
-    var command = event.results[event.results.length - 1][0].transcript;
-
-    console.log("Raw voice input: " + command);
-
-    if(nonChessCommands.has(command)){
-        submit_function = nonChessCommands.get(command);
-        result_command = command;
-    }
-
-    else {
-        var processedCommand_array = processRawInput(command);
-        console.log('Processed voice input: ' + processedCommand_array);
-
-        result_command = createChessMove(processedCommand_array);
-        submit_function = inputMove;
-        
-        if(result_command == ''){
-            console.log("failed to create command.");
-            return;
-        }
-    }
-
-    console.log("result = " + result_command);
-    display_move.innerHTML = "press enter to submit: " + result_command;
-
-};
-
-recognition.onspeechend = function() {
-    recognition.stop();
-};
-
-recognition.onerror = function(event) {
-    console.log('Speech recognition error detected: ' + event.error);
-}        
-
-
-function processRawInput(command){
-    
-    //replace any capital letters;
-    //put a space between 'letter-number' instances;
-    //replace any punctuation with a space. 
-    command = command.toLowerCase();
-    command = command.replace(/([^0-9])([0-9])/g, '$1 $2');
-    command = command.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ');
-
-    //save the phrase to show the user in popup what phrase was heard (before replacing any words)
-    chrome.storage.local.set({last_command: command}, function(){
-
-        chrome.storage.local.get(['last_command'], function(result){
-        });
+    recognition.addEventListener('end', function() {
+        if (is_listening == true) recognition.start();
     });
 
-    return replaceWords(command.split(' '));
-}
-function createChessMove(phrase){
+    var word_replacement_list;
+    var toggle_hold_selection;
 
-    var chessMove = '';
-    for(const word of phrase){
-        chessMove += extractCharacter(word);
-    }
-    return chessMove;
-}
+    chrome.storage.local.get(word_replacement_list, function(result){
+        word_replacement_list = result;
+    });
 
-function replaceWords(wordArray){
+    chrome.storage.local.get(toggle_hold_selection, function(result){
 
-    var result = [];
-    var replacementPhrase = '';
-    for(const word of wordArray){
-        if(word_replacement_list[word] != null && word_replacement_list[word] != undefined){
+        toggle_hold_selection = result;
+        if(toggle_hold_selection['__toggle']) toggle_hold_message = "Press ctrl to toggle on/off dictation";
+        else toggle_hold_message = "Press and hold ctrl to dictate";
 
-            //split replacement phrase. if just a single word, replacementPhrase will be an array of length 1; 
-            //no additional code should be needed.
-            replacementPhrase = word_replacement_list[word].split(' ');
-            for(const subWord of replacementPhrase){
-                result.push(subWord);
+        display_listen_status.innerHTML = toggle_hold_message;
+    });
+
+    //listen for toggle setting change, or any new replacement words
+    chrome.storage.onChanged.addListener(function(changes, area) {
+    
+        let changedItems = Object.keys(changes);
+        for (let item of changedItems) {
+            
+            if(item === '__toggle'){
+                toggle_hold_selection[item] = changes[item].newValue;
+                
+                if(toggle_hold_selection['__toggle']) toggle_hold_message = "Press ctrl to toggle on/off dictation";
+                else toggle_hold_message = "Press and hold ctrl to dictate";
+                display_listen_status.innerHTML = toggle_hold_message;
+
+                
+                recognition.stop();
+            } 
+            else if (item != 'last_command') word_replacement_list[item] = changes[item].newValue;
+        }
+    });
+
+    //when recognition decides it has heard an entire phrase:
+    recognition.onresult = function(event) {
+
+        var command = event.results[event.results.length - 1][0].transcript;
+
+        console.log("Raw voice input: " + command);
+
+        if(commandFunctionMap.has(command)){
+            submit_function = commandFunctionMap.get(command);
+            result_command = command;
+        }
+
+        else {
+            var processedCommand_array = processRawInput(command);
+            console.log('Processed voice input: ' + processedCommand_array);
+
+            result_command = createChessMove(processedCommand_array);
+            submit_function = inputMove;
+            
+            if(result_command == ''){
+                console.log("failed to create command.");
+                return;
             }
         }
 
-        else result.push(word);
-    }
+        console.log("result = " + result_command);
+        display_move.innerHTML = "press enter to submit: " + result_command;
 
-    return result;
+    };
+
+    recognition.onspeechend = function() {
+        recognition.stop();
+    };
+
+    recognition.onerror = function(event) {
+        console.log('Speech recognition error detected: ' + event.error);
+    }        
 }
 
-function extractCharacter(word){
 
-    if(word.match(/\d/) == null){
-
-        if(chessKeyWords.has(word)){
-            return chessKeyWords.get(word);
-        }
-
-        else if(numberMap.has(word)){
-            return numberMap.get(word);
-        }
-    }
-
-    //if here: get first letter of word/get digit
-    return word.charAt(0);
-}
-
-function replacePunctuation(word){
-
-    return word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ');
-}
-      
-function submitMove(){
-
-    if(result_command.length != 0){
+    function processRawInput(command){
         
-        submit_function();
-        result_command = '';
-        display_move.innerHTML = display_message;
-    
-    }
+        //replace any capital letters;
+        //put a space between 'letter-number' instances;
+        //replace any punctuation with a space. 
+        command = command.toLowerCase();
+        command = command.replace(/([^0-9])([0-9])/g, '$1 $2');
+        command = command.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ');
 
-    else console.log("no move stored yet.");
-}
+        //save the phrase to show the user in popup what phrase was heard (before replacing any words)
+        chrome.storage.local.set({last_command: command}, function(){
 
-function inputMove(){
-
-    if(result_command.match(/[a-h][1-8][a-h][1-8]/)){
-
-        //was getting ready to implement this, then remembered that 
-        //square-to-square format was failing on Lichess =\
-        console.log("Square to square format not yet supported. wompwomp =/");
-    }
-    else inputBox.value = result_command;
-}
-
-function waitForInputBox(){
-
-
-    if(!input_found && document.getElementsByClassName('ready').length > 0){
-        
-        console.log("input found.");
-
-        inputBox = document.getElementsByClassName('ready')[0];
-        document.addEventListener('keydown', enterMove);
-        document.addEventListener('keydown', listenKeyDown);
-        document.addEventListener('keyup', listenKeyUp);
-        document.addEventListener('visibilitychange', function() {
-            stopDictation();
-            holding_listen_key = false;
+            chrome.storage.local.get(['last_command'], function(result){
+            });
         });
-        
-        input_found = true;
 
+        return replaceWords(command.split(' '));
+    }
+    function createChessMove(phrase){
+
+        var chessMove = '';
+        for(const word of phrase){
+            chessMove += extractCharacter(word);
+        }
+        return chessMove;
     }
 
-    if(input_found && !underboard_found && document.getElementsByClassName('round__underboard').length > 0){ 
-        
-        console.log("underboard found.");
+    function replaceWords(wordArray){
 
-        var under_board = document.getElementsByClassName('round__underboard')[0];
-        display_move.innerHTML = display_message
-        under_board.insertBefore(display_move, under_board.firstChild);
-        underboard_found = true;
+        var result = [];
+        var replacementPhrase = '';
+        for(const word of wordArray){
+            if(word_replacement_list[word] != null && word_replacement_list[word] != undefined){
+
+                //split replacement phrase. if just a single word, replacementPhrase will be an array of length 1; 
+                //no additional code should be needed.
+                replacementPhrase = word_replacement_list[word].split(' ');
+                for(const subWord of replacementPhrase){
+                    result.push(subWord);
+                }
+            }
+
+            else result.push(word);
+        }
+
+        return result;
     }
 
-    if(underboard_found && !material_bottom_found && (document.getElementsByClassName('material material-bottom').length > 0)){
-        
-        console.log("material bottom found.");
+    function extractCharacter(word){
 
-        document.getElementsByClassName('material material-bottom')[0].appendChild(display_listen_status);        
-        material_bottom_found = true;
-        observer.disconnect();
+        if(word.match(/\d/) == null){
+
+            if(chessTermMap.has(word)){
+                return chessTermMap.get(word);
+            }
+
+            else if(numberMap.has(word)){
+                return numberMap.get(word);
+            }
+        }
+
+        //if here: get first letter of word/get digit
+        return word.charAt(0);
     }
+
+    function replacePunctuation(word){
+
+        return word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ');
+    }
+        
+    function submitMove(){
+
+        if(result_command.length != 0){
+            
+            submit_function();
+            result_command = '';
+            display_move.innerHTML = DISPLAY_MESSAGE;
+        
+        }
+
+        else console.log("no move stored yet.");
+    }
+
+    function inputMove(){
+
+        if(result_command.match(/[a-h][1-8][a-h][1-8]/)){
+
+            //was getting ready to implement this, then remembered that 
+            //square-to-square format was failing on Lichess =\
+            console.log("Square to square format not yet supported. wompwomp =/");
+        }
+        else inputBox.value = result_command;
+    }
+
+    function waitForInputBox(){
+
+
+        if(!input_found && document.getElementsByClassName('ready').length > 0){
+            
+            console.log("input found.");
+
+            inputBox = document.getElementsByClassName('ready')[0];
+            document.addEventListener('keydown', enterMove);
+            document.addEventListener('keydown', listenKeyDown);
+            document.addEventListener('keyup', listenKeyUp);
+            document.addEventListener('visibilitychange', function() {
+                stopDictation();
+                holding_listen_key = false;
+            });
+            
+            input_found = true;
+
+        }
+
+        if(input_found && !underboard_found && document.getElementsByClassName('round__underboard').length > 0){ 
+            
+            console.log("underboard found.");
+
+            var under_board = document.getElementsByClassName('round__underboard')[0];
+            display_move.innerHTML = DISPLAY_MESSAGE
+            under_board.insertBefore(display_move, under_board.firstChild);
+            underboard_found = true;
+        }
+
+        if(underboard_found && !material_bottom_found && (document.getElementsByClassName('material material-bottom').length > 0)){
+            
+            console.log("material bottom found.");
+
+            document.getElementsByClassName('material material-bottom')[0].appendChild(display_listen_status);        
+            material_bottom_found = true;
+            observer.disconnect();
+        }
 }
 
 function enterMove(e){
@@ -423,7 +424,7 @@ function declineOffer(){
  * TODO: Previously played games will still return true! They use the entire 12 character id in the URL. 
  * Can either only run script on 8 character games, or check if current game (possibly through API fetch)
  */
-function checkIfActiveGamePage(location){
+function checkIfGamePage(location){
     
     //locations with 8 or 12 alphanumeric characters
     const KNOWN_LOCATIONS = [
@@ -463,3 +464,80 @@ function checkIfActiveGamePage(location){
     console.log("don't do the thing!");
     return false;
 }
+
+//Not currently being used; didn't want to completely restructure code
+async function checkIfActiveGame(){
+
+    let response = await fetch('https://lichess.org/api/account/playing', {
+    
+    headers: {
+      'Authorization': 'Bearer ' + BOARD_API_TOKEN
+    }
+
+    });
+
+    if(!response.ok){
+        throw new Error("shit didn't work yo");
+    }
+    let gameList = await response.json();
+
+    console.log(gameList);
+    for(game_info of gameList.nowPlaying){
+
+        if(game_info.fullId === lichessLocation || game_info.gameId === lichessLocation){
+            console.log(game_info);
+            return true;
+            // board_api_url = createTemplateURL();
+        }
+    }
+    return false;
+        // response.json().then(function(res){
+        
+        //     console.log(res);
+        //     let found = false;
+        //     for(game_info of res.nowPlaying){
+    
+        //         if(game_info.fullId === lichessLocation || game_info.gameId === lichessLocation){
+        //             console.log(game_info);
+        //             return true;
+        //             // board_api_url = createTemplateURL();
+        //         }
+        //     }
+    
+        //     return false;
+        // });
+    }
+
+    function createKeyWordMaps(){
+        numberMap = new Map();
+        numberMap.set('one', '1');
+        numberMap.set('two', '2');
+        numberMap.set('three', '3');
+        numberMap.set('four', '4');
+        numberMap.set('five', '5');
+        numberMap.set('six', '6');
+        numberMap.set('seven', '7');
+        numberMap.set('eight', '8');
+
+        chessTermMap = new Map();
+        chessTermMap.set('king', 'k');
+        chessTermMap.set('queen', 'q');
+        chessTermMap.set('rook', 'r');
+        chessTermMap.set('bishop', 'b');
+        chessTermMap.set('knight', 'n');
+        chessTermMap.set('capture', 'x');
+        chessTermMap.set('take', 'x');
+        chessTermMap.set('promote', '=');
+        chessTermMap.set('equals', '=');
+        chessTermMap.set('castle', '0-0');
+        chessTermMap.set('long', '0-');
+        chessTermMap.set('short', '');
+
+        commandFunctionMap = new Map();
+        commandFunctionMap.set('resign', resign);
+        commandFunctionMap.set('offer draw', offerDraw);
+        commandFunctionMap.set('abort', abort);
+        commandFunctionMap.set('accept', acceptOffer);
+        commandFunctionMap.set('decline', declineOffer);
+        commandFunctionMap.set('take back', takeBack);
+    }
