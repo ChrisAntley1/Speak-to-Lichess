@@ -1,4 +1,5 @@
 
+const _GENERATE_TOKEN_URL = 'https://lichess.org/account/oauth/token/create?scopes[]=board:play&description=board_play_token';
 
 var trouble_input = document.querySelector('#trouble_input');
 var correct_input = document.querySelector('#correct_input');
@@ -7,6 +8,7 @@ var delete_button = document.querySelector('#delete');
 var update_message = document.querySelector('#update_message');
 var refresh_message = document.querySelector('#refresh_message');
 var delete_input = document.querySelector('#delete_input');
+let generateButton = document.getElementById('generate_token_button');
 
 var word_replacement_list;
 var replacement_word_keys;
@@ -23,6 +25,8 @@ var ignoreList = ['last_command', '__toggle'];
 
 submit_button.addEventListener("click", submitPhrase);
 delete_button.addEventListener("click", deleteWord);
+generateButton.addEventListener('click', generateToken);
+
 function addTableRows(array) {
     var table = document.getElementById('replacement_table');
     
@@ -134,4 +138,8 @@ function deleteWord(){
         update_message.textContent = "Word removed: " + word_to_delete + " will no longer be replaced.";
 
     }
+}
+
+function generateToken(){
+    window.open(_GENERATE_TOKEN_URL, '_blank');
 }

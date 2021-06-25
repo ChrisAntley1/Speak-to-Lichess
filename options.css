@@ -1,10 +1,23 @@
-body {
-    align-self: center;
+.center {
+    text-align: center;
+    margin: auto;
+    width: 50%;
+    border: 3px solid rgb(255, 251, 1);
+    padding: 10px;
+  }
+
+  table{
+      width: 100%;
+  }
+.scroll_table {
+    height: 500px;
+    width: 50%;
+    overflow-y:auto;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 10px;
 }
 
-table {
-    width: 100%;
-}
 td, th {
     border: 1px solid #616161;
     text-align: left;
@@ -14,9 +27,14 @@ td, th {
 tr:nth-child(even) {
     background-color: #616161;
 }
-.scroll_table {
-    height: 500px;
-    width: 50%;
-    overflow-y:auto;
-}
+
+#generate_token_button {
+    display: block;
+    height: 45px;
+    width: 250px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: medium;
+  }
+  
 
