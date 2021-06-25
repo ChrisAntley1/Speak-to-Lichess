@@ -1,76 +1,67 @@
-console.log("You are on Lichess! " + location.href);
-
+/**
+ * TODO: store and retrieve this from local storage
+ */
 const BOARD_API_TOKEN = 'NeycshINSAk7hQ2I';
+
 const lichessLocation = location.href
                     .replace('http://', '')
                     .replace('https://', '')
                     .replace('lichess.org/', '')
                     .replace('lichess.org', '');
 
-var isOngoingGame = false;
+// let isOngoingGame = false;
+
+// if(checkIfGamePage(lichessLocation)){
+//     console.log("might be ongoing game...");
+//     isOngoingGame = checkIfActiveGame().then(res =>{
+//         console.log(res);
+//     });
+//     console.log(isOngoingGame);
+// }
+
+// if(!isOngoingGame) console.log("Not ongoing game page.");
+
+// else {
 
 if(checkIfGamePage(lichessLocation)){
-    console.log("Possibly an active game page.");
-
-    //checkIfActiveGame is just returning the promise; Script is not waiting for it to finish despite await and async; WHAT DO
-    isOngoingGame = checkIfActiveGame();
-    console.log(isOngoingGame);
-}
-
-if(isOngoingGame) {
     /**
-     * Have been unable to get grammar to work properly in chrome and other browsers. I believe it is
-     * a known issue, but I've seen conflicting reports. 
+     * So here we know that the page may contain an active game. We need these variables declared outside of functions for global use.
+     * However, we could instantiate them in an async function that waits for the results of the API call; and if the API call returns negative, then 
+     * we can save some space and work by not initializing anything else. 
      */
+    console.log("Might be ongoing game, doing the thing");
+
+    // Grammar = broken
     // var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
     // var grammar = '#JSGF V1.0;';
     // var speechRecognitionGrammarList = new SpeechGrammarList();
     // speechRecognitionGrammarList.addFromString(grammar, 1);
     // recognition.grammars = speechRecognitionGrammarList;
+
+    //initializing speech recognition 
     var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
     var recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
     recognition.interimResults = false;
 
+    //Constants (declared as var for scope)
     var LISTEN_KEY_CODE = 17;
     var DISPLAY_MESSAGE = "Your move will appear here.";
 
-    var numberMap = new Map();
-    numberMap.set('one', '1');
-    numberMap.set('two', '2');
-    numberMap.set('three', '3');
-    numberMap.set('four', '4');
-    numberMap.set('five', '5');
-    numberMap.set('six', '6');
-    numberMap.set('seven', '7');
-    numberMap.set('eight', '8');
+    //Maps for checking and handling key words
+    var numberMap;
+    var chessTermMap;
+    var commandFunctionMap;
 
-    var chessKeyWords = new Map();
-    chessKeyWords.set('king', 'k');
-    chessKeyWords.set('queen', 'q');
-    chessKeyWords.set('rook', 'r');
-    chessKeyWords.set('bishop', 'b');
-    chessKeyWords.set('knight', 'n');
-    chessKeyWords.set('capture', 'x');
-    chessKeyWords.set('take', 'x');
-    chessKeyWords.set('promote', '=');
-    chessKeyWords.set('equals', '=');
-    chessKeyWords.set('castle', '0-0');
-    chessKeyWords.set('long', '0-');
-    chessKeyWords.set('short', '');
+    //creating our key word maps
+    createKeyWordMaps();
 
-    var nonChessCommands = new Map();
-    nonChessCommands.set('resign', resign);
-    nonChessCommands.set('offer draw', offerDraw);
-    nonChessCommands.set('abort', abort);
-    nonChessCommands.set('accept', acceptOffer);
-    nonChessCommands.set('decline', declineOffer);
-    nonChessCommands.set('take back', takeBack);
-
+    //HTML elements. inputBox is created by another script most likely and is not yet created, even when script is run at document_end (in manifest)
     var display_move = document.createElement('strong');
     var display_listen_status = document.createElement('strong');
     var inputBox; 
 
+    //flags and other variables
     var toggle_hold_message = '';
     var result_command = '';
     var holding_listen_key = false;
@@ -78,8 +69,11 @@ if(isOngoingGame) {
     var underboard_found = false;
     var material_bottom_found = false;
     var is_listening = false;
+
+    //function that will be called depending on spoken command/move
     var submit_function;
 
+    //document observer; observes DOM until inputBox (and a couple other elements) have been located.
     var observer = new MutationObserver(waitForInputBox);
     observer.observe(document, {subtree: true, childList: true});
 
@@ -130,8 +124,8 @@ if(isOngoingGame) {
 
         console.log("Raw voice input: " + command);
 
-        if(nonChessCommands.has(command)){
-            submit_function = nonChessCommands.get(command);
+        if(commandFunctionMap.has(command)){
+            submit_function = commandFunctionMap.get(command);
             result_command = command;
         }
 
@@ -215,8 +209,8 @@ if(isOngoingGame) {
 
         if(word.match(/\d/) == null){
 
-            if(chessKeyWords.has(word)){
-                return chessKeyWords.get(word);
+            if(chessTermMap.has(word)){
+                return chessTermMap.get(word);
             }
 
             else if(numberMap.has(word)){
@@ -471,29 +465,79 @@ function checkIfGamePage(location){
     return false;
 }
 
+//Not currently being used; didn't want to completely restructure code
 async function checkIfActiveGame(){
 
-    return await fetch('https://lichess.org/api/account/playing', {
+    let response = await fetch('https://lichess.org/api/account/playing', {
     
     headers: {
       'Authorization': 'Bearer ' + BOARD_API_TOKEN
     }
 
-    })
-    .then(res => res.json())
-    .then(function(res){
-        
-        console.log(res);
-        let found = false;
-        for(game_info of res.nowPlaying){
-
-            if(game_info.fullId === lichessLocation || game_info.gameId === lichessLocation){
-                console.log(game_info);
-                return true;
-                // board_api_url = createTemplateURL();
-            }
-        }
-
-        return false;
     });
-}
+
+    if(!response.ok){
+        throw new Error("shit didn't work yo");
+    }
+    let gameList = await response.json();
+
+    console.log(gameList);
+    for(game_info of gameList.nowPlaying){
+
+        if(game_info.fullId === lichessLocation || game_info.gameId === lichessLocation){
+            console.log(game_info);
+            return true;
+            // board_api_url = createTemplateURL();
+        }
+    }
+    return false;
+        // response.json().then(function(res){
+        
+        //     console.log(res);
+        //     let found = false;
+        //     for(game_info of res.nowPlaying){
+    
+        //         if(game_info.fullId === lichessLocation || game_info.gameId === lichessLocation){
+        //             console.log(game_info);
+        //             return true;
+        //             // board_api_url = createTemplateURL();
+        //         }
+        //     }
+    
+        //     return false;
+        // });
+    }
+
+    function createKeyWordMaps(){
+        numberMap = new Map();
+        numberMap.set('one', '1');
+        numberMap.set('two', '2');
+        numberMap.set('three', '3');
+        numberMap.set('four', '4');
+        numberMap.set('five', '5');
+        numberMap.set('six', '6');
+        numberMap.set('seven', '7');
+        numberMap.set('eight', '8');
+
+        chessTermMap = new Map();
+        chessTermMap.set('king', 'k');
+        chessTermMap.set('queen', 'q');
+        chessTermMap.set('rook', 'r');
+        chessTermMap.set('bishop', 'b');
+        chessTermMap.set('knight', 'n');
+        chessTermMap.set('capture', 'x');
+        chessTermMap.set('take', 'x');
+        chessTermMap.set('promote', '=');
+        chessTermMap.set('equals', '=');
+        chessTermMap.set('castle', '0-0');
+        chessTermMap.set('long', '0-');
+        chessTermMap.set('short', '');
+
+        commandFunctionMap = new Map();
+        commandFunctionMap.set('resign', resign);
+        commandFunctionMap.set('offer draw', offerDraw);
+        commandFunctionMap.set('abort', abort);
+        commandFunctionMap.set('accept', acceptOffer);
+        commandFunctionMap.set('decline', declineOffer);
+        commandFunctionMap.set('take back', takeBack);
+    }
