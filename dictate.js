@@ -1,7 +1,6 @@
 /**
  * TODO: store and retrieve this from local storage
  */
-const BOARD_API_TOKEN = 'NeycshINSAk7hQ2I';
 
 const lichessLocation = location.href
                     .replace('http://', '')
@@ -38,6 +37,8 @@ if(checkIfGamePage(lichessLocation)){
     // speechRecognitionGrammarList.addFromString(grammar, 1);
     // recognition.grammars = speechRecognitionGrammarList;
 
+    var BOARD_API_TOKEN = '';
+
     //initializing speech recognition 
     var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
     var recognition = new SpeechRecognition();
@@ -47,7 +48,7 @@ if(checkIfGamePage(lichessLocation)){
     //Constants (declared as var for scope)
     var LISTEN_KEY_CODE = 17;
     var DISPLAY_MESSAGE = "Your move will appear here.";
-
+    var NO_TOKEN_MESSAGE = "No API token! Open options page and set a valid API token to use both UCI format and automatic move submission."
     //Maps for checking and handling key words
     var numberMap;
     var chessTermMap;
@@ -58,6 +59,8 @@ if(checkIfGamePage(lichessLocation)){
 
     //HTML elements. inputBox is created by another script most likely and is not yet created, even when script is run at document_end (in manifest)
     var display_move = document.createElement('strong');
+    display_move.innerHTML = DISPLAY_MESSAGE;
+
     var display_listen_status = document.createElement('strong');
     var inputBox; 
 
@@ -97,6 +100,16 @@ if(checkIfGamePage(lichessLocation)){
         display_listen_status.innerHTML = toggle_hold_message;
     });
 
+    chrome.storage.local.get(['__board_api_token'], function(result){
+
+        if(!result.hasOwnProperty('__board_api_token')){
+            display_move.innerHTML = NO_TOKEN_MESSAGE;
+        }
+    
+        else {
+            testToken(result['__board_api_token']);
+        }
+    });
     //listen for toggle setting change, or any new replacement words
     chrome.storage.onChanged.addListener(function(changes, area) {
     
@@ -276,7 +289,6 @@ if(checkIfGamePage(lichessLocation)){
             console.log("underboard found.");
 
             var under_board = document.getElementsByClassName('round__underboard')[0];
-            display_move.innerHTML = DISPLAY_MESSAGE
             under_board.insertBefore(display_move, under_board.firstChild);
             underboard_found = true;
         }
@@ -508,36 +520,61 @@ async function checkIfActiveGame(){
         // });
     }
 
-    function createKeyWordMaps(){
-        numberMap = new Map();
-        numberMap.set('one', '1');
-        numberMap.set('two', '2');
-        numberMap.set('three', '3');
-        numberMap.set('four', '4');
-        numberMap.set('five', '5');
-        numberMap.set('six', '6');
-        numberMap.set('seven', '7');
-        numberMap.set('eight', '8');
+function createKeyWordMaps(){
+    numberMap = new Map();
+    numberMap.set('one', '1');
+    numberMap.set('two', '2');
+    numberMap.set('three', '3');
+    numberMap.set('four', '4');
+    numberMap.set('five', '5');
+    numberMap.set('six', '6');
+    numberMap.set('seven', '7');
+    numberMap.set('eight', '8');
 
-        chessTermMap = new Map();
-        chessTermMap.set('king', 'k');
-        chessTermMap.set('queen', 'q');
-        chessTermMap.set('rook', 'r');
-        chessTermMap.set('bishop', 'b');
-        chessTermMap.set('knight', 'n');
-        chessTermMap.set('capture', 'x');
-        chessTermMap.set('take', 'x');
-        chessTermMap.set('promote', '=');
-        chessTermMap.set('equals', '=');
-        chessTermMap.set('castle', '0-0');
-        chessTermMap.set('long', '0-');
-        chessTermMap.set('short', '');
+    chessTermMap = new Map();
+    chessTermMap.set('king', 'k');
+    chessTermMap.set('queen', 'q');
+    chessTermMap.set('rook', 'r');
+    chessTermMap.set('bishop', 'b');
+    chessTermMap.set('knight', 'n');
+    chessTermMap.set('capture', 'x');
+    chessTermMap.set('take', 'x');
+    chessTermMap.set('promote', '=');
+    chessTermMap.set('equals', '=');
+    chessTermMap.set('castle', '0-0');
+    chessTermMap.set('long', '0-');
+    chessTermMap.set('short', '');
 
-        commandFunctionMap = new Map();
-        commandFunctionMap.set('resign', resign);
-        commandFunctionMap.set('offer draw', offerDraw);
-        commandFunctionMap.set('abort', abort);
-        commandFunctionMap.set('accept', acceptOffer);
-        commandFunctionMap.set('decline', declineOffer);
-        commandFunctionMap.set('take back', takeBack);
-    }
+    commandFunctionMap = new Map();
+    commandFunctionMap.set('resign', resign);
+    commandFunctionMap.set('offer draw', offerDraw);
+    commandFunctionMap.set('abort', abort);
+    commandFunctionMap.set('accept', acceptOffer);
+    commandFunctionMap.set('decline', declineOffer);
+    commandFunctionMap.set('take back', takeBack);
+}
+
+async function testToken(token){
+    //still throws 401 error in console if invalid token, there's probably some way to catch this
+    display_move.innerHTML = "Checking Token...";
+    fetch('https://lichess.org/api/account', {
+    
+        headers: {
+            'Authorization': 'Bearer ' + token
+        }
+    
+        })
+        .then(res => res.json())
+        .then(function(res){
+
+            if(res.hasOwnProperty('error')){
+                display_move.innerHTML = "API token fetch failed: " + res['error'] + ". add new API token in options. User can still use SAN format submissions through the input text box.";
+                
+            }
+            else {
+                console.log("Valid API token is in use!");
+                BOARD_API_TOKEN = token;
+                display_move.innerHTML = DISPLAY_MESSAGE;
+            }
+        });
+}
