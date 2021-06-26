@@ -234,7 +234,7 @@ function storeToken(token){
 
 async function testToken(token, isNewToken){
     //still throws 401 error in console if invalid token, there's probably some way to catch this
-    tokenMessage.innerHTML = "Checking Token...";
+    tokenStatus.innerHTML = "Checking Token...";
     fetch('https://lichess.org/api/account', {
     
         headers: {
@@ -246,8 +246,8 @@ async function testToken(token, isNewToken){
         .then(function(res){
 
             if(res.hasOwnProperty('error')){
-                if(isNewToken) tokenMessage.innerHTML = "Fetch failed: " + res['error'];
-                else tokenStatus.innerHTML = "Fetch failed: " + res['error'];
+                if(isNewToken) tokenMessage.innerHTML = "Fetch failed: " + res['error'] + ". Try creating a new token.";
+                else tokenStatus.innerHTML = "Fetch failed: " + res['error'] + ". Try creating a new token.";
                 
             }
             else {
