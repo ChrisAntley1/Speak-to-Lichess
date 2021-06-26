@@ -141,11 +141,8 @@ if(checkIfGamePage(lichessLocation)){
 
             result_command = createChessMove(processedCommand_array);
 
-            /**
-             * TODO: Check for UCI or SAN; either fetch or submit to text box accordingly.
-             * Adjust UCI check to also read special moves like promotions.
-             */
-            if(result_command.match(/[a-h][1-8][a-h][1-8]/)){
+            //API actually accepts invalid promotion moves and just ignores the promoting portion. For example: d2d4q will be interpreted as d2d4.
+            if(result_command.match(/[a-h][1-8][a-h][1-8]/) || result_command.match(/[a-h][1-8][a-h][1-8][qrbn]/)){
 
                 submitUCI(result_command);
                 console.log("result = " + result_command);
