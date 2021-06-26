@@ -18,7 +18,7 @@ const lichessLocation = location.href
 // if(!isOngoingGame) console.log("Not ongoing game page.");
 
 // else {
-
+//hello
 if(checkIfGamePage(lichessLocation)){
     /**
      * So here we know that the page may contain an active game. We need these variables declared outside of functions for global use.
