@@ -1,6 +1,4 @@
-/**
- * TODO: store and retrieve this from local storage
- */
+
 
 const lichessLocation = location.href
                     .replace('http://', '')
@@ -37,7 +35,6 @@ if(checkIfGamePage(lichessLocation)){
     // speechRecognitionGrammarList.addFromString(grammar, 1);
     // recognition.grammars = speechRecognitionGrammarList;
 
-    var BOARD_API_TOKEN = '';
 
     //initializing speech recognition 
     var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
@@ -48,7 +45,10 @@ if(checkIfGamePage(lichessLocation)){
     //Constants (declared as var for scope)
     var LISTEN_KEY_CODE = 17;
     var DISPLAY_MESSAGE = "Your move will appear here.";
+    var API_ADDRESS_TEMPLATE = "https://lichess.org/api/board/game/--GAME_ID--/move/--UCI_MOVE--".replace('--GAME_ID--', lichessLocation);
+    var BOARD_API_TOKEN = '';
     var NO_TOKEN_MESSAGE = "No API token! Open options page and set a valid API token to use both UCI format and automatic move submission."
+    
     //Maps for checking and handling key words
     var numberMap;
     var chessTermMap;
@@ -133,21 +133,35 @@ if(checkIfGamePage(lichessLocation)){
     //when recognition decides it has heard an entire phrase:
     recognition.onresult = function(event) {
 
-        var command = event.results[event.results.length - 1][0].transcript;
+        let command = event.results[event.results.length - 1][0].transcript;
 
         console.log("Raw voice input: " + command);
 
         if(commandFunctionMap.has(command)){
             submit_function = commandFunctionMap.get(command);
             result_command = command;
+
+            //store command in last_command 
+            chrome.storage.local.set({last_command: command});
         }
 
         else {
-            var processedCommand_array = processRawInput(command);
+            let processedCommand_array = processRawInput(command);
             console.log('Processed voice input: ' + processedCommand_array);
 
             result_command = createChessMove(processedCommand_array);
-            submit_function = inputMove;
+
+            //API actually accepts invalid promotion moves and just ignores the promoting portion. For example: d2d4q will be interpreted as d2d4.
+            if(result_command.match(/[a-h][1-8][a-h][1-8]/) || result_command.match(/[a-h][1-8][a-h][1-8][qrbn]/)){
+
+                submitUCI(result_command);
+                console.log("result = " + result_command);
+                display_move.innerHTML = "UCI move detected: " + result_command + ". submitting with Board API fetch request...";
+                return;
+            }
+    
+
+            submit_function = submitSAN;
             
             if(result_command == ''){
                 console.log("failed to create command.");
@@ -160,6 +174,13 @@ if(checkIfGamePage(lichessLocation)){
 
     };
 
+    /**
+     * TODO: there was something about the listening I wanted to change.
+     * 
+     * While using toggle listening, for the sake of speed, provide user key to immediately submit a move?
+     * In the same vein, provide key to ignore whatever has been heard in the immediate listening sesion?
+     * 
+     */
     recognition.onspeechend = function() {
         recognition.stop();
     };
@@ -170,137 +191,163 @@ if(checkIfGamePage(lichessLocation)){
 }
 
 
-    function processRawInput(command){
+function processRawInput(command){
+    
+    //replace any capital letters;
+    //put a space between 'letter-number' instances;
+    //replace any punctuation with a space. 
+    command = command.toLowerCase();
+
+    //this creates an extra space; doesn't seem to cause problems
+    command = command.replace(/([^0-9])([0-9])/g, '$1 $2');
+    command = command.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ');
+
+    //save the phrase to show the user in popup what phrase was heard (before replacing any words)
+    chrome.storage.local.set({last_command: command}, function(){
+
+        //can delete this
+        // chrome.storage.local.get(['last_command'], function(result){
+        // });
+    });
+
+    return replaceWords(command.split(' '));
+}
+function createChessMove(phrase){
+
+    var chessMove = '';
+    for(const word of phrase){
+        chessMove += extractCharacter(word);
+    }
+    return chessMove;
+}
+
+function replaceWords(wordArray){
+
+    let result = [];
+    let replacementPhrase = '';
+    for(const word of wordArray){
+        if(word_replacement_list[word] != null && word_replacement_list[word] != undefined){
+
+            //split replacement phrase. if just a single word, replacementPhrase will be an array of length 1; 
+            //no additional code should be needed.
+            replacementPhrase = word_replacement_list[word].split(' ');
+            for(const subWord of replacementPhrase){
+                result.push(subWord);
+            }
+        }
+
+        else result.push(word);
+    }
+
+    return result;
+}
+
+function extractCharacter(word){
+
+    if(word.match(/\d/) == null){
+
+        if(chessTermMap.has(word)){
+            return chessTermMap.get(word);
+        }
+
+        else if(numberMap.has(word)){
+            return numberMap.get(word);
+        }
+    }
+
+    //if here: get first letter of word/get digit
+    return word.charAt(0);
+}
+
+function replacePunctuation(word){
+
+    return word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ');
+}
+    
+function submitMove(){
+
+    if(result_command.length != 0){
         
-        //replace any capital letters;
-        //put a space between 'letter-number' instances;
-        //replace any punctuation with a space. 
-        command = command.toLowerCase();
-        command = command.replace(/([^0-9])([0-9])/g, '$1 $2');
-        command = command.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ');
+        submit_function();
+        result_command = '';
+        display_move.innerHTML = DISPLAY_MESSAGE;
+    
+    }
+    else console.log("no move stored yet.");
+}
 
-        //save the phrase to show the user in popup what phrase was heard (before replacing any words)
-        chrome.storage.local.set({last_command: command}, function(){
+function submitSAN(){
 
-            chrome.storage.local.get(['last_command'], function(result){
-            });
+    inputBox.value = result_command;
+}
+
+//Submit move with Board API instantly; no 'enter' event required.
+async function submitUCI(chessMove){
+
+    let api_url = API_ADDRESS_TEMPLATE.replace('--UCI_MOVE--', chessMove);
+    let fetchRequestObject = {
+
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + BOARD_API_TOKEN
+        }
+    
+      };
+    
+    fetch(api_url, fetchRequestObject)
+        .then(res => res.json())
+        .then(function(res){
+            
+            if(res['ok']){
+                display_move.innerHTML = "Successfully submitted move with Lichess API!";
+                
+            }
+
+            else {
+                display_move.innerHTML = "Error - API move submission failed...";
+            }
+            console.log(res);
+    });
+
+}
+
+function waitForInputBox(){
+
+
+    if(!input_found && document.getElementsByClassName('ready').length > 0){
+        
+        console.log("input found.");
+
+        inputBox = document.getElementsByClassName('ready')[0];
+        document.addEventListener('keydown', enterMove);
+        document.addEventListener('keydown', listenKeyDown);
+        document.addEventListener('keyup', listenKeyUp);
+        document.addEventListener('visibilitychange', function() {
+            stopDictation();
+            holding_listen_key = false;
         });
-
-        return replaceWords(command.split(' '));
-    }
-    function createChessMove(phrase){
-
-        var chessMove = '';
-        for(const word of phrase){
-            chessMove += extractCharacter(word);
-        }
-        return chessMove;
-    }
-
-    function replaceWords(wordArray){
-
-        var result = [];
-        var replacementPhrase = '';
-        for(const word of wordArray){
-            if(word_replacement_list[word] != null && word_replacement_list[word] != undefined){
-
-                //split replacement phrase. if just a single word, replacementPhrase will be an array of length 1; 
-                //no additional code should be needed.
-                replacementPhrase = word_replacement_list[word].split(' ');
-                for(const subWord of replacementPhrase){
-                    result.push(subWord);
-                }
-            }
-
-            else result.push(word);
-        }
-
-        return result;
-    }
-
-    function extractCharacter(word){
-
-        if(word.match(/\d/) == null){
-
-            if(chessTermMap.has(word)){
-                return chessTermMap.get(word);
-            }
-
-            else if(numberMap.has(word)){
-                return numberMap.get(word);
-            }
-        }
-
-        //if here: get first letter of word/get digit
-        return word.charAt(0);
-    }
-
-    function replacePunctuation(word){
-
-        return word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ');
-    }
         
-    function submitMove(){
+        input_found = true;
 
-        if(result_command.length != 0){
-            
-            submit_function();
-            result_command = '';
-            display_move.innerHTML = DISPLAY_MESSAGE;
+    }
+
+    if(input_found && !underboard_found && document.getElementsByClassName('round__underboard').length > 0){ 
         
-        }
+        console.log("underboard found.");
+          var under_board = document.getElementsByClassName('round__underboard')[0];
+          under_board.insertBefore(display_move, under_board.firstChild);
+          underboard_found = true;
+      }
 
-        else console.log("no move stored yet.");
+
+    if(underboard_found && !material_bottom_found && (document.getElementsByClassName('material material-bottom').length > 0)){
+        
+        console.log("material bottom found.");
+
+        document.getElementsByClassName('material material-bottom')[0].appendChild(display_listen_status);        
+        material_bottom_found = true;
+        observer.disconnect();
     }
-
-    function inputMove(){
-
-        if(result_command.match(/[a-h][1-8][a-h][1-8]/)){
-
-            //was getting ready to implement this, then remembered that 
-            //square-to-square format was failing on Lichess =\
-            console.log("Square to square format not yet supported. wompwomp =/");
-        }
-        else inputBox.value = result_command;
-    }
-
-    function waitForInputBox(){
-
-
-        if(!input_found && document.getElementsByClassName('ready').length > 0){
-            
-            console.log("input found.");
-
-            inputBox = document.getElementsByClassName('ready')[0];
-            document.addEventListener('keydown', enterMove);
-            document.addEventListener('keydown', listenKeyDown);
-            document.addEventListener('keyup', listenKeyUp);
-            document.addEventListener('visibilitychange', function() {
-                stopDictation();
-                holding_listen_key = false;
-            });
-            
-            input_found = true;
-
-        }
-
-        if(input_found && !underboard_found && document.getElementsByClassName('round__underboard').length > 0){ 
-            
-            console.log("underboard found.");
-
-            var under_board = document.getElementsByClassName('round__underboard')[0];
-            under_board.insertBefore(display_move, under_board.firstChild);
-            underboard_found = true;
-        }
-
-        if(underboard_found && !material_bottom_found && (document.getElementsByClassName('material material-bottom').length > 0)){
-            
-            console.log("material bottom found.");
-
-            document.getElementsByClassName('material material-bottom')[0].appendChild(display_listen_status);        
-            material_bottom_found = true;
-            observer.disconnect();
-        }
 }
 
 function enterMove(e){
