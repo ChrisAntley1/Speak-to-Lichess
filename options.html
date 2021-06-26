@@ -11,15 +11,20 @@
 </head>
 <body class="bootstrap-dark, center">
 
-    <img src="images/Yellow Chess Talk 512.png" alt="" style="width: 20%; height: auto;">
+    <br>
+    <img src="images/Yellow Chess Talk 512.png" alt="" style="width: 15%; height: auto;">
     <h1>Speak to Lichess - Options</h1>
     
     <br>
     <h3>Board API Token</h3>
-    <h5>Checking token status with Lichess...</h5>
-    <span id="token_status">unknown</span>
     <br>
-    <p>A personal Lichess API token is required to use automatic submission. 
+    <img src="images/redChess512.png" id="status_image" style="width: 10%; height: auto;">
+    <br>
+    <br>
+    <h5 id="token_status">Checking token status with Lichess...</h5>
+
+    <br>
+    <p style="font-size: large;">A personal Lichess API token is required to use automatic submission. 
         The button below will navigate you to Lichess's token creation page.
         A name and the required scope has already been set; do not add any unnecessary permissions.
         Simply press the blue 'submit' button, and copy the generated token into the field below.</p>
@@ -54,8 +59,9 @@
         <input type="text" id="correct_input" name="correct_input">
 
         <input type="button" value="Submit" id="submit"> 
-        <br><br>
-       
+        <br>
+        <span id="display_message"></span>
+        <br>
         <label for="trouble_input">Delete this word entry:</label>
         <input type="text" id="delete_input" name="delete_input">
         <input type="button" value="Delete word" id="delete"> 

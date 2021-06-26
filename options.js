@@ -5,6 +5,8 @@
  */
 
 const _GENERATE_TOKEN_URL = 'https://lichess.org/account/oauth/token/create?scopes[]=board:play&description=board_play_token';
+const VALID_TOKEN_MESSAGE = "Current token is valid for Lichess user ";
+const NO_TOKEN_MESSAGE = "No token stored."
 
 let trouble_input = document.querySelector('#trouble_input');
 let correct_input = document.querySelector('#correct_input');
@@ -18,11 +20,15 @@ let tokenInput = document.getElementById('board_token_input');
 let tokenButton = document.getElementById('submit_token_button');
 let tokenMessage = document.getElementById('token_message');
 let tokenStatus = document.getElementById('token_status');
+let statusImage = document.getElementById('status_image');
+let displayMessage = document.getElementById('display_message');
+
 var word_replacement_list;
 var replacement_word_keys;
 
 
 //nephew delete this 
+//nvm
 var board_api_token;
 
 
@@ -34,6 +40,16 @@ chrome.storage.local.get(word_replacement_list, function(result){
 
 });
 
+chrome.storage.local.get(['__board_api_token'], function(result){
+
+    if(!result.hasOwnProperty('__board_api_token')){
+        tokenStatus.innerHTML = NO_TOKEN_MESSAGE;
+    }
+
+    else {
+        testToken(result['__board_api_token'], false);
+    }
+});
 var ignoreList = ['last_command', '__toggle', '__board_api_token'];
 
 submit_button.addEventListener('click', submitPhrase);
@@ -85,10 +101,23 @@ function addTableRows(array) {
 
 function submitPhrase(){
     
-    if(trouble_input.value === '' || correct_input.value === '') return;
-
     var trouble_word = trouble_input.value;
-    var correct_phrase = correct_input.value;
+    var correct_phrase = correct_input.value; 
+    if(trouble_word == null || trouble_word == undefined || trouble_word.length == 0) return;
+    if(correct_phrase == null || correct_phrase == undefined || correct_phrase.length == 0) return;
+    
+    if(!trouble_word.match(/^[a-z0-9]+$/i)){
+        trouble_input.value = '';
+        displayMessage.innerHTML = "Replacement word must be alphanumeric."
+        return;
+    }
+
+    if(trouble_word.includes(' ')){
+        trouble_input.value = '';
+        displayMessage.innerHTML = "Replacement word must be a single word and contain no spaces."
+        return;
+
+    }
     console.log("replace " + trouble_word + " with: " + correct_phrase);
 
     var phrase_updated = word_replacement_list.hasOwnProperty(trouble_word);
@@ -101,10 +130,10 @@ function submitPhrase(){
         chrome.storage.local.set(word_replacement_list);
 
         if (phrase_updated){
-            update_message.textContent = "Word updated: " + trouble_word + " will now be interpreted as: " + correct_phrase;
+            update_message.textContent = "Word updated: '" + trouble_word + "' will now be interpreted as: '" + correct_phrase +"'";
         }
 
-        else update_message.textContent = "Word added: " + trouble_word + " will now be interpreted as: " + correct_phrase;
+        else update_message.textContent = "Word added: '" + trouble_word + "' will now be interpreted as: '" + correct_phrase +"'";
 
         refresh_message.textContent = "Replacement table updated, refresh page to see changes!";
         correct_input.value = '';
@@ -117,7 +146,7 @@ function checkProposedPhrase(phrase){
 
     if (/[,;:"<>.'?\-]/.test(phrase)) {
         correct_input.value = '';
-        display_result.textContent = "Replacement phrase must not include punctuation. Use space ' ' to seperate words."
+        displayMessage.innerHTML = "Replacement phrase cannot not include punctuation. Use space ' ' to seperate words."
         return false;
     }
     
@@ -132,7 +161,7 @@ function checkProposedPhrase(phrase){
 function deleteWord(){
 
     var word_to_delete = delete_input.value;
-    if (word_to_delete == null) return;
+    if(word_to_delete == null || word_to_delete == undefined || word_to_delete.length == 0) return;
 
     if(word_replacement_list.hasOwnProperty(word_to_delete)){
 
@@ -153,11 +182,17 @@ function deleteWord(){
 
 
         refresh_message.textContent = "Replacement table updated, refresh page to see changes!";
-        delete_input.value = '';
 
         update_message.textContent = "Word removed: " + word_to_delete + " will no longer be replaced.";
 
     }
+
+    else {
+        update_message.textContent = word_to_delete + " is already not being replaced.";
+    }
+
+    delete_input.value = '';
+
 }
 
 function generateToken(){
@@ -168,32 +203,9 @@ async function submitToken(){
     let token = tokenInput.value;
     if (checkTokenFormat(token)){
 
-        //still throws 401 error in console if invalid token, there's probably some way to catch this
-        tokenMessage.innerHTML = "Checking Token...";
-        await fetch('https://lichess.org/api/account', {
-        
-            headers: {
-              'Authorization': 'Bearer ' + token
-            }
-        
-            })
-            .then(res => res.json())
-            .then(function(res){
-    
-                if(res.hasOwnProperty('error')){
-                    tokenMessage.innerHTML = "Fetch failed: " + res['error'];
-                }
-                else {
-                    tokenMessage.innerHTML = "Success! entered token for Lichess user " + res['username'];
-                    storeToken(token);
-                    tokenStatus.innerHTML = "You have a valid token!"
-                    return;
-                }
-            });
-    
+        testToken(token, true);
     } 
 
-    else tokenStatus.innerHTML = "NO TOKEN"
     tokenInput.value = '';
 }
 
@@ -208,6 +220,7 @@ function checkTokenFormat(token){
         return false;
     }
 
+    tokenMessage.innerHTML = 'Format appears valid, checking with Lichess...';
     return true;
 }
 
@@ -217,4 +230,33 @@ function storeToken(token){
             console.log(result);
         });
     });
+}
+
+async function testToken(token, isNewToken){
+    //still throws 401 error in console if invalid token, there's probably some way to catch this
+    tokenMessage.innerHTML = "Checking Token...";
+    fetch('https://lichess.org/api/account', {
+    
+        headers: {
+            'Authorization': 'Bearer ' + token
+        }
+    
+        })
+        .then(res => res.json())
+        .then(function(res){
+
+            if(res.hasOwnProperty('error')){
+                if(isNewToken) tokenMessage.innerHTML = "Fetch failed: " + res['error'];
+                else tokenStatus.innerHTML = "Fetch failed: " + res['error'];
+                
+            }
+            else {
+                if(isNewToken){
+                    storeToken(token);
+                    tokenMessage.innerHTML = 'Success!';
+                } 
+                tokenStatus.innerHTML = VALID_TOKEN_MESSAGE + res['username'];
+                statusImage.src = "images/greenChess512.png";
+            }
+        });
 }
