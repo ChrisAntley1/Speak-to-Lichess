@@ -1,17 +1,30 @@
 
+
+/**
+ * TODO: Make input value checks consistent 
+ */
+
 const _GENERATE_TOKEN_URL = 'https://lichess.org/account/oauth/token/create?scopes[]=board:play&description=board_play_token';
 
-var trouble_input = document.querySelector('#trouble_input');
-var correct_input = document.querySelector('#correct_input');
-var submit_button = document.querySelector('#submit');
-var delete_button = document.querySelector('#delete');
-var update_message = document.querySelector('#update_message');
-var refresh_message = document.querySelector('#refresh_message');
-var delete_input = document.querySelector('#delete_input');
+let trouble_input = document.querySelector('#trouble_input');
+let correct_input = document.querySelector('#correct_input');
+let submit_button = document.querySelector('#submit');
+let delete_button = document.querySelector('#delete');
+let update_message = document.querySelector('#update_message');
+let refresh_message = document.querySelector('#refresh_message');
+let delete_input = document.querySelector('#delete_input');
 let generateButton = document.getElementById('generate_token_button');
-
+let tokenInput = document.getElementById('board_token_input');
+let tokenButton = document.getElementById('submit_token_button');
+let tokenMessage = document.getElementById('token_message');
+let tokenStatus = document.getElementById('token_status');
 var word_replacement_list;
 var replacement_word_keys;
+
+
+//nephew delete this 
+var board_api_token;
+
 
 chrome.storage.local.get(word_replacement_list, function(result){
     word_replacement_list = result;
@@ -21,11 +34,17 @@ chrome.storage.local.get(word_replacement_list, function(result){
 
 });
 
-var ignoreList = ['last_command', '__toggle'];
+var ignoreList = ['last_command', '__toggle', '__board_api_token'];
 
-submit_button.addEventListener("click", submitPhrase);
-delete_button.addEventListener("click", deleteWord);
+submit_button.addEventListener('click', submitPhrase);
+delete_button.addEventListener('click', deleteWord);
 generateButton.addEventListener('click', generateToken);
+
+tokenButton.addEventListener('click', submitToken);
+tokenInput.addEventListener('keyup', function(event){
+    // console.log(event.key);
+    if (event.key === 'Enter') submitToken();
+});
 
 function addTableRows(array) {
     var table = document.getElementById('replacement_table');
@@ -68,9 +87,10 @@ function submitPhrase(){
     
     if(trouble_input.value === '' || correct_input.value === '') return;
 
-    console.log("replace " + trouble_input.value + " with: " + correct_input.value);
     var trouble_word = trouble_input.value;
     var correct_phrase = correct_input.value;
+    console.log("replace " + trouble_word + " with: " + correct_phrase);
+
     var phrase_updated = word_replacement_list.hasOwnProperty(trouble_word);
     //TODO: vet the input phrase for formatting correctness
 
@@ -142,4 +162,59 @@ function deleteWord(){
 
 function generateToken(){
     window.open(_GENERATE_TOKEN_URL, '_blank');
+}
+
+async function submitToken(){
+    let token = tokenInput.value;
+    if (checkTokenFormat(token)){
+
+        //still throws 401 error in console if invalid token, there's probably some way to catch this
+        tokenMessage.innerHTML = "Checking Token...";
+        await fetch('https://lichess.org/api/account', {
+        
+            headers: {
+              'Authorization': 'Bearer ' + token
+            }
+        
+            })
+            .then(res => res.json())
+            .then(function(res){
+    
+                if(res.hasOwnProperty('error')){
+                    tokenMessage.innerHTML = "Fetch failed: " + res['error'];
+                }
+                else {
+                    tokenMessage.innerHTML = "Success! entered token for Lichess user " + res['username'];
+                    storeToken(token);
+                    tokenStatus.innerHTML = "You have a valid token!"
+                    return;
+                }
+            });
+    
+    } 
+
+    else tokenStatus.innerHTML = "NO TOKEN"
+    tokenInput.value = '';
+}
+
+function checkTokenFormat(token){
+    if(token == null || token == undefined || token.length == 0){
+        tokenMessage.innerHTML = "No token entered.";
+        return false;
+    }
+
+    if(token.length != 16){
+        tokenMessage.innerHTML = "Invalid token.";
+        return false;
+    }
+
+    return true;
+}
+
+function storeToken(token){
+    chrome.storage.local.set({__board_api_token: token}, function(){
+        chrome.storage.local.get(['__board_api_token'], function(result){
+            console.log(result);
+        });
+    });
 }

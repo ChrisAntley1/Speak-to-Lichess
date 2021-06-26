@@ -12,13 +12,12 @@
 <body class="bootstrap-dark, center">
 
     <img src="images/Yellow Chess Talk 512.png" alt="" style="width: 20%; height: auto;">
-    <h1>Options - Speak to Lichess</h1>
+    <h1>Speak to Lichess - Options</h1>
     
     <br>
     <h3>Board API Token</h3>
-    <h5>Status:</h5>
-    <span>Checking token status with Lichess...</span>
-    <br>
+    <h5>Checking token status with Lichess...</h5>
+    <span id="token_status">unknown</span>
     <br>
     <p>A personal Lichess API token is required to use automatic submission. 
         The button below will navigate you to Lichess's token creation page.
@@ -29,6 +28,9 @@
         <br>
         <input type="text" id="board_token_input" placeholder ="paste auth token here" style="text-align: center;">
         <input type="button" id="submit_token_button" value="submit token">
+        <br>
+        <span id="token_message">token message go brrr</span>
+
     </div>  
     <br>
     <br>
