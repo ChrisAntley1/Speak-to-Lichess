@@ -255,7 +255,7 @@ async function testToken(token, isNewToken){
                     storeToken(token);
                     tokenMessage.innerHTML = 'Success!';
                 } 
-                tokenStatus.innerHTML = VALID_TOKEN_MESSAGE + res['username'];
+                tokenStatus.innerHTML = VALID_TOKEN_MESSAGE + res['username'] +".";
                 statusImage.src = "images/greenChess512.png";
             }
         });
