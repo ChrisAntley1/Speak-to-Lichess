@@ -4,7 +4,7 @@ var trouble_input = document.querySelector('#trouble_input');
 var correct_input = document.querySelector('#correct_input');
 var submit = document.querySelector('#submit');
 var manage = document.querySelector('#manage');
-var display_result = document.querySelector('#display_result');
+var displayResult = document.querySelector('#display_result');
 var hold_radio = document.querySelector('#hold');
 var toggle_radio = document.querySelector('#toggle');
 
@@ -23,7 +23,7 @@ chrome.storage.local.get(['last_command'], function(result){
     if(last_command == undefined){
         last_command = 'nothing yet!'
     }
-    command.textContent = last_command;
+    command.innerHTML = last_command;
 });
 
 chrome.storage.local.get(TOGGLE_LISTEN, function(result){
@@ -46,22 +46,36 @@ toggle_radio.addEventListener("change", function(event){
     chrome.storage.local.set(TOGGLE_LISTEN);
 });
 submit.addEventListener("click", submitPhrase);
-manage.addEventListener("click", managePhrases);
+manage.addEventListener("click", openOptions);
 
 function submitPhrase(){
     
-    if(trouble_input.value === '' || correct_input.value === '') return;
 
-    console.log("replace " + trouble_input.value + " with: " + correct_input.value);
     var trouble_word = trouble_input.value;
+    var correct_phrase = correct_input.value; 
+    if(trouble_word == null || trouble_word == undefined || trouble_word.length == 0) return;
+    if(correct_phrase == null || correct_phrase == undefined || correct_phrase.length == 0) return;
 
-    if (speech_to_text_Lichess_fuzzy_words.hasOwnProperty(trouble_word)){
-        console.log(trouble_word + " is already a replaced word...");
-        display_result.textContent = trouble_word + " is already replaced; manage your replaced words to change.";
+    console.log(" Attempting to replace " + trouble_word + " with: " + correct_phrase);
+
+    if(!trouble_word.match(/^[a-z0-9]+$/i)){
+        trouble_input.value = '';
+        displayResult.innerHTML = "Replacement word must be alphanumeric."
         return;
     }
 
-    var correct_phrase = correct_input.value;
+    if(trouble_word.includes(' ')){
+        trouble_input.value = '';
+        displayResult.innerHTML = "Replacement word must be a single word and contain no spaces."
+        return;
+
+    }
+
+    if (speech_to_text_Lichess_fuzzy_words.hasOwnProperty(trouble_word)){
+        console.log(trouble_word + " is already a replaced word...");
+        displayResult.innerHTML = trouble_word + " is already replaced; manage your replaced words to change.";
+        return;
+    }
 
     //TODO: vet the input phrase for formatting correctness
 
@@ -70,21 +84,21 @@ function submitPhrase(){
         speech_to_text_Lichess_fuzzy_words[trouble_word] = correct_phrase;
         chrome.storage.local.set(speech_to_text_Lichess_fuzzy_words);
 
-        display_result.textContent = trouble_word + " will now be reinterpreted as: " + correct_phrase;
+        displayResult.innerHTML = trouble_word + " will now be reinterpreted as: " + correct_phrase;
         correct_input.value = '';
         trouble_input.value = '';
 
     }
 }
 
-function managePhrases(){
-    console.log("popup fuzzy words:");
-    console.log(speech_to_text_Lichess_fuzzy_words);
+function openOptions(){
+    // console.log("popup replaced words:");
+    // console.log(speech_to_text_Lichess_fuzzy_words);
 
-    chrome.storage.local.get(speech_to_text_Lichess_fuzzy_words, function(result){
-        console.log("local fuzzy words:");
-        console.log(result);
-    });
+    // chrome.storage.local.get(speech_to_text_Lichess_fuzzy_words, function(result){
+    //     console.log("local replaced words:");
+    //     console.log(result);
+    // });
     
     chrome.runtime.openOptionsPage();
 }
@@ -93,7 +107,7 @@ function checkProposedPhrase(phrase){
 
     if (/[,;:"<>.'?\-]/.test(phrase)) {
         correct_input.value = '';
-        display_result.textContent = "Replacement phrase must not include punctuation. Use space ' ' to seperate words."
+        displayResult.innerHTML = "Replacement phrase must not include punctuation. Use space ' ' to seperate words."
         return false;
     }
     
