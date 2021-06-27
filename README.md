@@ -8,7 +8,9 @@ Demo: https://youtu.be/yqbm0kMNjAM
 
 Be sure to check out the How to Use section and example commands!
 
-**DISCLAIMER: Speak to Lichess does require some keyboard input to submit moves and to record speech. In addition,  to specify the letter of a square, you must say a word that begins with that letter, such as "delta" for the d column. The dictation software is very bad at understanding individual letters!**
+**Now supports complete voice control to submit moves! Require UCI format moves. In addition, user must provide personal API token; instructions in options page.**
+
+**To specify the letter of a square, you must say a word that begins with that letter, such as "delta" for the d column. The dictation software is very bad at understanding individual letters!**
 
 **Does not support the word "to"! Commands such as "bishop to hotel five" will be interpreted as "bishop 2 hotel 5", and will submit the move "b2h5".**
 

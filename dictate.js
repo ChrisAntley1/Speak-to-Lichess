@@ -1,4 +1,15 @@
 
+/**
+ * TODO: General TODO for this trip that I can think of currently:
+ * 
+ * 1. Find out best practice when it comes to crediting self in actual files (And possibly in the README)
+ * 
+ * 2. Create new video showcasing UCI automatic input; opening options, creating, and submitting an API token; 
+ * 
+ * 3. Consider ways to use the alternative word/ phrase interpretations of recognition
+ * 
+ * 4. To begin broaching other API requests, could implement match queuing with parameters; would look great in a demo
+ */
 
 const lichessLocation = location.href
                     .replace('http://', '')
@@ -180,6 +191,8 @@ if(checkIfGamePage(lichessLocation)){
      * While using toggle listening, for the sake of speed, provide user key to immediately submit a move?
      * In the same vein, provide key to ignore whatever has been heard in the immediate listening sesion?
      * 
+     * Implement known single syllable word list for letters - possibly
+     * 
      */
     recognition.onspeechend = function() {
         recognition.stop();
@@ -314,6 +327,10 @@ async function submitUCI(chessMove){
 function waitForInputBox(){
 
 
+    /**
+     * TODO: Find the box that gets added at the bottom of game screens between players; append submit_message as first child
+     * after it has been added to try and place it above the box.
+     */
     if(!input_found && document.getElementsByClassName('ready').length > 0){
         
         console.log("input found.");
@@ -500,6 +517,8 @@ function checkIfGamePage(location){
         //check if alphanumeric; if not, then can't be game page
         /**
          * TODO: Make sure the above condition is actually the case; not sure if options can be attached to game page url!
+         * 
+         * Think this is fine but leave for now
          */
         if(location.match(/^[a-z0-9]+$/i)){
 
