@@ -8,29 +8,18 @@ Demo: https://youtu.be/yqbm0kMNjAM
 
 Be sure to check out the How to Use section and example commands!
 
-**Now supports complete voice control to submit moves! Require UCI format moves. In addition, user must provide personal API token; instructions in options page.**
+**Now supports complete voice control to submit moves in rapid, classical and correspondence time formats! Require UCI format moves. In addition, user must provide personal API token; instructions in options page.**
 
 **To specify the letter of a square, you must say a word that begins with that letter, such as "delta" for the d column. The dictation software is very bad at understanding individual letters!**
 
 **Does not support the word "to"! Commands such as "bishop to hotel five" will be interpreted as "bishop 2 hotel 5", and will submit the move "b2h5".**
 
-Takes advantage of Lichess's optional text input box to submit SAN format moves. Uses the Web Speech API to process spoken word into chess moves (with a little extra processing by the extension to more accurately recognize moves).
+Takes advantage of Lichess's optional text input box to submit SAN format moves. Does require user to press 'enter' to submit moves.
 
-### Install Guide:
+Uses Lichess's Board API to (automatically!) submit UCI format moves in rapid, classical, and correspondence games. 
 
---Extension Store submission pending--
+Uses the Web Speech API to process spoken word into chess moves (with a little extra processing by the extension to more accurately recognize moves).
 
-1. Download the latest release zip file from GitHub (usually somewhere on the right of the page) or clone the repository. 
-
-2. Unzip the package; take note of where the resulting folder exists. 
-
-3. Go to chrome://extensions 
-
-4. Toggle on developer mode in the top right, then click 'load unpacked' on the top left; select the "Speech-to-Text-Lichess" folder that you extracted in step 2.
-
-5. Done! You should see Speak to Lichess on your extension page. Make sure it is enabled.
-
-6. Optional (but recommended!): At the top right of chrome, click the puzzle piece icon, and pin Speak to Lichess. This will let you use the pop up menu to specify words that the speech recognition software is mishearing and manage your list of replaced words. 
 
 ### How to Use:
 
@@ -48,7 +37,9 @@ The popup menu will display your last spoken phrase as the speech software under
 
 Speak to Lichess already replaces a number of words that cause issues (such as "ford"). You can view, edit, and add words to the Replacement List in the options page.
 
-### Command Guide:
+### SAN Command Guide:
+
+SAN format moves can be used in any time control and do require the user to press 'enter' to submit.
 
 Piece -> Word -> Number 
 
@@ -56,25 +47,14 @@ Piece -> Word -> Number
 
 To specify a square, say a word that starts with the letter of the coordinate you wish to specify followed by the number. For example, you could say "delta four" to specify the D4 square. The NATO phonetic alphabet is a great starting point for words that the speech recognition software consistently hears (I have run into a bit of trouble with 'foxtrot' though). Names also work well, ie "Frank six" to specify F6. 
 
-UCI format (*Square* to *square*) phrases will not be interpreted correctly! 
-
 "To" will always be interpreted as "2".
 
 Correctly processes "capture", "take", "short", "long", "castle", "promote", "equals" into chess notation. User could theoretically add additional chess related words using the "replace words" feature.
 
-Additional, non-move commands supported:
-
-"resign"
-"offer draw"
-"take back"
-"accept"
-"decline"
-"abort"
-
 More command info:
 https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0Tsxo/edit?usp=sharing
 
-### Example Commands:
+### Example SAN Commands:
 
 "bobby four" -> b4
 
@@ -88,17 +68,72 @@ https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0T
 
 "offer draw" -> offers a draw to the opponent
 
+### UCI Command Guide:
+
+UCI commands are supported in rapid, classical, and correspondence time controls. Requires user to submit a personal API token in the options page; see instructions below example UCI commands.
+
+UCI format specifies the square of the piece to be moved, and the square that piece should move to (a1c3). The format does not change if capturing a piece (e1e8 to capture a rook on e8 with your rook on e1). For castling, follow this format with the kings starting and ending squares (e1g1). For pawn promotions, add the promoting piece to the end of the regular format (e7e8q).
+
+Word -> Number -> Word -> number
+
+Specify squares in the same manner as you would for SAN format: a word that starts with the target letter, followed by the number. 
+
+### Example UCI Commands:
+
+"delta two delta four" -> d2d4
+
+"baseball one charlie three" -> b1c3
+
+"elephant eight computer eight" -> e8c8 (black queenside castle)
+
+"gorilla seven fiesta eight queen" ->g7f8q (g7 pawn captures on f8 and promotes to queen)
+
+### Enabling UCI format
+
+A personal Lichess API token is required to use both automatic submission and UCI format. You can navigate from the options page to Lichess's token creation page. The name and required scope will already be set; do not add any unnecessary permissions. Simply press the blue 'submit' button, and copy the generated token into the appropriate field in Options, and submit.
+
+## Warning: Do not add additional permissions to your token! Token is stored in plain text!
+
+### Additional Commands:
+
+"resign"
+"offer draw"
+"take back"
+"accept"
+"decline"
+"abort"
+"find a game"
+"rematch"
+"flip board"
+"analyze game"
+bonus: "flip table" (also resigns game)
+
+### Install Guide:
+
+--Extension Store submission pending--
+
+1. Download the latest release zip file from GitHub (usually somewhere on the right of the page) or clone the repository. 
+
+2. Unzip the package; take note of where the resulting folder exists. 
+
+3. Go to chrome://extensions 
+
+4. Toggle on developer mode in the top right, then click 'load unpacked' on the top left; select the "Speech-to-Text-Lichess" folder that you extracted in step 2.
+
+5. Done! You should see Speak to Lichess on your extension page. Make sure it is enabled.
+
+6. At the top right of chrome, click the puzzle piece icon, and pin Speak to Lichess. This will let you use the pop up menu to specify words that the speech recognition software is mishearing and manage your list of replaced words. 
+
 ### Notes:
 
-Web Speech API (https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) is an experimental project. It is normally able to listen for sets of words supplied in the form of grammar objects. However, this feature is broken in Chrome, and has been for a while. As a result, the speech-to-text software often misinterprets the user's voice input. In addition, it seems most dictation software has a hard time discerning individual letters. For example, "B", "D", and "E" are often mistaken for one another. 
+Web Speech API (https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) is an experimental project. It is normally able to listen for sets of words supplied in the form of grammar objects. However this feature breaks when used in Chrome. As a result, the speech-to-text software often misinterprets the user's voice input. In addition, it seems most dictation software has a hard time discerning individual letters. For example, "B", "D", and "E" are often mistaken for one another. 
 
 With that in mind, most of the work in this project focused on taking user input supplied by speech recognition; formatting it; replacing words that were most likely not what the user intended; and extracting chess moves from that resulting phrase.
 
+TODO: change these 2 sections below
 The app does not interact with Lichess's chessboard directly; it simply creates a text command and submits it to the move input box. It does interact with the "resign", "abort", "draw", etc. buttons. (See https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0Tsxo/edit?usp=sharing)
 
 My initial goal was to completely control the game with spoken word and require no keyboard input. However, the move input textbox does not automatically enter values without real keyboard input (Programmaticly triggering keyboard events failed to make the input box submit moves in my experience).
-
-Hoping to implement the Lichess API in future updates to make Speak to Lichess completely voice controlled and hands free!
 
 Speak to Lichess is Open Source. Feedback welcome!
 

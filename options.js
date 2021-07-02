@@ -22,10 +22,10 @@ let tokenMessage = document.getElementById('token_message');
 let tokenStatus = document.getElementById('token_status');
 let statusImage = document.getElementById('status_image');
 let displayMessage = document.getElementById('display_message');
+let searchInput = document.getElementById('search_input');
 
 var word_replacement_list;
 var replacement_word_keys;
-
 
 //nephew delete this 
 //nvm
@@ -55,6 +55,7 @@ var ignoreList = ['last_command', '__toggle', '__board_api_token'];
 submit_button.addEventListener('click', submitPhrase);
 delete_button.addEventListener('click', deleteWord);
 generateButton.addEventListener('click', generateToken);
+searchInput.addEventListener('keyup', filterBySearch);
 
 tokenButton.addEventListener('click', submitToken);
 tokenInput.addEventListener('keyup', function(event){
@@ -74,7 +75,7 @@ function addTableRows(array) {
         } 
         // Create the table row:
         var item = document.createElement('tr');
-
+        item.id = array[i]+word_replacement_list[array[i]];
         // add the problematic word and it's replacement phrase:
         var problem_col = document.createElement('td');
         problem_col.innerHTML = array[i];
@@ -99,6 +100,41 @@ function addTableRows(array) {
     return table;
 }
 
+//doesn't quite work properly
+//TODO: make work gud
+function filterBySearch(){
+
+    if (document.activeElement === searchInput){
+        
+        let searchText = searchInput.value;
+        for(key of replacement_word_keys){
+            
+            if(ignoreList.includes(key)){
+                continue;
+            } 
+
+            let tableRow = document.getElementById(key+word_replacement_list[key]);
+
+            if(searchText == null || searchText == undefined || searchText.length == 0){
+                tableRow.style.display = null;
+                // tableRow.style.width = "100%";
+            }
+            else if(key.includes(searchText)){
+                tableRow.style.display = null;
+                // tableRow.style.width = "100%";
+            }
+
+            else if(word_replacement_list[key].includes(searchText)){
+                tableRow.style.display = null;
+                // tableRow.style.width = "100%";
+            }
+            
+            else {
+                tableRow.style.display = "none";
+            }
+        }
+    }
+}
 function submitPhrase(){
     
     var trouble_word = trouble_input.value;

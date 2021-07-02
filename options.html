@@ -29,6 +29,10 @@
         The name and required scope has already been set; do not add any unnecessary permissions.
         Simply press the blue 'submit' button, and copy the generated token into the field below.</p>
     
+    <strong style="font-size: large;">Only available in rapid, classical, and correspondence formats!</strong>
+    <br>
+    <br>
+
     <strong style="color: red; background-color: white; font-size: large;">WARNING: Do not add additional permissions to your token!
         Token is stored in plain text!</strong>
     <br>
@@ -56,13 +60,18 @@
         </table>
     </div>
 
+    <br>
+    <input type="text" name="" id="search_input" placeholder ="search replacement table" style="width: 200px;">
+    <br>
+    <br>
     <div class="input_div">
         <label for="trouble_input">Replace this word:</label>
         <input type="text" id="trouble_input" name="trouble_input">
 
         <label for="correct_input">with this word or phrase:</label>
         <input type="text" id="correct_input" name="correct_input">
-
+        <br>
+        <br>
         <input type="button" value="Submit" id="submit"> 
         <br>
         <span id="display_message"></span>

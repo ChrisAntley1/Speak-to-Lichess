@@ -2,13 +2,24 @@
 /**
  * TODO: General TODO for this trip that I can think of currently:
  * 
- * 1. Find out best practice when it comes to crediting self in actual files (And possibly in the README)
- * 
  * 2. Create new video showcasing UCI automatic input; opening options, creating, and submitting an API token; 
  * 
- * 3. Consider ways to use the alternative word/ phrase interpretations of recognition
  * 
- * 4. To begin broaching other API requests, could implement match queuing with parameters; would look great in a demo
+ * 3. Consider ways to use the alternative word/ phrase interpretations of recognition
+ * --seems hard, could be worthwhile though
+ * 
+ * 6. Board API cannot be used with blitz or bullet! More incentive to find way to submit to textbox
+ * --input events have an isTrusted flag which is set when the event is a real, triggered by the user event and not a 
+ *   programmatically generated event. 
+ * 
+ * 8. Update messages about UCI and automatic submission only being available in rapid, classical, and correspondence.
+ * 
+ * 9. Implement table flip command ^^
+ * --simple flip implemented! resigns on flip, naturally. Could look better with more work.
+ * -- instead of flying off the page, could vary speed and have them "land" in locations on the page.
+ * 
+ * 10. Dynamically update replacement table in options page
+ * --complete for search table
  */
 
 const lichessLocation = location.href
@@ -34,10 +45,10 @@ const lichessLocation = location.href
 if(checkIfGamePage(lichessLocation)){
     /**
      * So here we know that the page may contain an active game. We need these variables declared outside of functions for global use.
-     * However, we could instantiate them in an async function that waits for the results of the API call; and if the API call returns negative, then 
-     * we can save some space and work by not initializing anything else. 
+     * However, we could instantiate them in an async function that waits for the results of the API call; 
+     * and if the API call returns negative, then we can save some space and work by not initializing anything else. 
      */
-    console.log("Might be ongoing game, doing the thing");
+    // console.log("Might be ongoing game, doing the thing");
 
     // Grammar = broken
     // var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
@@ -68,7 +79,8 @@ if(checkIfGamePage(lichessLocation)){
     //creating our key word maps
     createKeyWordMaps();
 
-    //HTML elements. inputBox is created by another script most likely and is not yet created, even when script is run at document_end (in manifest)
+    //HTML elements. inputBox is created by another script most likely and is not yet created,
+    //even when script is run at document_end (in manifest)
     var display_move = document.createElement('strong');
     display_move.innerHTML = DISPLAY_MESSAGE;
 
@@ -121,6 +133,7 @@ if(checkIfGamePage(lichessLocation)){
             testToken(result['__board_api_token']);
         }
     });
+
     //listen for toggle setting change, or any new replacement words
     chrome.storage.onChanged.addListener(function(changes, area) {
     
@@ -141,28 +154,52 @@ if(checkIfGamePage(lichessLocation)){
         }
     });
 
-    //when recognition decides it has heard an entire phrase:
+    /**
+     * SPEECH RECOGNITION SECTION 
+     */
     recognition.onresult = function(event) {
 
         let command = event.results[event.results.length - 1][0].transcript;
 
         console.log("Raw voice input: " + command);
 
+
         if(commandFunctionMap.has(command)){
             submit_function = commandFunctionMap.get(command);
             result_command = command;
 
-            //store command in last_command 
+            //store command in last_command, to display in popup window
             chrome.storage.local.set({last_command: command});
         }
 
         else {
             let processedCommand_array = processRawInput(command);
+            let checkForCommandAgainPhrase = '';
+            
+            for(word of processedCommand_array)
+                checkForCommandAgainPhrase+= (word + ' ');
+            checkForCommandAgainPhrase = checkForCommandAgainPhrase.slice(0, -1);
+
+            //TODO: Processing of speech is a jumbled NIGHTMARE; reorganize 
+            if(commandFunctionMap.has(checkForCommandAgainPhrase)){
+                submit_function = commandFunctionMap.get(checkForCommandAgainPhrase);
+                result_command = checkForCommandAgainPhrase;
+    
+                //store command in last_command, to display in popup window
+                chrome.storage.local.set({last_command: checkForCommandAgainPhrase});
+
+                console.log("result = " + result_command);
+                display_move.innerHTML = "press enter to submit: " + result_command;
+                
+                return;
+            }
+    
             console.log('Processed voice input: ' + processedCommand_array);
 
             result_command = createChessMove(processedCommand_array);
 
-            //API actually accepts invalid promotion moves and just ignores the promoting portion. For example: d2d4q will be interpreted as d2d4.
+            //API actually accepts invalid promotion moves and just ignores the promoting portion. 
+            //For example: d2d4q will be interpreted as d2d4.
             if(result_command.match(/[a-h][1-8][a-h][1-8]/) || result_command.match(/[a-h][1-8][a-h][1-8][qrbn]/)){
 
                 submitUCI(result_command);
@@ -196,6 +233,7 @@ if(checkIfGamePage(lichessLocation)){
      */
     recognition.onspeechend = function() {
         recognition.stop();
+        console.log("recognition speech end");
     };
 
     recognition.onerror = function(event) {
@@ -211,9 +249,15 @@ function processRawInput(command){
     //replace any punctuation with a space. 
     command = command.toLowerCase();
 
+    //TODO: seperate number from start of letter as well
     //this creates an extra space; doesn't seem to cause problems
     command = command.replace(/([^0-9])([0-9])/g, '$1 $2');
+    command = command.replace(/([0-9])([^0-9])/g, '$1 $2');
     command = command.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ');
+
+    while(command.includes('  ')){
+        command = command.replace('  ', ' ');
+    }
 
     //save the phrase to show the user in popup what phrase was heard (before replacing any words)
     chrome.storage.local.set({last_command: command}, function(){
@@ -222,7 +266,6 @@ function processRawInput(command){
         // chrome.storage.local.get(['last_command'], function(result){
         // });
     });
-
     return replaceWords(command.split(' '));
 }
 function createChessMove(phrase){
@@ -292,6 +335,40 @@ function submitMove(){
 function submitSAN(){
 
     inputBox.value = result_command;
+    inputBox.submit();
+    // let move = 'c4';
+    // inputBox.value = move;
+    let keydownEvent = new KeyboardEvent('keydown', {
+        key: "Enter",
+        keyCode: 13, // example values.
+        code: "Enter", // put everything you need in this object.
+        which: 13,
+        shiftKey: false, // you don't need to include values
+        ctrlKey: false,  // if you aren't going to use them.
+        metaKey: false   // these are here for example's sake.
+    });
+    let inputEvent = new KeyboardEvent('input', {
+        key: "Enter",
+        keyCode: 13, // example values.
+        code: "Enter", // put everything you need in this object.
+        which: 13,
+        shiftKey: false, // you don't need to include values
+        ctrlKey: false,  // if you aren't going to use them.
+        metaKey: false   // these are here for example's sake.
+    });
+    let keyupEvent = new KeyboardEvent('keyup', {
+        key: "Enter",
+        keyCode: 13, // example values.
+        code: "Enter", // put everything you need in this object.
+        which: 13,
+        shiftKey: false, // you don't need to include values
+        ctrlKey: false,  // if you aren't going to use them.
+        metaKey: false   // these are here for example's sake.
+    });
+
+    inputBox.dispatchEvent(keydownEvent);
+    inputBox.dispatchEvent(inputEvent);
+    inputBox.dispatchEvent(keyupEvent);
 }
 
 //Submit move with Board API instantly; no 'enter' event required.
@@ -330,6 +407,9 @@ function waitForInputBox(){
     /**
      * TODO: Find the box that gets added at the bottom of game screens between players; append submit_message as first child
      * after it has been added to try and place it above the box.
+     * 
+     * Added a check for this, but seems like it was already above the box? might not have been consistent. 
+     * Check if it is consistent now
      */
     if(!input_found && document.getElementsByClassName('ready').length > 0){
         
@@ -348,12 +428,14 @@ function waitForInputBox(){
 
     }
 
-    if(input_found && !underboard_found && document.getElementsByClassName('round__underboard').length > 0){ 
+    if(input_found && !underboard_found && document.getElementsByClassName('round__underboard').length > 0){
+    // && document.getElementsByClassName('crosstable').length > 0 ){ 
         
         console.log("underboard found.");
           var under_board = document.getElementsByClassName('round__underboard')[0];
           under_board.insertBefore(display_move, under_board.firstChild);
           underboard_found = true;
+
       }
 
 
@@ -401,6 +483,7 @@ function startDictation(){
     recognition.start();
     display_listen_status.innerHTML = "Listening...";
     is_listening = true;
+    
 }
 
 function stopDictation(){
@@ -496,6 +579,140 @@ function declineOffer(){
 
 }
 
+function findNewGame(){
+
+    let newGameUrl = "https://lichess.org/?hook_like=" + lichessLocation;
+    window.open(newGameUrl);
+
+}
+
+function rematch(){
+
+    let rematch_button = document.getElementsByClassName('fbt rematch white')[0];
+    if(rematch_button == null){
+        console.log("did not find rematch button");
+        return;
+    }
+    rematch_button.click();
+}
+
+function flipBoard(){
+    
+    let flip_board_button = document.getElementsByClassName('fbt flip active')[0];
+    if(flip_board_button == null){
+        console.log("did not find flip board button");
+        return;
+    }
+    flip_board_button.click();
+}
+
+function analyzeGame(){
+    
+    let analyze_button = document.getElementsByClassName('fbt analysis')[0];
+    if(analyze_button == null){
+        console.log("did not find analyze button");
+        return;
+    }
+    analyze_button.click();
+
+}
+
+function flipTable(){
+
+    let pieceList = document.getElementsByTagName('piece');
+    throwTable();
+
+
+    for(piece of pieceList){
+        throwPiece(piece);
+    }
+
+    resign();
+}
+
+
+async function throwPiece(piece){
+    
+    let id = null;
+    let pos = 0;
+    clearInterval(id);
+    id = setInterval(frame, 5);
+    function frame() {
+        if (pos == 600) {
+            clearInterval(id);
+        } 
+    
+        else {
+            pos++; 
+            pos++; 
+            pos++; 
+
+            piece.style.top = "-" +pos + "px"; 
+            // piece.style.left = pos + "px"; 
+        }
+    }
+}
+async function throwTable(){
+
+    const board = document.getElementsByTagName("cg-board")[0];
+
+    let id = null;
+    let pos = 0;
+    clearInterval(id);
+    id = setInterval(frame, 5);
+    function frame(){
+        if(pos = 350){
+            clearInterval(id);
+        }
+
+        else{
+            pos++;
+            board.style.top = pos + "px"; 
+            board.style.left = pos + "px";     
+        }
+    }
+}
+
+function createKeyWordMaps(){
+    numberMap = new Map();
+    numberMap.set('one', '1');
+    numberMap.set('two', '2');
+    numberMap.set('three', '3');
+    numberMap.set('four', '4');
+    numberMap.set('five', '5');
+    numberMap.set('six', '6');
+    numberMap.set('seven', '7');
+    numberMap.set('eight', '8');
+
+    chessTermMap = new Map();
+    chessTermMap.set('king', 'k');
+    chessTermMap.set('queen', 'q');
+    chessTermMap.set('rook', 'r');
+    chessTermMap.set('bishop', 'b');
+    chessTermMap.set('knight', 'n');
+    chessTermMap.set('capture', 'x');
+    chessTermMap.set('take', 'x');
+    chessTermMap.set('promote', '=');
+    chessTermMap.set('equals', '=');
+    chessTermMap.set('castle', '0-0');
+    chessTermMap.set('long', '0-');
+    chessTermMap.set('short', '');
+
+    commandFunctionMap = new Map();
+    commandFunctionMap.set('resign', resign);
+    commandFunctionMap.set('offer draw', offerDraw);
+    commandFunctionMap.set('abort', abort);
+    commandFunctionMap.set('accept', acceptOffer);
+    commandFunctionMap.set('decline', declineOffer);
+    commandFunctionMap.set('take back', takeBack);
+    commandFunctionMap.set('find a game', createSeek);
+    commandFunctionMap.set('new game', findNewGame);
+    commandFunctionMap.set('rematch', rematch);
+    commandFunctionMap.set('flip board', flipBoard);
+    commandFunctionMap.set('analyze game', analyzeGame);
+    commandFunctionMap.set('flip table', flipTable);
+}
+
 /**
  * TODO: Previously played games will still return true! They use the entire 12 character id in the URL. 
  * Can either only run script on 8 character games, or check if current game (possibly through API fetch)
@@ -543,6 +760,76 @@ function checkIfGamePage(location){
     return false;
 }
 
+
+async function testToken(token){
+    //still throws 401 error in console if invalid token, there's probably some way to catch this
+    display_move.innerHTML = "Checking Token...";
+    fetch('https://lichess.org/api/account', {
+    
+        headers: {
+            'Authorization': 'Bearer ' + token
+        }
+    
+        })
+        .then(res => res.json())
+        .then(function(res){
+
+            if(res.hasOwnProperty('error')){
+                display_move.innerHTML = "API token fetch failed: " + res['error'] + ". add new API token in options. User can still use SAN format submissions through the input text box.";
+                
+            }
+            else {
+                console.log("Valid API token is in use!");
+                BOARD_API_TOKEN = token;
+                display_move.innerHTML = DISPLAY_MESSAGE;
+            }
+        });
+}
+
+async function createSeek(){
+
+    //create Stream
+    requestStream();
+
+    //queue for another 3+2 blitz game
+    let fetchRequest = {
+
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + BOARD_API_TOKEN
+        }
+    
+      };
+
+      fetch('https://lichess.org/api/board/seek', fetchRequest)
+      .then(res => res.json())
+      .then(function(res){
+      
+      
+      });
+  
+
+}
+
+async function requestStream(){
+
+    let fetchRequest = {
+
+        headers: {
+            'Authorization': 'Bearer ' + BOARD_API_TOKEN
+        }
+        
+
+        };
+
+    fetch('https://lichess.org/api/stream/event', fetchRequest)
+    .then(res => res.json())
+    .then(function(res){
+    
+    
+    });
+}
+
 //Not currently being used; didn't want to completely restructure code
 async function checkIfActiveGame(){
 
@@ -584,63 +871,4 @@ async function checkIfActiveGame(){
     
         //     return false;
         // });
-    }
-
-function createKeyWordMaps(){
-    numberMap = new Map();
-    numberMap.set('one', '1');
-    numberMap.set('two', '2');
-    numberMap.set('three', '3');
-    numberMap.set('four', '4');
-    numberMap.set('five', '5');
-    numberMap.set('six', '6');
-    numberMap.set('seven', '7');
-    numberMap.set('eight', '8');
-
-    chessTermMap = new Map();
-    chessTermMap.set('king', 'k');
-    chessTermMap.set('queen', 'q');
-    chessTermMap.set('rook', 'r');
-    chessTermMap.set('bishop', 'b');
-    chessTermMap.set('knight', 'n');
-    chessTermMap.set('capture', 'x');
-    chessTermMap.set('take', 'x');
-    chessTermMap.set('promote', '=');
-    chessTermMap.set('equals', '=');
-    chessTermMap.set('castle', '0-0');
-    chessTermMap.set('long', '0-');
-    chessTermMap.set('short', '');
-
-    commandFunctionMap = new Map();
-    commandFunctionMap.set('resign', resign);
-    commandFunctionMap.set('offer draw', offerDraw);
-    commandFunctionMap.set('abort', abort);
-    commandFunctionMap.set('accept', acceptOffer);
-    commandFunctionMap.set('decline', declineOffer);
-    commandFunctionMap.set('take back', takeBack);
-}
-
-async function testToken(token){
-    //still throws 401 error in console if invalid token, there's probably some way to catch this
-    display_move.innerHTML = "Checking Token...";
-    fetch('https://lichess.org/api/account', {
-    
-        headers: {
-            'Authorization': 'Bearer ' + token
-        }
-    
-        })
-        .then(res => res.json())
-        .then(function(res){
-
-            if(res.hasOwnProperty('error')){
-                display_move.innerHTML = "API token fetch failed: " + res['error'] + ". add new API token in options. User can still use SAN format submissions through the input text box.";
-                
-            }
-            else {
-                console.log("Valid API token is in use!");
-                BOARD_API_TOKEN = token;
-                display_move.innerHTML = DISPLAY_MESSAGE;
-            }
-        });
 }
