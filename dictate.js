@@ -4,14 +4,6 @@
  * 
  * 2. Create new video showcasing UCI automatic input; opening options, creating, and submitting an API token; 
  * 
- * 
- * 3. Consider ways to use the alternative word/ phrase interpretations of recognition
- * --seems hard, could be worthwhile though
- * 
- * 6. Board API cannot be used with blitz or bullet! More incentive to find way to submit to textbox
- * --input events have an isTrusted flag which is set when the event is a real, triggered by the user event and not a 
- *   programmatically generated event. 
- * 
  * 8. Update messages about UCI and automatic submission only being available in rapid, classical, and correspondence.
  * 
  * 9. Implement table flip command ^^
@@ -164,57 +156,55 @@ if(checkIfGamePage(lichessLocation)){
         console.log("Raw voice input: " + command);
 
 
-        if(commandFunctionMap.has(command)){
-            submit_function = commandFunctionMap.get(command);
-            result_command = command;
+        // if(commandFunctionMap.has(command)){
+        //     submit_function = commandFunctionMap.get(command);
+        //     result_command = command;
+
+        //     //store command in last_command, to display in popup window
+        //     chrome.storage.local.set({last_command: command});
+        // }
+
+        let processedCommand_array = processRawInput(command);
+        let checkForCommandAgainPhrase = '';
+        
+        for(word of processedCommand_array)
+            checkForCommandAgainPhrase+= (word + ' ');
+        checkForCommandAgainPhrase = checkForCommandAgainPhrase.slice(0, -1);
+
+        //TODO: Processing of speech is a jumbled NIGHTMARE; reorganize 
+        if(commandFunctionMap.has(checkForCommandAgainPhrase)){
+            submit_function = commandFunctionMap.get(checkForCommandAgainPhrase);
+            result_command = checkForCommandAgainPhrase;
 
             //store command in last_command, to display in popup window
-            chrome.storage.local.set({last_command: command});
+            chrome.storage.local.set({last_command: checkForCommandAgainPhrase});
+
+            console.log("result = " + result_command);
+            display_move.innerHTML = "press enter to submit: " + result_command;
+            
+            return;
         }
 
-        else {
-            let processedCommand_array = processRawInput(command);
-            let checkForCommandAgainPhrase = '';
-            
-            for(word of processedCommand_array)
-                checkForCommandAgainPhrase+= (word + ' ');
-            checkForCommandAgainPhrase = checkForCommandAgainPhrase.slice(0, -1);
+        console.log('Processed voice input: ' + processedCommand_array);
 
-            //TODO: Processing of speech is a jumbled NIGHTMARE; reorganize 
-            if(commandFunctionMap.has(checkForCommandAgainPhrase)){
-                submit_function = commandFunctionMap.get(checkForCommandAgainPhrase);
-                result_command = checkForCommandAgainPhrase;
-    
-                //store command in last_command, to display in popup window
-                chrome.storage.local.set({last_command: checkForCommandAgainPhrase});
+        result_command = createChessMove(processedCommand_array);
 
-                console.log("result = " + result_command);
-                display_move.innerHTML = "press enter to submit: " + result_command;
-                
-                return;
-            }
-    
-            console.log('Processed voice input: ' + processedCommand_array);
+        //API actually accepts invalid promotion moves and just ignores the promoting portion. 
+        //For example: d2d4q will be interpreted as d2d4.
+        if(result_command.match(/^[a-h][1-8][a-h][1-8]$/) || result_command.match(/^[a-h][1-8][a-h][1-8][qrbn]$/)){
 
-            result_command = createChessMove(processedCommand_array);
+            submitUCI(result_command);
+            console.log("result = " + result_command);
+            display_move.innerHTML = "UCI move detected: " + result_command + ". submitting with Board API fetch request...";
+            return;
+        }
 
-            //API actually accepts invalid promotion moves and just ignores the promoting portion. 
-            //For example: d2d4q will be interpreted as d2d4.
-            if(result_command.match(/[a-h][1-8][a-h][1-8]/) || result_command.match(/[a-h][1-8][a-h][1-8][qrbn]/)){
 
-                submitUCI(result_command);
-                console.log("result = " + result_command);
-                display_move.innerHTML = "UCI move detected: " + result_command + ". submitting with Board API fetch request...";
-                return;
-            }
-    
-
-            submit_function = submitSAN;
-            
-            if(result_command == ''){
-                console.log("failed to create command.");
-                return;
-            }
+        submit_function = submitSAN;
+        
+        if(result_command == ''){
+            console.log("failed to create command.");
+            return;
         }
 
         console.log("result = " + result_command);
@@ -335,40 +325,6 @@ function submitMove(){
 function submitSAN(){
 
     inputBox.value = result_command;
-    inputBox.submit();
-    // let move = 'c4';
-    // inputBox.value = move;
-    let keydownEvent = new KeyboardEvent('keydown', {
-        key: "Enter",
-        keyCode: 13, // example values.
-        code: "Enter", // put everything you need in this object.
-        which: 13,
-        shiftKey: false, // you don't need to include values
-        ctrlKey: false,  // if you aren't going to use them.
-        metaKey: false   // these are here for example's sake.
-    });
-    let inputEvent = new KeyboardEvent('input', {
-        key: "Enter",
-        keyCode: 13, // example values.
-        code: "Enter", // put everything you need in this object.
-        which: 13,
-        shiftKey: false, // you don't need to include values
-        ctrlKey: false,  // if you aren't going to use them.
-        metaKey: false   // these are here for example's sake.
-    });
-    let keyupEvent = new KeyboardEvent('keyup', {
-        key: "Enter",
-        keyCode: 13, // example values.
-        code: "Enter", // put everything you need in this object.
-        which: 13,
-        shiftKey: false, // you don't need to include values
-        ctrlKey: false,  // if you aren't going to use them.
-        metaKey: false   // these are here for example's sake.
-    });
-
-    inputBox.dispatchEvent(keydownEvent);
-    inputBox.dispatchEvent(inputEvent);
-    inputBox.dispatchEvent(keyupEvent);
 }
 
 //Submit move with Board API instantly; no 'enter' event required.
@@ -617,60 +573,42 @@ function analyzeGame(){
 
 }
 
-function flipTable(){
+function rageQuit(){
 
     let pieceList = document.getElementsByTagName('piece');
-    throwTable();
-
 
     for(piece of pieceList){
-        throwPiece(piece);
+
+        //
+        throwPiece(piece, getRandomArbitrary(10, 250));
     }
 
     resign();
 }
 
 
-async function throwPiece(piece){
+async function throwPiece(piece, endPosition){
     
     let id = null;
     let pos = 0;
     clearInterval(id);
     id = setInterval(frame, 5);
     function frame() {
-        if (pos == 600) {
+        if (pos >= endPosition) {
             clearInterval(id);
         } 
     
         else {
             pos++; 
-            pos++; 
-            pos++; 
-
+            pos++;
             piece.style.top = "-" +pos + "px"; 
             // piece.style.left = pos + "px"; 
         }
     }
 }
-async function throwTable(){
 
-    const board = document.getElementsByTagName("cg-board")[0];
-
-    let id = null;
-    let pos = 0;
-    clearInterval(id);
-    id = setInterval(frame, 5);
-    function frame(){
-        if(pos = 350){
-            clearInterval(id);
-        }
-
-        else{
-            pos++;
-            board.style.top = pos + "px"; 
-            board.style.left = pos + "px";     
-        }
-    }
+function getRandomArbitrary(min, max) {
+    return Math.floor(Math.random() * (max - min) + min);
 }
 
 function createKeyWordMaps(){
@@ -710,7 +648,7 @@ function createKeyWordMaps(){
     commandFunctionMap.set('rematch', rematch);
     commandFunctionMap.set('flip board', flipBoard);
     commandFunctionMap.set('analyze game', analyzeGame);
-    commandFunctionMap.set('flip table', flipTable);
+    commandFunctionMap.set('rage quit', rageQuit);
 }
 
 /**

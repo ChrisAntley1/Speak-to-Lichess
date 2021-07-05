@@ -38,7 +38,10 @@ chrome.runtime.onInstalled.addListener((details)=>{
         "viii": "8",
 
         "except": "accept",
-        "excepts": "accept"
+        "excepts": "accept",
+        "overdraw": "offer draw",
+        "offered": "offer",
+        "aboard": "abort"
 
 
         //settings? because why not? and also setting TOGGLE_LISTEN by itself didnt seem to work
