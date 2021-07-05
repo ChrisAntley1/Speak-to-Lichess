@@ -1,22 +1,27 @@
-# Speak to Lichess
+# Speak to Lichess 2.0
 
 Play chess using speech recognition!
 
-Lichess does not currently have a method to submit moves via voice commands. This extension allows you to dictate your moves and requires no board interaction. Great for blindfolded play or increasing accessibility. 
+NEW with 2.0 - Complete voice control with UCI format moves: Rapid, Classical, and Correspondence games supported!
+SAN format moves with some keyboard input required: All formats supported.
+
+Lichess does not currently have a method to submit moves via voice commands. This extension allows you to dictate your moves and requires no board interaction. Great for blindfolded play or increasing accessibility. Not great for faster formats.
 
 Demo: https://youtu.be/yqbm0kMNjAM
-
+Chrome Web Store: 
 Be sure to check out the How to Use section and example commands!
 
 **Now supports complete voice control to submit moves in rapid, classical and correspondence time formats! Require UCI format moves. In addition, user must provide personal API token; instructions in options page.**
+
+**Complete voice control AND UCI format moves are not supported in blitz or faster formats!**
 
 **To specify the letter of a square, you must say a word that begins with that letter, such as "delta" for the d column. The dictation software is very bad at understanding individual letters!**
 
 **Does not support the word "to"! Commands such as "bishop to hotel five" will be interpreted as "bishop 2 hotel 5", and will submit the move "b2h5".**
 
-Takes advantage of Lichess's optional text input box to submit SAN format moves. Does require user to press 'enter' to submit moves.
+Takes advantage of Lichess's optional text input box for SAN format moves. SAN format requires user to press 'enter' to submit their move. 
 
-Uses Lichess's Board API to (automatically!) submit UCI format moves in rapid, classical, and correspondence games. 
+Uses Lichess's Board API to (automatically!) submit UCI format moves in rapid, classical, and correspondence games. Requires API token which can be added in the options page.
 
 Uses the Web Speech API to process spoken word into chess moves (with a little extra processing by the extension to more accurately recognize moves).
 
@@ -24,6 +29,10 @@ Uses the Web Speech API to process spoken word into chess moves (with a little e
 ### How to Use:
 
 Demo: https://youtu.be/yqbm0kMNjAM
+
+## Instructions
+
+### SAN format moves, in any time format
 
 1. On Lichess, enable text input by going to https://lichess.org/account/preferences/game-behavior and enabling "Input moves with the keyboard". Optional: to turn on move playback, enter a game and click on your name in the top right-> sound -> Speech.
 
@@ -68,9 +77,9 @@ https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0T
 
 "offer draw" -> offers a draw to the opponent
 
-### UCI Command Guide:
+### UCI format moves in rapid or slower games:
 
-UCI commands are supported in rapid, classical, and correspondence time controls. Requires user to submit a personal API token in the options page; see instructions below example UCI commands.
+UCI commands are supported in rapid, classical, and correspondence time controls. Requires user to submit a personal API token in the options page; see instructions listed below example UCI commands.
 
 UCI format specifies the square of the piece to be moved, and the square that piece should move to (a1c3). The format does not change if capturing a piece (e1e8 to capture a rook on e8 with your rook on e1). For castling, follow this format with the kings starting and ending squares (e1g1). For pawn promotions, add the promoting piece to the end of the regular format (e7e8q).
 
@@ -90,7 +99,7 @@ Specify squares in the same manner as you would for SAN format: a word that star
 
 ### Enabling UCI format
 
-A personal Lichess API token is required to use both automatic submission and UCI format. You can navigate from the options page to Lichess's token creation page. The name and required scope will already be set; do not add any unnecessary permissions. Simply press the blue 'submit' button, and copy the generated token into the appropriate field in Options, and submit.
+A personal Lichess API token is required to use both automatic submission and UCI format. You can navigate, from the options page, to Lichess's personal token creation page. The name and required scope will already be set; do not add any unnecessary permissions. Simply press the blue 'submit' button, and copy the generated token into the appropriate field in Options, and submit.
 
 ## Warning: Do not add additional permissions to your token! Token is stored in plain text!
 
@@ -102,11 +111,11 @@ A personal Lichess API token is required to use both automatic submission and UC
 "accept"
 "decline"
 "abort"
-"find a game"
+"new game"
 "rematch"
 "flip board"
 "analyze game"
-bonus: "flip table" (also resigns game)
+"rage quit"
 
 ### Install Guide:
 
@@ -126,14 +135,13 @@ bonus: "flip table" (also resigns game)
 
 ### Notes:
 
-Web Speech API (https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) is an experimental project. It is normally able to listen for sets of words supplied in the form of grammar objects. However this feature breaks when used in Chrome. As a result, the speech-to-text software often misinterprets the user's voice input. In addition, it seems most dictation software has a hard time discerning individual letters. For example, "B", "D", and "E" are often mistaken for one another. 
+The Web Speech API (https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) is an experimental project. It is normally able to listen for sets of words supplied in the form of grammar objects. However this feature breaks when used in Chrome. As a result, the speech-to-text software often misinterprets the user's voice input. In addition, it seems most dictation software has a hard time discerning individual letters. For example, "B", "D", and "E" are often mistaken for one another. 
 
 With that in mind, most of the work in this project focused on taking user input supplied by speech recognition; formatting it; replacing words that were most likely not what the user intended; and extracting chess moves from that resulting phrase.
 
-TODO: change these 2 sections below
-The app does not interact with Lichess's chessboard directly; it simply creates a text command and submits it to the move input box. It does interact with the "resign", "abort", "draw", etc. buttons. (See https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0Tsxo/edit?usp=sharing)
+The Lichess Board API (https://lichess.org/blog/XlRW5REAAB8AUJJ-/welcome-lichess-boards) allows this extension to communicate directly with Lichess to submit moves. The API accepts moves in UCI format and does not work in blitz or faster formats. 
 
-My initial goal was to completely control the game with spoken word and require no keyboard input. However, the move input textbox does not automatically enter values without real keyboard input (Programmaticly triggering keyboard events failed to make the input box submit moves in my experience).
+For SAN format moves in the text box, the extension is unable to automatically fire an enter command in order to submit a move. Events fired programmatically and not from a real user event are marked as untrusted: https://developer.mozilla.org/en-US/docs/Web/API/Event/isTrusted 
 
 Speak to Lichess is Open Source. Feedback welcome!
 

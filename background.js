@@ -44,7 +44,6 @@ chrome.runtime.onInstalled.addListener((details)=>{
         "aboard": "abort"
 
 
-        //settings? because why not? and also setting TOGGLE_LISTEN by itself didnt seem to work
     };
 
     var TOGGLE_LISTEN = {'__toggle': false};

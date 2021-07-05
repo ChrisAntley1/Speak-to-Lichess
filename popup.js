@@ -77,8 +77,6 @@ function submitPhrase(){
         return;
     }
 
-    //TODO: vet the input phrase for formatting correctness
-
     if(correct_phrase = checkProposedPhrase(correct_phrase)){
 
         speech_to_text_Lichess_fuzzy_words[trouble_word] = correct_phrase;
@@ -92,13 +90,6 @@ function submitPhrase(){
 }
 
 function openOptions(){
-    // console.log("popup replaced words:");
-    // console.log(speech_to_text_Lichess_fuzzy_words);
-
-    // chrome.storage.local.get(speech_to_text_Lichess_fuzzy_words, function(result){
-    //     console.log("local replaced words:");
-    //     console.log(result);
-    // });
     
     chrome.runtime.openOptionsPage();
 }

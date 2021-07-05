@@ -1,54 +1,12 @@
 
-/**
- * TODO: General TODO for this trip that I can think of currently:
- * 
- * 2. Create new video showcasing UCI automatic input; opening options, creating, and submitting an API token; 
- * 
- * 8. Update messages about UCI and automatic submission only being available in rapid, classical, and correspondence.
- * 
- * 9. Implement table flip command ^^
- * --simple flip implemented! resigns on flip, naturally. Could look better with more work.
- * -- instead of flying off the page, could vary speed and have them "land" in locations on the page.
- * 
- * 10. Dynamically update replacement table in options page
- * --complete for search table
- */
-
 const lichessLocation = location.href
                     .replace('http://', '')
                     .replace('https://', '')
                     .replace('lichess.org/', '')
                     .replace('lichess.org', '');
 
-// let isOngoingGame = false;
-
-// if(checkIfGamePage(lichessLocation)){
-//     console.log("might be ongoing game...");
-//     isOngoingGame = checkIfActiveGame().then(res =>{
-//         console.log(res);
-//     });
-//     console.log(isOngoingGame);
-// }
-
-// if(!isOngoingGame) console.log("Not ongoing game page.");
-
-// else {
 
 if(checkIfGamePage(lichessLocation)){
-    /**
-     * So here we know that the page may contain an active game. We need these variables declared outside of functions for global use.
-     * However, we could instantiate them in an async function that waits for the results of the API call; 
-     * and if the API call returns negative, then we can save some space and work by not initializing anything else. 
-     */
-    // console.log("Might be ongoing game, doing the thing");
-
-    // Grammar = broken
-    // var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
-    // var grammar = '#JSGF V1.0;';
-    // var speechRecognitionGrammarList = new SpeechGrammarList();
-    // speechRecognitionGrammarList.addFromString(grammar, 1);
-    // recognition.grammars = speechRecognitionGrammarList;
-
 
     //initializing speech recognition 
     var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
@@ -155,15 +113,6 @@ if(checkIfGamePage(lichessLocation)){
 
         console.log("Raw voice input: " + command);
 
-
-        // if(commandFunctionMap.has(command)){
-        //     submit_function = commandFunctionMap.get(command);
-        //     result_command = command;
-
-        //     //store command in last_command, to display in popup window
-        //     chrome.storage.local.set({last_command: command});
-        // }
-
         let processedCommand_array = processRawInput(command);
         let checkForCommandAgainPhrase = '';
         
@@ -171,7 +120,6 @@ if(checkIfGamePage(lichessLocation)){
             checkForCommandAgainPhrase+= (word + ' ');
         checkForCommandAgainPhrase = checkForCommandAgainPhrase.slice(0, -1);
 
-        //TODO: Processing of speech is a jumbled NIGHTMARE; reorganize 
         if(commandFunctionMap.has(checkForCommandAgainPhrase)){
             submit_function = commandFunctionMap.get(checkForCommandAgainPhrase);
             result_command = checkForCommandAgainPhrase;
@@ -212,15 +160,6 @@ if(checkIfGamePage(lichessLocation)){
 
     };
 
-    /**
-     * TODO: there was something about the listening I wanted to change.
-     * 
-     * While using toggle listening, for the sake of speed, provide user key to immediately submit a move?
-     * In the same vein, provide key to ignore whatever has been heard in the immediate listening sesion?
-     * 
-     * Implement known single syllable word list for letters - possibly
-     * 
-     */
     recognition.onspeechend = function() {
         recognition.stop();
         console.log("recognition speech end");
@@ -239,7 +178,6 @@ function processRawInput(command){
     //replace any punctuation with a space. 
     command = command.toLowerCase();
 
-    //TODO: seperate number from start of letter as well
     //this creates an extra space; doesn't seem to cause problems
     command = command.replace(/([^0-9])([0-9])/g, '$1 $2');
     command = command.replace(/([0-9])([^0-9])/g, '$1 $2');
@@ -252,9 +190,6 @@ function processRawInput(command){
     //save the phrase to show the user in popup what phrase was heard (before replacing any words)
     chrome.storage.local.set({last_command: command}, function(){
 
-        //can delete this
-        // chrome.storage.local.get(['last_command'], function(result){
-        // });
     });
     return replaceWords(command.split(' '));
 }
@@ -352,21 +287,12 @@ async function submitUCI(chessMove){
             else {
                 display_move.innerHTML = "Error - API move submission failed...";
             }
-            console.log(res);
     });
 
 }
 
 function waitForInputBox(){
 
-
-    /**
-     * TODO: Find the box that gets added at the bottom of game screens between players; append submit_message as first child
-     * after it has been added to try and place it above the box.
-     * 
-     * Added a check for this, but seems like it was already above the box? might not have been consistent. 
-     * Check if it is consistent now
-     */
     if(!input_found && document.getElementsByClassName('ready').length > 0){
         
         console.log("input found.");
@@ -385,7 +311,6 @@ function waitForInputBox(){
     }
 
     if(input_found && !underboard_found && document.getElementsByClassName('round__underboard').length > 0){
-    // && document.getElementsByClassName('crosstable').length > 0 ){ 
         
         console.log("underboard found.");
           var under_board = document.getElementsByClassName('round__underboard')[0];
@@ -579,10 +504,10 @@ function rageQuit(){
 
     for(piece of pieceList){
 
-        //
         throwPiece(piece, getRandomArbitrary(10, 250));
     }
 
+    abort();
     resign();
 }
 
@@ -599,10 +524,8 @@ async function throwPiece(piece, endPosition){
         } 
     
         else {
-            pos++; 
-            pos++;
+            pos+=2; 
             piece.style.top = "-" +pos + "px"; 
-            // piece.style.left = pos + "px"; 
         }
     }
 }
@@ -643,7 +566,6 @@ function createKeyWordMaps(){
     commandFunctionMap.set('accept', acceptOffer);
     commandFunctionMap.set('decline', declineOffer);
     commandFunctionMap.set('take back', takeBack);
-    commandFunctionMap.set('find a game', createSeek);
     commandFunctionMap.set('new game', findNewGame);
     commandFunctionMap.set('rematch', rematch);
     commandFunctionMap.set('flip board', flipBoard);
@@ -651,10 +573,6 @@ function createKeyWordMaps(){
     commandFunctionMap.set('rage quit', rageQuit);
 }
 
-/**
- * TODO: Previously played games will still return true! They use the entire 12 character id in the URL. 
- * Can either only run script on 8 character games, or check if current game (possibly through API fetch)
- */
 function checkIfGamePage(location){
     
     //locations with 8 or 12 alphanumeric characters
@@ -670,37 +588,25 @@ function checkIfGamePage(location){
     if(numChars != null || numChars != undefined || numChars != 0){
 
         //check if alphanumeric; if not, then can't be game page
-        /**
-         * TODO: Make sure the above condition is actually the case; not sure if options can be attached to game page url!
-         * 
-         * Think this is fine but leave for now
-         */
         if(location.match(/^[a-z0-9]+$/i)){
 
             //check length of alphanumeric string. if 8 or 12, then might be game page
             if(numChars == 8 || numChars == 12){
 
                 //finally, make sure location is not in our known location list:
-
                 if(!KNOWN_LOCATIONS.includes(location)){
                     
-                    
-                    //We know it is probably an ongoing game; Could now execute fetch request to see if it is an ongoing game. 
-                    //Executes much less, seems like a reasonable filter.
-                    console.log("do the thing!");
                     return true;
                 }
             }
         }
     }
 
-    console.log("don't do the thing!");
     return false;
 }
 
 
 async function testToken(token){
-    //still throws 401 error in console if invalid token, there's probably some way to catch this
     display_move.innerHTML = "Checking Token...";
     fetch('https://lichess.org/api/account', {
     
@@ -713,7 +619,8 @@ async function testToken(token){
         .then(function(res){
 
             if(res.hasOwnProperty('error')){
-                display_move.innerHTML = "API token fetch failed: " + res['error'] + ". add new API token in options. User can still use SAN format submissions through the input text box.";
+                display_move.innerHTML = "API token fetch failed: " + res['error']
+                 + ". add new API token in options. User can still use SAN format submissions through the input text box.";
                 
             }
             else {
@@ -724,89 +631,4 @@ async function testToken(token){
         });
 }
 
-async function createSeek(){
 
-    //create Stream
-    requestStream();
-
-    //queue for another 3+2 blitz game
-    let fetchRequest = {
-
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + BOARD_API_TOKEN
-        }
-    
-      };
-
-      fetch('https://lichess.org/api/board/seek', fetchRequest)
-      .then(res => res.json())
-      .then(function(res){
-      
-      
-      });
-  
-
-}
-
-async function requestStream(){
-
-    let fetchRequest = {
-
-        headers: {
-            'Authorization': 'Bearer ' + BOARD_API_TOKEN
-        }
-        
-
-        };
-
-    fetch('https://lichess.org/api/stream/event', fetchRequest)
-    .then(res => res.json())
-    .then(function(res){
-    
-    
-    });
-}
-
-//Not currently being used; didn't want to completely restructure code
-async function checkIfActiveGame(){
-
-    let response = await fetch('https://lichess.org/api/account/playing', {
-    
-    headers: {
-      'Authorization': 'Bearer ' + BOARD_API_TOKEN
-    }
-
-    });
-
-    if(!response.ok){
-        throw new Error("shit didn't work yo");
-    }
-    let gameList = await response.json();
-
-    console.log(gameList);
-    for(game_info of gameList.nowPlaying){
-
-        if(game_info.fullId === lichessLocation || game_info.gameId === lichessLocation){
-            console.log(game_info);
-            return true;
-            // board_api_url = createTemplateURL();
-        }
-    }
-    return false;
-        // response.json().then(function(res){
-        
-        //     console.log(res);
-        //     let found = false;
-        //     for(game_info of res.nowPlaying){
-    
-        //         if(game_info.fullId === lichessLocation || game_info.gameId === lichessLocation){
-        //             console.log(game_info);
-        //             return true;
-        //             // board_api_url = createTemplateURL();
-        //         }
-        //     }
-    
-        //     return false;
-        // });
-}

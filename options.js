@@ -1,9 +1,5 @@
 
 
-/**
- * TODO: Make input value checks consistent 
- */
-
 const _GENERATE_TOKEN_URL = 'https://lichess.org/account/oauth/token/create?scopes[]=board:play&description=board_play_token';
 const VALID_TOKEN_MESSAGE = "Current token is valid for Lichess user ";
 const NO_TOKEN_MESSAGE = "No token stored."
@@ -26,9 +22,6 @@ let searchInput = document.getElementById('search_input');
 
 var word_replacement_list;
 var replacement_word_keys;
-
-//nephew delete this 
-//nvm
 var board_api_token;
 
 
@@ -59,7 +52,6 @@ searchInput.addEventListener('keyup', filterBySearch);
 
 tokenButton.addEventListener('click', submitToken);
 tokenInput.addEventListener('keyup', function(event){
-    // console.log(event.key);
     if (event.key === 'Enter') submitToken();
 });
 
@@ -68,8 +60,6 @@ function addTableRows(array) {
     
     for (var i = 0; i < array.length; i++) {
         
-        //check to make sure the entry is not an option. Should definitely 
-        //change storage management so that this can't happen!
         if(ignoreList.includes(array[i])){
             continue;
         } 
@@ -81,17 +71,10 @@ function addTableRows(array) {
         problem_col.innerHTML = array[i];
         var correct_col = document.createElement('td');
         correct_col.innerHTML = word_replacement_list[array[i]];
-        // var edit_col = document.createElement('td');
-        // var edit_button = document.createElement('button');
-        // var delete_button = document.createElement('button');
-        // edit_button.innerHTML = "edit...";
-        // delete_button.innerHTML = "X";
-        // edit_col.appendChild(edit_button);
-        // edit_col.appendChild(delete_button);
         
         item.appendChild(problem_col);
         item.appendChild(correct_col);
-        // item.appendChild(edit_col);
+
         // Add it to the table:
         table.appendChild(item);
     }
@@ -100,8 +83,6 @@ function addTableRows(array) {
     return table;
 }
 
-//doesn't quite work properly
-//TODO: make work gud
 function filterBySearch(){
 
     if (document.activeElement === searchInput){
@@ -117,16 +98,13 @@ function filterBySearch(){
 
             if(searchText == null || searchText == undefined || searchText.length == 0){
                 tableRow.style.display = null;
-                // tableRow.style.width = "100%";
             }
             else if(key.includes(searchText)){
                 tableRow.style.display = null;
-                // tableRow.style.width = "100%";
             }
 
             else if(word_replacement_list[key].includes(searchText)){
                 tableRow.style.display = null;
-                // tableRow.style.width = "100%";
             }
             
             else {
@@ -157,7 +135,6 @@ function submitPhrase(){
     console.log("replace " + trouble_word + " with: " + correct_phrase);
 
     var phrase_updated = word_replacement_list.hasOwnProperty(trouble_word);
-    //TODO: vet the input phrase for formatting correctness
 
     if(correct_phrase = checkProposedPhrase(correct_phrase)){
     
@@ -204,14 +181,6 @@ function deleteWord(){
         delete word_replacement_list[word_to_delete];
         console.log(word_replacement_list);
         console.log(word_replacement_list[word_to_delete]);
-        // chrome.storage.local.remove(['word_replacement_list'], function(){
-        //     var error = chrome.runtime.lastError;
-        //        if (error) {
-        //            console.error(error);
-        //        }
-        //     chrome.storage.local.set(word_replacement_list);
-            
-        //     });
         chrome.storage.local.clear(function(){
             chrome.storage.local.set(word_replacement_list);
         });
