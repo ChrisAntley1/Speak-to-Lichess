@@ -128,8 +128,7 @@ if(checkIfGamePage(lichessLocation)){
             chrome.storage.local.set({last_command: checkForCommandAgainPhrase});
 
             console.log("result = " + result_command);
-            display_move.innerHTML = "press enter to submit: " + result_command;
-            
+            submit_function();
             return;
         }
 

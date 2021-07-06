@@ -9,7 +9,7 @@ Lichess does not currently have a method to submit moves via voice commands. Thi
 
 Demo: https://youtu.be/yqbm0kMNjAM
 
-Chrome Web Store: 
+Chrome Web Store: https://chrome.google.com/webstore/detail/speak-to-lichess/ldiiocggpmgljihlkgpngjlhnggpapig 
 
 Be sure to check out the How to Use section and example commands!
 
