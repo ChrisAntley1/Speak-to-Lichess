@@ -13,17 +13,11 @@ Chrome Web Store: https://chrome.google.com/webstore/detail/speak-to-lichess/ldi
 
 Some command help: https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0Tsxo/edit?usp=sharing
 
-  Takes advantage of Lichess's optional text input box for SAN format moves. SAN format requires user to press 'enter' to submit their move. 
-
-  Uses Lichess's Board API to (automatically!) submit UCI format moves in rapid, classical, and correspondence games. Requires API token which can be added in the options page.
-
-  Uses the Web Speech API to process spoken word into chess moves (with a little extra processing by the extension to more accurately recognize moves).
-
-## Instructions
+## How to Use
 
 **To specify the letter of a square, you must say a word that begins with that letter, such as "delta" for the d column. The dictation software is very bad at understanding individual letters!**
 
-**Does not support the word "to"! Commands such as "bishop to hotel five" will be interpreted as "bishop 2 hotel 5", and will submit the move "b2h5".**
+**Does not support the word "to"! Commands such as "knight to hotel five" will be interpreted as "knight 2 hotel 5", and will submit the move "n2h5".**
 
 ### SAN format moves, in any time format
 
@@ -34,10 +28,6 @@ Some command help: https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVY
 3. Say your move in SAN format. For pieces and numbers, simply say the piece or number. For the letter portion of a square's coordinates, say a word that starts with that letter; for example "Eric" for "e" or "delta" for "d". Trying to say the letter itself will likely fail and is not recommended! NOTE: you can also use this "word that starts with desired letter" method to specify pieces if needed.
 
 4. The app will process your move and display it in SAN format below the text input box. Simply press enter to submit your move! If the move displayed is incorrect, you can try to dictate your command again, or you open the popup menu to see (and replace) the word that was incorrectly recognized. 
-
-The popup menu will display your last spoken phrase as the speech software understood it (though slightly formatted). If the speech recognition software often hears a particular word that you are NOT trying to say, Speak to Lichess allows you to add this word to an exception list that will replace the word with the intended word or phrase. For example: tell the software to replace the word "ford" with "four". 
-
-Speak to Lichess already replaces a number of words that cause issues (such as "ford"). You can view, edit, and add words to the Replacement List in the options page.
 
 ### SAN Command Guide:
 
@@ -70,7 +60,7 @@ https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0T
 
 "offer draw" -> offers a draw to the opponent
 
-### UCI format moves in rapid or slower games:
+### UCI format moves in rapid or slower time controls:
 
 UCI commands are supported in rapid, classical, and correspondence time controls. Requires user to submit a personal API token in the options page; see instructions listed below example UCI commands.
 
@@ -94,21 +84,32 @@ Specify squares in the same manner as you would for SAN format: a word that star
 
 A personal Lichess API token is required to use both automatic submission and UCI format. You can navigate, from the options page, to Lichess's personal token creation page. The name and required scope will already be set; do not add any unnecessary permissions. Simply press the blue 'submit' button, and copy the generated token into the appropriate field in Options, and submit.
 
-**Warning: Do not add additional permissions to your token! Token is stored in plain text!**
+**--Warning: Do not add additional permissions to your token! Token is stored in plain text!--**
+
+Read more about the Lichess Board API here: https://lichess.org/blog/XlRW5REAAB8AUJJ-/welcome-lichess-boards
 
 ### Additional Commands:
+You may interact automatically with certain html elements on game pages using the following commands:
 
-"resign", 
-"offer draw", 
-"take back", 
-"accept", 
-"decline", 
-"abort", 
-"new game", 
-"rematch", 
-"flip board", 
-"analyze game", 
-"rage quit"
+resign, 
+offer draw, 
+take back, 
+accept, 
+decline, 
+abort, 
+new game, 
+rematch, 
+flip board, 
+analyze game, 
+rage quit
+
+### Popup menu and Options page:
+
+The popup menu will display your last spoken phrase as the speech software understood it (though slightly formatted). If the speech recognition software often hears a particular word that you are NOT trying to say, Speak to Lichess allows you to add this word to an exception list that will replace the word with the intended word or phrase. For example: tell the software to replace the word "ford" with "four". 
+
+Speak to Lichess already replaces a number of words that cause issues (such as "ford"). You can view, edit, and add words to the Replacement List in the options page.
+
+You can also submit a board API token to the options page. 
 
 ### Install Guide:
 
