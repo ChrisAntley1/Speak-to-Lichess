@@ -7,10 +7,9 @@
     <link id="dark-theme-style" rel="stylesheet" href="https://bootswatch.com/5/darkly/bootstrap.min.css"/>
     <link rel="stylesheet" href="popup.css">
 </head>
-<body class="bootstrap-dark">
-
-    <img src="images/Yellow Chess Talk 512.png" alt="image go brr" style="margin-top: 20px; width: 35%; height: auto;">
-    <!-- <h1>Speak to Lichess</h1> -->
+<body class="bootstrap-dark, popup">
+    
+    <img src="images/Yellow Chess Talk 512.png" alt="image go brr" style="margin-top: 20px; width: 30%; height: auto;">
     <br><br>
     <h3>Listen style:</h3>
     <form>
@@ -30,10 +29,10 @@
     <h5 for="correct_input">with this word or phrase:</h5>
     <input type="text" id="correct_input" name="correct_input"><br><br>
     <input type="button" value="Submit" id="submit"> 
-    <input type="button" value="Manage phrases" id="manage"> 
-    <br><br>
-
+    <input type="button" value="Options" id="manage"> 
+    <br>
     <span id = 'display_result'></span>
+    <br>
 
     <script src="popup.js"></script>
 </body>

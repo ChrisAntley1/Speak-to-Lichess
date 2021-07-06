@@ -9,12 +9,46 @@
     <link rel="stylesheet" href="options.css">
     <title>Options Page</title>
 </head>
-<body class="bootstrap-dark">
-    <h1>Options - Speak to Lichess</h1>
+<body class="bootstrap-dark, center">
+
+    <br>
+    <img src="images/Yellow Chess Talk 512.png" alt="" style="width: 15%; height: auto;">
+    <h1>Speak to Lichess - Options</h1>
     
     <br>
+    <h3>Board API Token</h3>
+    <br>
+    <img src="images/redChess512.png" id="status_image" style="width: 10%; height: auto;">
+    <br>
+    <br>
+    <h5 id="token_status">Checking token status with Lichess...</h5>
 
-    <h3>Replacement words table</h3>
+    <br>
+    <p style="font-size: large;">A personal Lichess API token is required to use both automatic submission and UCI format moves. 
+        The button below will navigate you to Lichess's token creation page.
+        The name and required scope has already been set; do not add any unnecessary permissions.
+        Simply press the blue 'submit' button, and copy the generated token into the field below.</p>
+    
+    <strong style="font-size: large;">**Only available in rapid, classical, and correspondence formats!**</strong>
+    <br>
+    <br>
+
+    <strong style="color: red; background-color: white; font-size: large;">WARNING: Do not add additional permissions to your token!
+        Token is stored in plain text!</strong>
+    <br>
+    <br>
+    <div>
+        <input type="button" id="generate_token_button" value="generate new token on Lichess">
+        <br>
+        <input type="text" id="board_token_input" placeholder ="paste auth token here" style="text-align: center;">
+        <input type="button" id="submit_token_button" value="submit token">
+        <br>
+        <span id="token_message">token message go brrr</span>
+
+    </div>  
+    <br>
+    <br>
+    <h3>Replacement Words Table</h3>
 
     <div class="scroll_table">
         <table id="replacement_table">
@@ -26,16 +60,22 @@
         </table>
     </div>
 
+    <br>
+    <input type="text" name="" id="search_input" placeholder ="search replacement table" style="width: 200px;">
+    <br>
+    <br>
     <div class="input_div">
         <label for="trouble_input">Replace this word:</label>
         <input type="text" id="trouble_input" name="trouble_input">
 
         <label for="correct_input">with this word or phrase:</label>
         <input type="text" id="correct_input" name="correct_input">
-
+        <br>
+        <br>
         <input type="button" value="Submit" id="submit"> 
-        <br><br>
-       
+        <br>
+        <span id="display_message"></span>
+        <br>
         <label for="trouble_input">Delete this word entry:</label>
         <input type="text" id="delete_input" name="delete_input">
         <input type="button" value="Delete word" id="delete"> 

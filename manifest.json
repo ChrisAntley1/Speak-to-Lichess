@@ -1,6 +1,6 @@
 {
     "name": "Speak to Lichess",
-    "version": "1.0",
+    "version": "2.0",
     "manifest_version": 3,
     "description": "Dictate moves to Lichess in SAN format!",
     "options_page": "options.html",
@@ -27,5 +27,9 @@
 
     "permissions": [
       "storage"
-    ]
+    ],
+
+    "icons": {
+      "128": "/images/yellow_chess_talk_128.png"
+    }
   }

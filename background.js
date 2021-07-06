@@ -3,6 +3,7 @@ chrome.runtime.onInstalled.addListener((details)=>{
     console.log("The extension has been installed!");
 
     var speech_to_text_Lichess_fuzzy_words = {
+
         "night": "knight",
         "knights": "knight",
         "brooke": "rook",
@@ -36,7 +37,13 @@ chrome.runtime.onInstalled.addListener((details)=>{
         "ate": "8",
         "viii": "8",
 
-        //settings? because why not? and also setting TOGGLE_LISTEN by itself didnt seem to work
+        "except": "accept",
+        "excepts": "accept",
+        "overdraw": "offer draw",
+        "offered": "offer",
+        "aboard": "abort"
+
+
     };
 
     var TOGGLE_LISTEN = {'__toggle': false};
