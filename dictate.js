@@ -97,7 +97,7 @@ if(checkIfGamePage(lichessLocation)){
                 else toggle_hold_message = "Press and hold ctrl to dictate";
                 display_listen_status.innerHTML = toggle_hold_message;
 
-                
+                is_listening = false;
                 recognition.stop();
             } 
             else if (item != 'last_command') word_replacement_list[item] = changes[item].newValue;
