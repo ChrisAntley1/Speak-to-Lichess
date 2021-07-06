@@ -5,31 +5,25 @@ Play chess using speech recognition!
 Lichess does not currently have a method to submit moves via voice commands. This extension allows you to dictate your moves and requires no board interaction. Great for blindfolded play or increasing accessibility. Not great for faster formats.
 
 ### NEW with 2.0 - Complete voice control with UCI format moves: Rapid, Classical, and Correspondence games supported!
-### SAN format moves with some keyboard input required: All formats supported.
+### SAN format moves with some keyboard input required: All time controls supported
 
-Demo: https://youtu.be/yqbm0kMNjAM
+Demo: https://www.youtube.com/watch?v=opdz7SAkMXc 
 
 Chrome Web Store: https://chrome.google.com/webstore/detail/speak-to-lichess/ldiiocggpmgljihlkgpngjlhnggpapig 
 
-Be sure to check out the How to Use section and example commands!
+Some command help: https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0Tsxo/edit?usp=sharing
 
-**Now supports complete voice control to submit moves in rapid, classical and correspondence time formats! Require UCI format moves. In addition, user must provide personal API token; instructions in options page.**
+  Takes advantage of Lichess's optional text input box for SAN format moves. SAN format requires user to press 'enter' to submit their move. 
 
-**Complete voice control AND UCI format moves are not supported in blitz or faster formats!**
+  Uses Lichess's Board API to (automatically!) submit UCI format moves in rapid, classical, and correspondence games. Requires API token which can be added in the options page.
+
+  Uses the Web Speech API to process spoken word into chess moves (with a little extra processing by the extension to more accurately recognize moves).
+
+## Instructions
 
 **To specify the letter of a square, you must say a word that begins with that letter, such as "delta" for the d column. The dictation software is very bad at understanding individual letters!**
 
 **Does not support the word "to"! Commands such as "bishop to hotel five" will be interpreted as "bishop 2 hotel 5", and will submit the move "b2h5".**
-
-Takes advantage of Lichess's optional text input box for SAN format moves. SAN format requires user to press 'enter' to submit their move. 
-
-Uses Lichess's Board API to (automatically!) submit UCI format moves in rapid, classical, and correspondence games. Requires API token which can be added in the options page.
-
-Uses the Web Speech API to process spoken word into chess moves (with a little extra processing by the extension to more accurately recognize moves).
-
-Demo: https://youtu.be/yqbm0kMNjAM
-
-## Instructions
 
 ### SAN format moves, in any time format
 
@@ -100,29 +94,31 @@ Specify squares in the same manner as you would for SAN format: a word that star
 
 A personal Lichess API token is required to use both automatic submission and UCI format. You can navigate, from the options page, to Lichess's personal token creation page. The name and required scope will already be set; do not add any unnecessary permissions. Simply press the blue 'submit' button, and copy the generated token into the appropriate field in Options, and submit.
 
-## Warning: Do not add additional permissions to your token! Token is stored in plain text!
+**Warning: Do not add additional permissions to your token! Token is stored in plain text!**
 
 ### Additional Commands:
 
-"resign"
-"offer draw"
-"take back"
-"accept"
-"decline"
-"abort"
-"new game"
-"rematch"
-"flip board"
-"analyze game"
+"resign", 
+"offer draw", 
+"take back", 
+"accept", 
+"decline", 
+"abort", 
+"new game", 
+"rematch", 
+"flip board", 
+"analyze game", 
 "rage quit"
 
 ### Install Guide:
 
---Extension Store submission pending--
+--Chrome Web Store: https://chrome.google.com/webstore/detail/speak-to-lichess/ldiiocggpmgljihlkgpngjlhnggpapig
 
-1. Download the latest release zip file from GitHub (usually somewhere on the right of the page) or clone the repository. 
+--From Github:
 
-2. Unzip the package; take note of where the resulting folder exists. 
+1. Download the latest release zip file from GitHub (usually somewhere on the right of the page), or clone the repository. 
+
+2. Unzip the package; take note of where the resulting folder is located. 
 
 3. Go to chrome://extensions 
 
