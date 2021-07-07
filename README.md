@@ -84,6 +84,8 @@ Specify squares in the same manner as you would for SAN format: a word that star
 
 A personal Lichess API token is required to use both automatic submission and UCI format. You can navigate, from the options page, to Lichess's personal token creation page. The name and required scope will already be set; do not add any unnecessary permissions. Simply press the blue 'submit' button, and copy the generated token into the appropriate field in Options, and submit.
 
+You can delete any personal API keys in Lichess preferences: https://lichess.org/account/oauth/token
+
 **--Warning: Do not add additional permissions to your token! Token is stored in plain text!--**
 
 Read more about the Lichess Board API here: https://lichess.org/blog/XlRW5REAAB8AUJJ-/welcome-lichess-boards
