@@ -4,7 +4,7 @@ Play chess using speech recognition!
 
 Lichess does not currently have a method to submit moves via voice commands. This extension allows you to dictate your moves and requires no board interaction. Great for blindfolded play or increasing accessibility. Not great for faster formats.
 
-### NEW with 2.0 - Complete voice control with UCI format moves: Rapid, Classical, and Correspondence games supported!
+### NEW with 2.0 - Complete voice control with UCI format moves: Rapid, Classical, and Correspondence games supported! (Requires API key; see UCI instructions)
 ### SAN format moves with some keyboard input required: All time controls supported
 
 Demo: https://www.youtube.com/watch?v=opdz7SAkMXc 
