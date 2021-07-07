@@ -7,7 +7,7 @@ Lichess does not currently have a method to submit moves via voice commands. Thi
 ### NEW with 2.0 - Complete voice control with UCI format moves: Rapid, Classical, and Correspondence games supported! (Requires API key; see UCI instructions)
 ### SAN format moves with some keyboard input required: All time controls supported
 
-Demo: https://www.youtube.com/watch?v=opdz7SAkMXc 
+Demo: https://www.youtube.com/watch?v=FB0uJwfo87k
 
 Chrome Web Store: https://chrome.google.com/webstore/detail/speak-to-lichess/ldiiocggpmgljihlkgpngjlhnggpapig 
 
