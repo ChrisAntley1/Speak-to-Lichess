@@ -3,6 +3,27 @@
  * 
  * 1. Dynamically update replacement table in options page
  * --complete for search table
+ * --could just redraw replacement table on changes/additions to list
+ * 
+ * 2. properly seperate replacement word list from settings in chrome storage
+ * 
+ * 3. Consolidate similar 'other command' functions
+ * 
+ * 4. clean up speech processing
+ * 
+ * 5. Make 'listen' message view not compete for space with material icons
+ * 
+ * 6. Get gud at JS and scope functions and variables more appropriately
+ * 
+ * 7. probably other stuff
+ * 
+ * LARGER GOALS/ POTENTIAL FEATURES:
+ * 
+ * 1. stream game state data from Lichess; track game state and convert SAN to UCI according to user settings
+ * 
+ * 2. Prepare for firefox release; experiment in firefox extension with functional speech grammar
+ * 
+ * 3. Possibly use interim results from recognition to more quickly submit to the API
  */
 
 const lichessLocation = location.href
