@@ -19,7 +19,9 @@ if(checkIfGamePage(lichessLocation)){
     var DISPLAY_MESSAGE = "Your move will appear here.";
     var API_ADDRESS_TEMPLATE = "https://lichess.org/api/board/game/--GAME_ID--/move/--UCI_MOVE--".replace('--GAME_ID--', lichessLocation);
     var BOARD_API_TOKEN = '';
-    var NO_TOKEN_MESSAGE = "No API token! Open options page and set a valid API token to use both UCI format and automatic move submission."
+    var NO_TOKEN_MESSAGE = 
+        "No API token! Open options page and set a valid API token to use both UCI format " +
+        "and automatic move submission. You can still use SAN format moves, and press enter to submit them."
     
     //Maps for checking and handling key words
     var numberMap;
