@@ -58,6 +58,8 @@ tokenInput.addEventListener('keyup', function(event){
 function addTableRows(array) {
     var table = document.getElementById('replacement_table');
     
+    //check to make sure the entry is not an option. Should definitely 
+    //change storage management so that this can't happen!
     for (var i = 0; i < array.length; i++) {
         
         if(ignoreList.includes(array[i])){
