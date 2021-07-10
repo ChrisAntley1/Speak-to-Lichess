@@ -2,7 +2,7 @@
     "name": "Speak to Lichess",
     "version": "2.0",
     "manifest_version": 3,
-    "description": "Dictate moves to Lichess in SAN format!",
+    "description": "Use voice control to play Lichess games!",
     "options_page": "options.html",
     "host_permissions": ["*://*.lichess.org/*"],
     "content_scripts": [
