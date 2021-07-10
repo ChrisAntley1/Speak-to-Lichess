@@ -24,6 +24,18 @@
  * 2. Prepare for firefox release; experiment in firefox extension with functional speech grammar
  * 
  * 3. Possibly use interim results from recognition to more quickly submit to the API
+ * 
+ * Promotional/supplemental work:
+ * 
+ * 1. more detailed screenshots on web store page
+ * 
+ * 2. Video of game fully played with speech
+ * 
+ * 3. Video of hilarious rage quit command
+ * --no one's found it yet :(
+ * 
+ * 4. Try and poke Eric Rosen and see if he likes it
+ * -- Maybe best after SAN gets auto-submitted, but also might just go for it
  */
 
 const lichessLocation = location.href
