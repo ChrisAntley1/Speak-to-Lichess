@@ -4,10 +4,10 @@ Play chess using speech recognition!
 
 Lichess does not currently have a method to submit moves via voice commands. This extension allows you to dictate your moves and requires no board interaction. Great for blindfolded play or increasing accessibility. Not great for faster formats.
 
-### NEW with 2.0 - Complete voice control with UCI format moves: Rapid, Classical, and Correspondence games supported!
+### NEW with 2.0 - Complete voice control with UCI format moves: Rapid, Classical, and Correspondence games supported! (Requires API key; see UCI instructions)
 ### SAN format moves with some keyboard input required: All time controls supported
 
-Demo: https://www.youtube.com/watch?v=opdz7SAkMXc 
+Demo: https://www.youtube.com/watch?v=FB0uJwfo87k
 
 Chrome Web Store: https://chrome.google.com/webstore/detail/speak-to-lichess/ldiiocggpmgljihlkgpngjlhnggpapig 
 
@@ -83,6 +83,8 @@ Specify squares in the same manner as you would for SAN format: a word that star
 ### Enabling UCI format
 
 A personal Lichess API token is required to use both automatic submission and UCI format. You can navigate, from the options page, to Lichess's personal token creation page. The name and required scope will already be set; do not add any unnecessary permissions. Simply press the blue 'submit' button, and copy the generated token into the appropriate field in Options, and submit.
+
+You can delete any personal API keys in Lichess preferences: https://lichess.org/account/oauth/token
 
 **--Warning: Do not add additional permissions to your token! Token is stored in plain text!--**
 
