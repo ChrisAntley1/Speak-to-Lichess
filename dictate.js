@@ -1,3 +1,9 @@
+/**
+ * TODO: General TODO for this trip that I can think of currently:
+ * 
+ * 1. Dynamically update replacement table in options page
+ * --complete for search table
+ */
 
 const lichessLocation = location.href
                     .replace('http://', '')
@@ -5,8 +11,35 @@ const lichessLocation = location.href
                     .replace('lichess.org/', '')
                     .replace('lichess.org', '');
 
+// let isOngoingGame = false;
+
+// if(checkIfGamePage(lichessLocation)){
+//     console.log("might be ongoing game...");
+//     isOngoingGame = checkIfActiveGame().then(res =>{
+//         console.log(res);
+//     });
+//     console.log(isOngoingGame);
+// }
+
+// if(!isOngoingGame) console.log("Not ongoing game page.");
+
+// else {
 
 if(checkIfGamePage(lichessLocation)){
+
+    /**
+     * So here we know that the page may contain an active game. We need these variables declared outside of functions for global use.
+     * However, we could instantiate them in an async function that waits for the results of the API call; 
+     * and if the API call returns negative, then we can save some space and work by not initializing anything else. 
+     */
+    // console.log("Might be ongoing game, doing the thing");
+
+    // Grammar = broken
+    // var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
+    // var grammar = '#JSGF V1.0;';
+    // var speechRecognitionGrammarList = new SpeechGrammarList();
+    // speechRecognitionGrammarList.addFromString(grammar, 1);
+    // recognition.grammars = speechRecognitionGrammarList;
 
     //initializing speech recognition 
     var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
@@ -109,6 +142,8 @@ if(checkIfGamePage(lichessLocation)){
     /**
      * SPEECH RECOGNITION SECTION 
      */
+    //TODO: Processing of speech is a jumbled NIGHTMARE; reorganize 
+
     recognition.onresult = function(event) {
 
         let command = event.results[event.results.length - 1][0].transcript;
@@ -160,7 +195,17 @@ if(checkIfGamePage(lichessLocation)){
         display_move.innerHTML = "press enter to submit: " + result_command;
 
     };
-
+  
+  
+     /**
+     * TODO: there was something about the listening I wanted to change.
+     * 
+     * While using toggle listening, for the sake of speed, provide user key to immediately submit a move?
+     * In the same vein, provide key to ignore whatever has been heard in the immediate listening sesion?
+     * 
+     * Implement known single syllable word list for letters - possibly
+     * 
+     */
     recognition.onspeechend = function() {
         recognition.stop();
         console.log("recognition speech end");
@@ -190,7 +235,7 @@ function processRawInput(command){
 
     //save the phrase to show the user in popup what phrase was heard (before replacing any words)
     chrome.storage.local.set({last_command: command}, function(){
-
+        //can delete this bracket space
     });
     return replaceWords(command.split(' '));
 }
@@ -574,6 +619,10 @@ function createKeyWordMaps(){
     commandFunctionMap.set('rage quit', rageQuit);
 }
 
+/**
+ * TODO: Previously played games will still return true! They use the entire 12 character id in the URL. 
+ * Can either only run script on 8 character games, or check if current game (possibly through API fetch)
+ */
 function checkIfGamePage(location){
     
     //locations with 8 or 12 alphanumeric characters
@@ -608,6 +657,7 @@ function checkIfGamePage(location){
 
 
 async function testToken(token){
+    //still throws 401 error in console if invalid token, there's probably some way to catch this
     display_move.innerHTML = "Checking Token...";
     fetch('https://lichess.org/api/account', {
     
@@ -630,6 +680,94 @@ async function testToken(token){
                 display_move.innerHTML = DISPLAY_MESSAGE;
             }
         });
+}
+async function createSeek(){
+
+    //create Stream
+    requestStream();
+
+    //queue for another 3+2 blitz game
+    let fetchRequest = {
+
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + BOARD_API_TOKEN
+        }
+    
+      };
+
+      fetch('https://lichess.org/api/board/seek', fetchRequest)
+      .then(res => res.json())
+      .then(function(res){
+      
+      
+      });
+  
+
+}
+
+async function requestStream(){
+
+    let fetchRequest = {
+
+        headers: {
+            'Authorization': 'Bearer ' + BOARD_API_TOKEN
+        }
+        
+
+        };
+
+    fetch('https://lichess.org/api/stream/event', fetchRequest)
+    .then(res => res.json())
+    .then(function(res){
+    
+    
+    });
+}
+
+/**
+ * everything below here not being used currently
+ */
+async function checkIfActiveGame(){
+
+    let response = await fetch('https://lichess.org/api/account/playing', {
+    
+    headers: {
+      'Authorization': 'Bearer ' + BOARD_API_TOKEN
+    }
+
+    });
+
+    if(!response.ok){
+        throw new Error("shit didn't work yo");
+    }
+    let gameList = await response.json();
+
+    console.log(gameList);
+    for(game_info of gameList.nowPlaying){
+
+        if(game_info.fullId === lichessLocation || game_info.gameId === lichessLocation){
+            console.log(game_info);
+            return true;
+            // board_api_url = createTemplateURL();
+        }
+    }
+    return false;
+        // response.json().then(function(res){
+        
+        //     console.log(res);
+        //     let found = false;
+        //     for(game_info of res.nowPlaying){
+    
+        //         if(game_info.fullId === lichessLocation || game_info.gameId === lichessLocation){
+        //             console.log(game_info);
+        //             return true;
+        //             // board_api_url = createTemplateURL();
+        //         }
+        //     }
+    
+        //     return false;
+        // });
 }
 
 
