@@ -9,7 +9,6 @@ let correct_input = document.querySelector('#correct_input');
 let submit_button = document.querySelector('#submit');
 let delete_button = document.querySelector('#delete');
 let update_message = document.querySelector('#update_message');
-let refresh_message = document.querySelector('#refresh_message');
 let delete_input = document.querySelector('#delete_input');
 let generateButton = document.getElementById('generate_token_button');
 let tokenInput = document.getElementById('board_token_input');
@@ -19,19 +18,15 @@ let tokenStatus = document.getElementById('token_status');
 let statusImage = document.getElementById('status_image');
 let displayMessage = document.getElementById('display_message');
 let searchInput = document.getElementById('search_input');
+let table = document.getElementById('replacement_table');
+let tableBody = document.getElementById('table_body');
 
 var word_replacement_list;
 var replacement_word_keys;
 var board_api_token;
+var ignoreList = ['last_command', '__toggle', '__board_api_token'];
 
-
-chrome.storage.local.get(word_replacement_list, function(result){
-    word_replacement_list = result;
-    replacement_word_keys = Object.keys(word_replacement_list);
-    console.log(replacement_word_keys);
-    addTableRows(replacement_word_keys);
-
-});
+getStoredTable();
 
 chrome.storage.local.get(['__board_api_token'], function(result){
 
@@ -43,7 +38,6 @@ chrome.storage.local.get(['__board_api_token'], function(result){
         testToken(result['__board_api_token'], false);
     }
 });
-var ignoreList = ['last_command', '__toggle', '__board_api_token'];
 
 submit_button.addEventListener('click', submitPhrase);
 delete_button.addEventListener('click', deleteWord);
@@ -56,7 +50,9 @@ tokenInput.addEventListener('keyup', function(event){
 });
 
 function addTableRows(array) {
-    var table = document.getElementById('replacement_table');
+    
+    let newTableBody = document.createElement('tbody');
+
     
     //check to make sure the entry is not an option. Should definitely 
     //change storage management so that this can't happen!
@@ -78,11 +74,12 @@ function addTableRows(array) {
         item.appendChild(correct_col);
 
         // Add it to the table:
-        table.appendChild(item);
+        newTableBody.appendChild(item);
     }
 
+    table.replaceChild(newTableBody, tableBody);
+    tableBody = newTableBody;
     // Finally, return the constructed list:
-    return table;
 }
 
 function filterBySearch(){
@@ -144,13 +141,16 @@ function submitPhrase(){
         word_replacement_list[trouble_word] = correct_phrase;
         chrome.storage.local.set(word_replacement_list);
 
+        //try updating table here
+        getStoredTable();
+
+
         if (phrase_updated){
             update_message.textContent = "Word updated: '" + trouble_word + "' will now be interpreted as: '" + correct_phrase +"'";
         }
 
         else update_message.textContent = "Word added: '" + trouble_word + "' will now be interpreted as: '" + correct_phrase +"'";
 
-        refresh_message.textContent = "Replacement table updated, refresh page to see changes!";
         correct_input.value = '';
         trouble_input.value = '';
 
@@ -187,15 +187,15 @@ function deleteWord(){
             chrome.storage.local.set(word_replacement_list);
         });
 
-
-        refresh_message.textContent = "Replacement table updated, refresh page to see changes!";
+        //try updating table here
+        getStoredTable();
 
         update_message.textContent = "Word removed: " + word_to_delete + " will no longer be replaced.";
 
     }
 
     else {
-        update_message.textContent = word_to_delete + " is already not being replaced.";
+        update_message.textContent = word_to_delete + " is not a word that is currently being replaced.";
     }
 
     delete_input.value = '';
@@ -229,6 +229,16 @@ function checkTokenFormat(token){
 
     tokenMessage.innerHTML = 'Format appears valid, checking with Lichess...';
     return true;
+}
+
+function getStoredTable(){
+    
+    chrome.storage.local.get(word_replacement_list, function(result){
+        word_replacement_list = result;
+        replacement_word_keys = Object.keys(word_replacement_list);
+        console.log(replacement_word_keys);
+        addTableRows(replacement_word_keys);
+    });    
 }
 
 function storeToken(token){
