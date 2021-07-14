@@ -4,15 +4,12 @@ const _GENERATE_TOKEN_URL = 'https://lichess.org/account/oauth/token/create?scop
 const VALID_TOKEN_MESSAGE = "Current token is valid for Lichess user ";
 const NO_TOKEN_MESSAGE = "No token stored."
 
-let trouble_input = document.querySelector('#trouble_input');
-let correct_input = document.querySelector('#correct_input');
-let submit_button = document.querySelector('#submit');
-let delete_button = document.querySelector('#delete');
-let update_message = document.querySelector('#update_message');
-let delete_input = document.querySelector('#delete_input');
+let trouble_input = document.getElementById('trouble_input');
+let correct_input = document.getElementById('correct_input');
+let update_message = document.getElementById('update_message');
+let delete_input = document.getElementById('delete_input');
 let generateButton = document.getElementById('generate_token_button');
 let tokenInput = document.getElementById('board_token_input');
-let tokenButton = document.getElementById('submit_token_button');
 let tokenMessage = document.getElementById('token_message');
 let tokenStatus = document.getElementById('token_status');
 let statusImage = document.getElementById('status_image');
@@ -20,9 +17,8 @@ let displayMessage = document.getElementById('display_message');
 let searchInput = document.getElementById('search_input');
 let table = document.getElementById('replacement_table');
 let tableBody = document.getElementById('table_body');
-
-let newWordForm = document.querySelector('#new_word_form');
-let deleteForm = document.querySelector('#delete_form');
+let newWordForm = document.getElementById('new_word_form');
+let deleteForm = document.getElementById('delete_form');
 let tokenForm = document.getElementById('token_form');
 
 var word_replacement_list;
@@ -42,14 +38,6 @@ chrome.storage.local.get(['__board_api_token'], function(result){
         testToken(result['__board_api_token'], false);
     }
 });
-
-// submit_button.addEventListener('click', submitPhrase);
-// delete_button.addEventListener('click', submitDelete);
-// tokenInput.addEventListener('keyup', function(event){
-//     if (event.key === 'Enter') submitToken();
-// });
-// tokenButton.addEventListener('click', submitToken);
-
 
 newWordForm.addEventListener('submit', submitPhrase);
 deleteForm.addEventListener('submit', submitDelete);
