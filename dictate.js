@@ -216,6 +216,14 @@ if(checkIfGamePage(lichessLocation)){
         }
     });
 
+    document.addEventListener('keydown', enterMove);
+    document.addEventListener('keydown', listenKeyDown);
+    document.addEventListener('keyup', listenKeyUp);
+    document.addEventListener('visibilitychange', function() {
+        stopDictation();
+        holding_listen_key = false;
+    });
+
     /**
      * SPEECH RECOGNITION SECTION 
      */
@@ -418,20 +426,12 @@ if(checkIfGamePage(lichessLocation)){
             
             console.log("input found.");
     
-            inputBox = document.getElementsByClassName('ready')[0];
-            document.addEventListener('keydown', enterMove);
-            document.addEventListener('keydown', listenKeyDown);
-            document.addEventListener('keyup', listenKeyUp);
-            document.addEventListener('visibilitychange', function() {
-                stopDictation();
-                holding_listen_key = false;
-            });
-            
+            inputBox = document.getElementsByClassName('ready')[0];            
             input_found = true;
     
         }
     
-        if(input_found && !underboard_found && document.getElementsByClassName('round__underboard').length > 0){
+        if(!underboard_found && document.getElementsByClassName('round__underboard').length > 0){
             
             console.log("underboard found.");
               var under_board = document.getElementsByClassName('round__underboard')[0];
@@ -441,14 +441,18 @@ if(checkIfGamePage(lichessLocation)){
           }
     
     
-        if(underboard_found && !material_bottom_found && (document.getElementsByClassName('material material-bottom').length > 0)){
+        if(!material_bottom_found && (document.getElementsByClassName('material material-bottom').length > 0)){
             
             console.log("material bottom found.");
     
             document.getElementsByClassName('material material-bottom')[0].appendChild(display_listen_status);        
             material_bottom_found = true;
+        }
+
+        if(input_found & underboard_found & material_bottom_found){
             observer.disconnect();
         }
+    
     }
     
     function enterMove(e){
