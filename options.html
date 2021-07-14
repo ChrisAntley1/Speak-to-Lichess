@@ -40,10 +40,12 @@
     <div>
         <input type="button" id="generate_token_button" value="generate new token on Lichess">
         <br>
-        <input type="text" id="board_token_input" placeholder ="paste auth token here" style="text-align: center;">
-        <input type="button" id="submit_token_button" value="submit token">
-        <br>
-        <span id="token_message">token message go brrr</span>
+        <form id="token_form">
+            <input type="text" id="board_token_input" placeholder ="paste auth token here" style="text-align: center;">
+            <input type="submit" id="submit_token_button" value="submit token">
+            <br>
+            <span id="token_message">token message go brrr</span>
+        </form>
 
     </div>  
     <br>
@@ -66,20 +68,24 @@
     <br>
     <br>
     <div class="input_div">
-        <label for="trouble_input">Replace this word:</label>
-        <input type="text" id="trouble_input" name="trouble_input">
+        <form id="new_word_form">
+            <label for="trouble_input">Replace this word:</label>
+            <input type="text" id="trouble_input" name="trouble_input">
 
-        <label for="correct_input">with this word or phrase:</label>
-        <input type="text" id="correct_input" name="correct_input">
+            <label for="correct_input">with this word or phrase:</label>
+            <input type="text" id="correct_input" name="correct_input">
+            <br>
+            <br>
+            <input type="submit" value="Submit" id="submit">
+            <span id="display_message"></span>
+        </form>
         <br>
         <br>
-        <input type="button" value="Submit" id="submit"> 
-        <br>
-        <span id="display_message"></span>
-        <br>
-        <label for="trouble_input">Delete this word entry:</label>
-        <input type="text" id="delete_input" name="delete_input">
-        <input type="button" value="Delete word" id="delete"> 
+        <form id="delete_form">
+            <label for="trouble_input">Delete this word entry:</label>
+            <input type="text" id="delete_input" name="delete_input">
+            <input type="submit" value="Delete word" id="delete"> 
+        </form>
     
     </div>
     <div>

@@ -21,6 +21,10 @@ let searchInput = document.getElementById('search_input');
 let table = document.getElementById('replacement_table');
 let tableBody = document.getElementById('table_body');
 
+let newWordForm = document.querySelector('#new_word_form');
+let deleteForm = document.querySelector('#delete_form');
+let tokenForm = document.getElementById('token_form');
+
 var word_replacement_list;
 var replacement_word_keys;
 var board_api_token;
@@ -39,15 +43,21 @@ chrome.storage.local.get(['__board_api_token'], function(result){
     }
 });
 
-submit_button.addEventListener('click', submitPhrase);
-delete_button.addEventListener('click', deleteWord);
+// submit_button.addEventListener('click', submitPhrase);
+// delete_button.addEventListener('click', submitDelete);
+// tokenInput.addEventListener('keyup', function(event){
+//     if (event.key === 'Enter') submitToken();
+// });
+// tokenButton.addEventListener('click', submitToken);
+
+
+newWordForm.addEventListener('submit', submitPhrase);
+deleteForm.addEventListener('submit', submitDelete);
+tokenForm.addEventListener('submit', submitToken);
+
 generateButton.addEventListener('click', generateToken);
 searchInput.addEventListener('keyup', filterBySearch);
 
-tokenButton.addEventListener('click', submitToken);
-tokenInput.addEventListener('keyup', function(event){
-    if (event.key === 'Enter') submitToken();
-});
 
 function addTableRows(array) {
     
@@ -112,8 +122,9 @@ function filterBySearch(){
         }
     }
 }
-function submitPhrase(){
+function submitPhrase(e){
     
+    e.preventDefault();
     var trouble_word = trouble_input.value;
     var correct_phrase = correct_input.value; 
     if(trouble_word == null || trouble_word == undefined || trouble_word.length == 0) return;
@@ -173,7 +184,8 @@ function checkProposedPhrase(phrase){
     return phrase;
 }
 
-function deleteWord(){
+function submitDelete(e){
+    e.preventDefault();
 
     var word_to_delete = delete_input.value;
     if(word_to_delete == null || word_to_delete == undefined || word_to_delete.length == 0) return;
@@ -206,10 +218,13 @@ function generateToken(){
     window.open(_GENERATE_TOKEN_URL, '_blank');
 }
 
-async function submitToken(){
+async function submitToken(e){
+
+    e.preventDefault();
+
     let token = tokenInput.value;
     if (checkTokenFormat(token)){
-
+        console.log("shouldnt be here");
         testToken(token, true);
     } 
 
