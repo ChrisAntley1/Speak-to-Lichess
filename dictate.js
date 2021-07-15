@@ -21,12 +21,17 @@
  * -- need to behave a lot differently from a game page? 
  * -- might initially just use entire body; use gamePage flag to avoid accepting moves
  * 
+ * 8. Log speech interpretations up to a certain amount; allows user to go back and see everything that may cause problems
+ * -- Up to 100 maybe
+ * -- maybe show last 5 in popup
  * 
  * LARGER GOALS/ POTENTIAL FEATURES:
  * 
  * 1. stream game state data from Lichess; track game state and convert SAN to UCI according to user settings
  * 
  * 2. Prepare for firefox release; experiment in firefox extension with functional speech grammar
+ * -- could probably easily port the extension as is to firefox as a start
+ * -- if grammar works, would be fairly easy to set up 1 syllabel letter replacements; maybe even allow certain letters
  * 
  * 3. Possibly use interim results from recognition to more quickly submit to the API
  * 
