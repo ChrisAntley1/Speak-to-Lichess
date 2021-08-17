@@ -2,7 +2,7 @@
 chrome.runtime.onInstalled.addListener((details)=>{
     console.log("The extension has been installed!");
 
-    var speech_to_text_Lichess_fuzzy_words = {
+    let word_replacement_list = {
 
         "night": "knight",
         "knights": "knight",
@@ -46,8 +46,8 @@ chrome.runtime.onInstalled.addListener((details)=>{
 
     };
 
-    var TOGGLE_LISTEN = {'__toggle': false};
-    chrome.storage.local.set(speech_to_text_Lichess_fuzzy_words);
+    let TOGGLE_LISTEN = {'__toggle': false};
+    chrome.storage.local.set(word_replacement_list);
     chrome.storage.local.set(TOGGLE_LISTEN);
     
 });
