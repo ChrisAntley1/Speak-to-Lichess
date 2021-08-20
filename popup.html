@@ -9,7 +9,7 @@
 </head>
 <body class="bootstrap-dark, popup">
     
-    <img src="images/Yellow Chess Talk 512.png" alt="image go brr" style="margin-top: 20px; width: 30%; height: auto;">
+    <img src="images/Yellow Chess Talk 512.png" alt="image go brr" style="margin-top: 20px; width: 20%; height: auto;">
     <br><br>
     <h3>Listen style:</h3>
     <form>
@@ -23,13 +23,15 @@
     <span id = 'command'></span>
     <br><br>
         
-    
-    <h5 for="trouble_input">Replace this word:</h5>
-    <input type="text" id="trouble_input" name="trouble_input"><br><br>
-    <h5 for="correct_input">with this word or phrase:</h5>
-    <input type="text" id="correct_input" name="correct_input"><br><br>
-    <input type="button" value="Submit" id="submit"> 
-    <input type="button" value="Options" id="manage"> 
+    <form id="replace_form">
+        <h5 for="trouble_input">Replace this word:</h5>
+        <input type="text" id="trouble_input" name="trouble_input"><br><br>
+        <h5 for="correct_input">with this word or phrase:</h5>
+        <input type="text" id="correct_input" name="correct_input"><br><br>
+        <input type="submit" value="Submit" id="submit">
+        <input type="button" value="Options" id="manage"> 
+
+    </form>
     <br>
     <span id = 'display_result'></span>
     <br>

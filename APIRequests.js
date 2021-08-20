@@ -44,7 +44,6 @@ async function checkIfActiveGame(){
     }
     let gameList = await response.json();
 
-    console.log(gameList);
     for(game_info of gameList.nowPlaying){
 
         if(game_info.fullId === lichessLocation || game_info.gameId === lichessLocation){
@@ -128,6 +127,7 @@ async function postMove(chessMove){
     
     };
     
+    //TODO: display move never actually displays move right now...
     fetch(api_url, fetchRequestObject)
         .then(res => res.json())
         .then(function(res){
@@ -135,7 +135,6 @@ async function postMove(chessMove){
             console.log(res);
             if(res['ok']){
                 display_move.innerHTML = API_SUBMIT_SUCCESS;
-                
             }
 
             else {

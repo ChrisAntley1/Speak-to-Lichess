@@ -41,13 +41,18 @@ chrome.runtime.onInstalled.addListener((details)=>{
         "excepts": "accept",
         "overdraw": "offer draw",
         "offered": "offer",
-        "aboard": "abort"
-
-
+        "aboard": "abort",
+        "flipboard": "flip board",
+        "footboard": "flip board",
+        "clipboard": "flip board"
+        // "": "",
     };
 
     let TOGGLE_LISTEN = {'__toggle': false};
-    chrome.storage.local.set(word_replacement_list);
+    chrome.storage.local.set({'word_replacement_list': word_replacement_list});
     chrome.storage.local.set(TOGGLE_LISTEN);
     
+    // let TEXT_INPUT = {'__text_input': false};
+    // chrome.storage.local.set(TEXT_INPUT);
+
 });

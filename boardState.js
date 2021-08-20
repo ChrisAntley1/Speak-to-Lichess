@@ -61,31 +61,27 @@
 *          -- probably inform user of both
 *          -- send move using arbitrary piece of target type regardless?
 */
-let INVALID_MOVE = 'Invalid move detected; your move did not follow any expected SAN or UCI formats.'
-let castleMap;
-// let translateColumnMap;
+const INVALID_MOVE = 'Invalid move detected; your move did not follow any expected SAN or UCI formats.'
+const BUILDING_BOARD = 'movelist length was 0 or takeback occured. Building board state from starting position...';
+const NO_SUCH_PIECE = 'updateUserPiece: attempting to update piece that does not exist in userPieceMap!';
+const MUST_SPECIFY_PIECE = 'More than 1 piece has access to this square; user must specify the correct piece!';
 
+let castleMap;
 let movesList = [];
 let userColor = '';
 let pieceRow = 0;
+let pawnRow = 0;
 let userPieceMap;
 let kingSideCastle;
 let queenSideCastle;
 
-let board = {
-    'a': [0, 'wR', 'wp', '--', '--', '--', '--', 'bp', 'bR'],
-    'b': [0, 'wN', 'wp', '--', '--', '--', '--', 'bp', 'bN'],
-    'c': [0, 'wB', 'wp', '--', '--', '--', '--', 'bp', 'bB'],
-    'd': [0, 'wQ', 'wp', '--', '--', '--', '--', 'bp', 'bQ'],
-    'e': [0, 'wK', 'wp', '--', '--', '--', '--', 'bp', 'bK'],
-    'f': [0, 'wB', 'wp', '--', '--', '--', '--', 'bp', 'bB'],
-    'g': [0, 'wN', 'wp', '--', '--', '--', '--', 'bp', 'bN'],
-    'h': [0, 'wR', 'wp', '--', '--', '--', '--', 'bp', 'bR']}; 
+var board;
 
-const columns = ['no!','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+const columns = ['-','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
 function setInitialGameState(color){
     
+    setStartingPosition();
     userColor = color;
     castleMap = new Map();
 
@@ -93,14 +89,6 @@ function setInitialGameState(color){
     castleMap.set('e8g8', 'h8f8');
     castleMap.set('e1c1', 'a1d1');
     castleMap.set('e1g1', 'h1f1');
-
-
-    userPieceMap = new Map();
-
-
-    // translateColumnMap = new Map(); 
-    let pawnRow;
-    let pieceRow;
 
     if(userColor === "w"){
         pawnRow = 2;
@@ -111,19 +99,59 @@ function setInitialGameState(color){
         pawnRow = 7;
         pieceRow = 8;
     }
-
     kingSideCastle = `e${pieceRow}g${pieceRow}`;
     queenSideCaslte = `e${pieceRow}c${pieceRow}`;
+
+    setUserPieces();
+}
+
+/**
+ * TODO: 
+ */
+function updateGameState(updatedMoveList){
+
+    //if no moves recorded yet OR if a takeback possibly occured
+    if(movesList.length == 0 || updatedMoveList.length - movesList.length != 1){
+        
+        console.log(BUILDING_BOARD);
+        setStartingPosition();
+        setUserPieces();
+        for(move of updatedMoveList)
+            movePiece(move);
+    }
+
+    //make sure our lists are consistent up to the point of the last known move; if not, a takeback has occured and shits gotta change
+    else if(isMovesListValid(updatedMoveList) == true){
+        const newMove = updatedMoveList[updatedMoveList.length - 1];
+        movePiece(newMove);
+    }
+    
+    movesList = updatedMoveList;
+
+    console.log(board);
+
+}
+
+function setStartingPosition(){
+    board = new Object({
+        'a': [0, 'wR', 'wp', '--', '--', '--', '--', 'bp', 'bR'],
+        'b': [0, 'wN', 'wp', '--', '--', '--', '--', 'bp', 'bN'],
+        'c': [0, 'wB', 'wp', '--', '--', '--', '--', 'bp', 'bB'],
+        'd': [0, 'wQ', 'wp', '--', '--', '--', '--', 'bp', 'bQ'],
+        'e': [0, 'wK', 'wp', '--', '--', '--', '--', 'bp', 'bK'],
+        'f': [0, 'wB', 'wp', '--', '--', '--', '--', 'bp', 'bB'],
+        'g': [0, 'wN', 'wp', '--', '--', '--', '--', 'bp', 'bN'],
+        'h': [0, 'wR', 'wp', '--', '--', '--', '--', 'bp', 'bR']
+    });
+}
+
+function setUserPieces(){
+
+    userPieceMap = new Map();
 
     const userPawn = userColor+'p';
 
     for(let i = 1; i<= 8; i++){
-
-        
-        
-        // pawnArray[i] = columns[i] + pawnRow;
-        // translateColumnMap.set(columns[i], i);
-
         userPieceMap.set(columns[i] + pawnRow, userPawn);
     }
 
@@ -138,46 +166,8 @@ function setInitialGameState(color){
     userPieceMap.set('f' + pieceRow, userColor + 'B');
     userPieceMap.set('g' + pieceRow, userColor + 'N');
     userPieceMap.set('h' + pieceRow, userColor + 'R');
-}
-
-/**
- * TODO: 
- */
-function updateGameState(updatedMoveList){
-
-    //either first move, or catching up to an ongoing game's current position.
-    if(movesList.length == 0){
-        
-        //go through the entire moves list
-        // let indexableMovesList = translateMoveList(updatedMoveList);
-        // for(move of indexableMovesList)
-        //     movePiece(move);
-        for(move of updatedMoveList)
-            movePiece(move);
-    }
-
-    else if(updatedMoveList.length - movesList.length == 1){
-
-        //make sure our lists are consistent up to the point of the last known move; if not, a takeback has occured and shits gotta change
-        if(isMovesListValid(updatedMoveList) == false)
-            throw 'New moves list inconsistent with current moves; a take-back has likely occured. refresh page to correct board state.';
-        
-        else {
-            
-            const newMove = updatedMoveList[updatedMoveList.length - 1];
-            movePiece(newMove);
-        }
-        
-    }
-
-    else throw 'new list of moves has either more or less than 1 new additional move; board state is likely corrupt. Refresh page to correct board state.';
-    
-    movesList = updatedMoveList;
-
-    console.log(board);
 
 }
-
 function movePiece(move){
 
     const startingSquare = move.slice(0, 2);
@@ -188,7 +178,7 @@ function movePiece(move){
     const destPiece = board[destinationSquare[0]][destinationSquare[1]];
 
     if (movingPiece === '--'){
-        throw error('there is no piece on the starting square; you done fucked up now');
+        throw 'there is no piece on the starting square; you done fucked up now';
     }
 
     //check if piece is promoting; this move will always be from the Board API response, format should be consistent
@@ -219,33 +209,10 @@ function movePiece(move){
     
 }
 
-// function translateMoveList(moveList){
-
-//     let newList = [];
-    
-//     for(const move of moveList){
-        
-//         newList.push(translateMove(move));
-//     }
-
-//     return newList;
-// }
-
-// function translateMove(move){
-
-//     let translatedMove = '--';
-
-//     for(const c of move){
-//         if (c.match(/[a-h]/)) translatedMove+= translateColumnMap.get(c);
-//         else translatedMove+= c;
-//     }
-
-//     return translatedMove;
-// }
-
 function isMovesListValid(updatedMoveList){
 
-    for(let i = 0; i< movesList.length; i++){
+    //start from back of moves list to find discrepancies more quickly
+    for(let i = movesList.length - 1; i>= 0; i--){
 
         if(updatedMoveList[i] !== movesList[i]) return false;
     }
@@ -255,10 +222,10 @@ function isMovesListValid(updatedMoveList){
 
 function deleteUserPiece(capturedPieceSquare){
     
-    if(userPieceMap.delete(capturedPieceSquare))
-        console.log('successfully removed piece from users piece list.');
+    //lol
+    if(userPieceMap.delete(capturedPieceSquare));
     
-    else throw 'attempted to delete piece that did not exist in users piece list??';
+    else throw 'attempted to delete piece that did not exist in user piece list??';
 
 
 }
@@ -266,7 +233,7 @@ function deleteUserPiece(capturedPieceSquare){
 function promoteUserPawn(startingSquare, newPiece){
     
     if (userPieceMap.get(startingSquare) == undefined){
-        throw'promoteUserPawn: attempting to promote pawn that does not exist in userPieceMap!';
+        throw 'promoteUserPawn: attempting to promote pawn that does not exist in userPieceMap!';
     }
 
     // newPiece = newPiece[0] + newPiece[1];
@@ -280,8 +247,7 @@ function updateUserPiece(previousSquare, newSquare){
     const piece = userPieceMap.get(previousSquare);
 
     if(piece == undefined){
-        console.log(board);
-        throw 'updateUserPiece: attempting to update piece that does not exist in userPieceMap!';
+        console.log(NO_SUCH_PIECE);
     }
     
     userPieceMap.delete(previousSquare);
@@ -330,8 +296,10 @@ function getPawnMove(sanMove){
 
     let destination = sanMove.match(/[a-h][1-8]/);
 
-    if(destination == null)
-        throw INVALID_MOVE;
+    if(destination == null){
+        console.log(INVALID_MOVE);
+        return;
+    }
     else destination = destination[0];
     
     console.log('destination: ' + destination);
@@ -349,11 +317,9 @@ function getPawnMove(sanMove){
     if(userColor === 'w')
         direction = 1;
 
-    
     if(sanMove.length == 2){
         //if move to rank 4 for white or rank 5 for black, check pawn map
         //else assume pawn's position
-    
         if((destRow == 5 && userColor == 'b') || (destRow == 4 && userColor == 'w')){ 
             if(board[col][destRow - direction] !== (userColor + 'p'))
                 return col + (destRow - (direction * 2)) + destination;
@@ -377,13 +343,13 @@ function getPawnMove(sanMove){
             return sanMove[0] + (destRow - direction) + destination + sanMove[sanMove.length - 1];
     
     return -1;
-
 }
 
 function getCastleMove(sanMove){
     
     if(sanMove === '0-0') return kingSideCastle;
     if(sanMove === '0-0-0') return queenSideCastle;
+
     return -1;
 }
 
@@ -427,7 +393,6 @@ function findValidPiece(pieceList, moveComponents){
     //first, check if identifying info successfully narrows it down to a single piece
     if(moveComponents.squareInfo !== ''){
         
-
         for (square of pieceList){
             if(square.includes(moveComponents.squareInfo)){
                 validPieces.push(square);
@@ -463,10 +428,9 @@ function findValidPiece(pieceList, moveComponents){
     else if (validPieces.length == 1)
         return validPieces[0];
     
-    else console.log('More than 1 piece has access to this square; user must specify the correct piece!');
+    else console.log(MUST_SPECIFY_PIECE);
     
     return -1;
-
 }
 
 //TODO: Handle if destination square is piece belonging to user?? prob not
@@ -496,10 +460,8 @@ function inKnightRange(coordinates){
     let diffRow = Math.abs(coordinates.startRow - coordinates.destRow);
 
     if(Math.abs(diffCol - diffRow) == 1){
-        console.log('knight is in range');
         return true;
     }
-    console.log('knight NOT in range');
     return false;
 }
 
@@ -525,60 +487,44 @@ function getNumericCoordinates(start, dest){
 }
 
 function isBlocked(coordinates){
-    //TODO: We are successfully (it seems) checking the squares leading up to the destination square. 
-
 
     let rowDir, colDir;
     //squares are on the same column
     if(coordinates.startCol - coordinates.destCol == 0){
         colDir = 0;
         coordinates.startRow > coordinates.destRow ? rowDir = -1: rowDir = 1;
-
-        console.log('move is down column');
-
     }
 
     //squares are on the same row
     else if(coordinates.startRow - coordinates.destRow == 0){
         rowDir = 0;
         coordinates.startCol > coordinates.destCol ? colDir = -1: colDir = 1;
-        console.log('move is down row');
-
-        
     }
     //squares are on the same diagonal
     else if((Math.abs(coordinates.startCol - coordinates.destCol) == Math.abs(coordinates.startRow - coordinates.destRow))){
 
-        
         coordinates.startCol > coordinates.destCol ? colDir = -1: colDir = 1;
         coordinates.startRow > coordinates.destRow ? rowDir = -1: rowDir = 1;
-        console.log('move is down diagonal');
-
-        
     }
 
-    else {
-        throw 'error: squares are not on same row, column, or diagonal';
-    }
+    else throw 'error: squares are not on same row, column, or diagonal';
 
     let checkRow = coordinates.startRow + rowDir;
     let checkCol = coordinates.startCol + colDir;
 
-    
+    //checks squares between start and dest; if blocked, returns true
     while(!(coordinates.destRow == checkRow && coordinates.destCol == checkCol)){
-        console.log('checking ' + columns[checkCol] + checkRow);
+        
         //if square is occupied
         if(board[columns[checkCol]][checkRow] !== '--'){
-            console.log('piece is blocked; does not have line of sight to destination square!');
             return true;
-
         }
         
         checkRow += rowDir;
         checkCol += colDir;
     }
 
-    //if squares have line of sight of each other
+    //squares have line of sight of each other
     return false;
 }
 

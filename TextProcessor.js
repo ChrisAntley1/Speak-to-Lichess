@@ -3,6 +3,9 @@
 //TODO: destroy this and make just a javascript file, not a class. binding is stupid
 //tho it is working right now? i dunno
 
+
+const EXCLUDE_LIST = ['__board_api_token', '__toggle'];
+
 class TextProcessor {
 
     word_replacement_list;
@@ -18,6 +21,7 @@ class TextProcessor {
         TextProcessor._instance = this;
 
         this.createKeyWordMaps();
+        this.setReplacementList();
     }
 
 
@@ -111,8 +115,9 @@ class TextProcessor {
         
     setReplacementList(){
         console.log('setting replacement list');
-        chrome.storage.local.get(this.word_replacement_list, function(result){
-            this.word_replacement_list = result;
+        chrome.storage.local.get(['word_replacement_list'], function(result){
+
+            this.word_replacement_list = result['word_replacement_list'];
             console.log(this.word_replacement_list);
         });
     }
@@ -124,17 +129,6 @@ class TextProcessor {
     createKeyWordMaps(){
         this.numberMap = new Map();
         this.chessTermMap = new Map();
-
-        // this.numberMap = {
-        //     'one': '1',
-        //     'two': '2',
-        //     'three': '3',
-        //     'four': '4',
-        //     'five': '5',
-        //     'six': '6',
-        //     'seven': '7',
-        //     'eight': '8'
-        // }
 
         this.numberMap.set('one', '1');
         this.numberMap.set('two', '2');
@@ -157,9 +151,7 @@ class TextProcessor {
         this.chessTermMap.set('castle', '0-0');
         this.chessTermMap.set('long', '0-');
         this.chessTermMap.set('short', '');
-
     }
-
 }
 
 
