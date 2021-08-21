@@ -1,25 +1,4 @@
 /**
- * TODO: General TODO for this trip that I can think of currently:
- *  * 
- * 2. properly seperate replacement word list from settings in chrome storage
- * --DONE finally. inform users that their replacement words list may need to be updated.
- * 4. clean up speech processing
- * 
- * 5. Make 'listen' message view not compete for space with material icons
- * 
- * 6. Get gud at JS and scope functions and variables more appropriately
- * -- Semi Complete. never even tried just putting functions within if statement; forgot javascript dgaf! 
- * -- should now go over scope of variables again
- * 
- * 7. Home page controls: quick pairing button control!
- * -- need to behave a lot differently from a game page? 
- * -- might initially just use entire body; use gamePage flag to avoid accepting moves
- * -- probably just a homepage.js would be the simplest solution; except voice control stuff
- * 
- * 8. Log speech interpretations up to a certain amount; allows user to go back and see everything that may cause problems
- * -- Up to 100 maybe
- * -- maybe show last 5 in popup
- * 
  * LARGER GOALS/ POTENTIAL FEATURES:
  * 
  * 1. stream game state data from Lichess; track game state and convert SAN to UCI according to user settings
@@ -30,6 +9,16 @@
  * 
  * 3. Possibly use interim results from recognition to more quickly submit to the API
  * 
+ * 4. Home page controls: quick pairing button control!
+ * -- need to behave a lot differently from a game page? 
+ * -- might initially just use entire body; use gamePage flag to avoid accepting moves
+ * -- probably just a homepage.js would be the simplest solution; except voice control stuff
+ * 
+ * 5. Log speech interpretations up to a certain amount; allows user to go back and see everything that may cause problems
+ * -- Up to 100 maybe
+ * -- maybe show last 5 in popup
+ * 
+
  * Promotional/supplemental work:
  * 
  * 1. more detailed screenshots on web store page
@@ -54,7 +43,7 @@
 /**
  * NEW TODO: 
  * 
- * 1. Consolidate todo lists -.-
+ * 1. BIG: try and capture current users' word replacement lists so that they are not lost with correct word_replacement_list retrieval
  * 
  * 2. Flip board button not being found in UI 
  * -- turns out it switches between 'fbt flip' and 'fbt flip active'
@@ -84,6 +73,9 @@
  * 
  * 11. add delay to ragequit before issuing quit/abort
  * --did i try this before?
+ * 
+ * 12. STILL: Make 'listen' message view not compete for space with material icons
+ * --lol fack
  */
 
 if(isGamePage){
@@ -205,6 +197,23 @@ if(isGamePage){
                 else if (item != 'last_command' && item != '__board_api_token') processor.updateReplacementList();
             }
         });    
+    };
+
+    function createMaps(){
+        specialCommandMap = new Map();
+        specialCommandMap.set('new game', findNewGame);
+        specialCommandMap.set('rage quit', rageQuit);
+
+        elementNameMap = new Map();
+        elementNameMap.set('resign', 'fbt resign');
+        elementNameMap.set('offer draw', 'fbt draw-yes');
+        elementNameMap.set('abort', 'fbt abort');
+        elementNameMap.set('accept', 'accept');
+        elementNameMap.set('decline', 'decline');
+        elementNameMap.set('take back', 'fbt takeback-yes');
+        elementNameMap.set('rematch', 'fbt rematch white');
+        elementNameMap.set('flip board', 'fbt flip');
+        elementNameMap.set('analyze game', 'fbt analysis');
     }
 
     /**
@@ -217,7 +226,6 @@ if(isGamePage){
         recognition.interimResults = false;
     
         recognition.onresult = function(event) {
-
             parseSpeech(event);
 
             if(result_command != undefined && result_command.length != 0){
@@ -276,7 +284,6 @@ if(isGamePage){
         }
         //is not a special command; we now process into chess move
         else {
-
             result_chess_move = processor.extractChessMove(componentWords);
 
             if(isUCIFormat(result_chess_move))
@@ -328,11 +335,10 @@ if(isGamePage){
         if(!underboard_found && document.getElementsByClassName('round__underboard').length > 0){
             
             console.log("underboard found.");
-              let under_board = document.getElementsByClassName('round__underboard')[0];
-              under_board.insertBefore(display_move, under_board.firstChild);
-              underboard_found = true;
-          }
-    
+            let under_board = document.getElementsByClassName('round__underboard')[0];
+            under_board.insertBefore(display_move, under_board.firstChild);
+            underboard_found = true;
+        }
     
         if(!material_bottom_found && (document.getElementsByClassName('material material-bottom').length > 0)){
             
@@ -341,11 +347,10 @@ if(isGamePage){
             material_bottom_found = true;
         }
 
-        if(input_found && underboard_found && material_bottom_found){
+        if(input_found && underboard_found && material_bottom_found) 
             observer.disconnect();
-        }
-    
     }
+
     //TEXT INPUT FUNCTION
     // function enterMove(e){
     
@@ -365,6 +370,7 @@ if(isGamePage){
             if(!holding_listen_key) holding_listen_key = true;
         }
     }
+    
     function listenKeyUp(e){
     
         if(e.keyCode == LISTEN_KEY_CODE && holding_listen_key){
@@ -429,7 +435,6 @@ if(isGamePage){
         window.open(newGameUrl);
     }
     
-    
     function rageQuit(){
     
         let pieceList = document.getElementsByTagName('piece');
@@ -440,7 +445,6 @@ if(isGamePage){
         clickButton('fbt resign');
         clickButton('fbt abort');
     }
-    
     
     async function throwPiece(piece, endPosition){
         
@@ -461,22 +465,5 @@ if(isGamePage){
     
     function getRandomArbitrary(min, max) {
         return Math.floor(Math.random() * (max - min) + min);
-    }
-    
-    function createMaps(){
-        specialCommandMap = new Map();
-        specialCommandMap.set('new game', findNewGame);
-        specialCommandMap.set('rage quit', rageQuit);
-
-        elementNameMap = new Map();
-        elementNameMap.set('resign', 'fbt resign');
-        elementNameMap.set('offer draw', 'fbt draw-yes');
-        elementNameMap.set('abort', 'fbt abort');
-        elementNameMap.set('accept', 'accept');
-        elementNameMap.set('decline', 'decline');
-        elementNameMap.set('take back', 'fbt takeback-yes');
-        elementNameMap.set('rematch', 'fbt rematch white');
-        elementNameMap.set('flip board', 'fbt flip');
-        elementNameMap.set('analyze game', 'fbt analysis');
     }
 }
