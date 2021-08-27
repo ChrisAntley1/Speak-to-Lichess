@@ -24,10 +24,10 @@
     <h5 id="token_status">Checking token status with Lichess...</h5>
 
     <br>
-    <p style="font-size: large;">A personal Lichess API token is required to use both automatic submission and UCI format moves. 
-        The button below will navigate you to Lichess's token creation page.
-        The name and required scope has already been set; do not add any unnecessary permissions.
-        Simply press the blue 'submit' button, and copy the generated token into the field below.</p>
+    <p style="font-size: large;">A personal Lichess API token is required to use Automatic Submission.
+        Click 'Generate Token' to navigate to Lichess's token creation page.
+        The name and required scope have already been set; simply press the blue 'submit' button 
+        and copy the generated token into the field below.*</p>
     
     <strong style="font-size: large;">**Only available in rapid, classical, and correspondence formats!**</strong>
     <br>
@@ -38,16 +38,22 @@
     <br>
     <br>
     <div>
-        <input type="button" id="generate_token_button" value="generate new token on Lichess">
+        <input type="button" id="generate_token_button" value="Generate Token">
         <br>
         <form id="token_form">
             <input type="text" id="board_token_input" placeholder ="paste auth token here" style="text-align: center;">
-            <input type="submit" id="submit_token_button" value="submit token">
+            <input type="submit" id="submit_token_button" value="submit">
             <br>
-            <span id="token_message">token message go brrr</span>
+            <span id="token_message"></span>
         </form>
 
-    </div>  
+    </div> 
+    
+    <br>
+    <strong style="font-size: medium;">*If you are not comfortable storing an API token, or if you would like to dictate moves in 
+        blitz or faster game speeds, you can opt to use the text input box provided by Lichess instead. The text input box does
+        require you to press 'enter' to submit dictated moves.</strong>
+
     <br>
     <br>
     <h3>Replacement Words Table</h3>

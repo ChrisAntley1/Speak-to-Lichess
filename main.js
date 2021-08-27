@@ -44,9 +44,10 @@
  * NEW TODO: 
  * 
  * 1. BIG: try and capture current users' word replacement lists so that they are not lost with correct word_replacement_list retrieval
+ * --Complete. TODO: copy over from test extension!
  * 
  * 2. Flip board button not being found in UI 
- * -- turns out it switches between 'fbt flip' and 'fbt flip active'
+ * -- complete. turns out it switches between 'fbt flip' and 'fbt flip active'
  * --fixed: flipboard seemed to want a dispatch event instead of click(). dispatch event
  * --didn't work for other elements. Just calling both; doesn't seem problematic
  * 
@@ -57,25 +58,34 @@
  * --complete!
  * 
  * 5. place popup input elements in a form. Also focus the replacement word text box
+ * --complete
  * 
  * 6. Figure out how we're going to handle optional text input box usage
  * 
  * 7. Figure out promises and move UI updates back to main
+ * --nani the fuck
+ * --complete! needed to create and return the promise at top function level it seems
  * 
  * 8. SAN format will only work consistently in Standard format matches (crazyhouse, 'from position', etc. formats not supported)
  * -- rewriting README and descriptions might be easiest
  * 
  * 9. Inform users that replacement words list may need to be updated
  * --programmatic solution? might be a little messy/might not be pretty
+ * --TODO: NEED TO COPY OVER! oninstall details tells if the install is an update, and what the previous version was.
+ * --Used this to update storage from 2.0's format.
  * 
  * 10. extension continues listening when switching application focus
  * -- https://stackoverflow.com/questions/2574204/detect-browser-focus-out-of-focus-via-google-chrome-extension
  * 
  * 11. add delay to ragequit before issuing quit/abort
  * --did i try this before?
+ * --complete! definitely better feel/pace
  * 
  * 12. STILL: Make 'listen' message view not compete for space with material icons
  * --lol fack
+ * --slight progress made: creating a div of the same class gets it in technically the correct place; can't seem to make it move down below the original div
+ * --complete! though with hardcoded height adjustment
+ * 
  */
 
 if(isGamePage){
@@ -95,9 +105,9 @@ if(isGamePage){
 
     //Constants (declared as var for scope; probably some noob shit)
     var LISTEN_KEY_CODE = 17;
-    var DISPLAY_MESSAGE = "Your move will appear here.";
+    var DEFAULT_DISPLAY_MESSAGE = "Your move will appear here.";
     var TOGGLE_LISTEN_MESSAGE = "Press ctrl to toggle dictation on or off";
-    var HOLD_LISTEN_MESSAGE = "Press and hold ctrl to dictate";
+    var HOLD_LISTEN_MESSAGE = "Hold ctrl to dictate";
     var API_ADDRESS_TEMPLATE = "https://lichess.org/api/board/game/--GAME_ID--/move/--UCI_MOVE--".replace('--GAME_ID--', lichessLocation);
     var BOARD_API_TOKEN = '';
     var NO_TOKEN_MESSAGE = 
@@ -105,7 +115,7 @@ if(isGamePage){
         "and automatic move submission. You can still use SAN format moves, and press enter to submit them.";
     
     var API_SUBMIT_SUCCESS = "Successfully submitted move with Lichess API!";
-    var API_SUBMIT_FAIL = "Error - API move submission failed...";
+    var API_SUBMIT_FAIL = "Error - API move submission failed: ";
     
     //HTML elements. inputBox is created by another script most likely and is not yet created,
     //even when script is run at document_end (in manifest)
@@ -121,7 +131,8 @@ if(isGamePage){
     var holding_listen_key = false;
     var is_listening = false;
     var toggle_listen;
-
+    var legalGameSpeed = false;
+    
     //element found flags; need to be global for observer
     var input_found = false;
     var underboard_found = false;
@@ -137,6 +148,7 @@ if(isGamePage){
     //initializing speech recognition 
     var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
     var recognition;
+    //var recognition = setupRecognition();
 
     //Text processor
     var processor = new TextProcessor();
@@ -170,12 +182,23 @@ if(isGamePage){
     
         chrome.storage.local.get(['__board_api_token'], function(result){
     
-            if(!result.hasOwnProperty('__board_api_token'))
+            if(!result.hasOwnProperty('__board_api_token')){
                 display_move.innerHTML = NO_TOKEN_MESSAGE;
-        
+            }
             else {
-                testToken(result['__board_api_token']);
-                display_move.innerHTML = DISPLAY_MESSAGE;
+                display_move.innerHTML = "Checking Token...";
+
+                testToken(result['__board_api_token']).then(function(token) {
+                    
+                    console.log("Valid API token is in use!");
+                    BOARD_API_TOKEN = token;
+                    display_move.innerHTML = DEFAULT_DISPLAY_MESSAGE;
+                    checkIfActiveGame();
+                }).catch((res) => {
+                    display_move.innerHTML = "API token fetch failed: " + res['error']
+                    + ". add new API token in options. User can still use SAN format submissions through the input text box.";
+
+                });
             }
         });
     
@@ -286,7 +309,12 @@ if(isGamePage){
         else {
             result_chess_move = processor.extractChessMove(componentWords);
 
-            if(isUCIFormat(result_chess_move))
+            //if Board API does not support the current game speed, use text input submission
+            if(legalGameSpeed == false){
+
+                //populate text input box, do other things
+            }
+            else if(isUCIFormat(result_chess_move))
                 result_command = result_chess_move;
             
             else result_command = getUCIFromSAN(result_chess_move);
@@ -300,7 +328,12 @@ if(isGamePage){
 
         display_move.innerHTML = "Result Move: " + result_command + ". submitting with Board API fetch request...";
 
-        postMove(result_command);
+        postMove(result_command).then(()=>{
+                display_move.innerHTML = API_SUBMIT_SUCCESS;
+                resetDisplay();
+            }).catch((res)=>{
+                display_move.innerHTML = API_SUBMIT_FAIL + res.error;
+            });
         
         // .then(res => {
             
@@ -343,9 +376,17 @@ if(isGamePage){
         if(!material_bottom_found && (document.getElementsByClassName('material material-bottom').length > 0)){
             
             console.log("material bottom found.");
-            document.getElementsByClassName('material material-bottom')[0].appendChild(display_listen_status);        
+            let bottom = document.getElementsByClassName('material material-bottom')[0];
+            let bottomParent = bottom.parentNode;
+            let newDiv = document.createElement('div');
+            let height = '60px';
+    
+            newDiv.className = 'material material-bottom';
+            newDiv.style.paddingTop = height;
+            newDiv.appendChild(display_listen_status);
+            bottomParent.insertBefore(newDiv, bottom.nextSibling);
             material_bottom_found = true;
-        }
+            }
 
         if(input_found && underboard_found && material_bottom_found) 
             observer.disconnect();
@@ -359,6 +400,11 @@ if(isGamePage){
     //     }
     // }
     
+    async function resetDisplay(){
+        await new Promise(r => setTimeout(r, 1400));
+        display_move.innerHTML = DEFAULT_DISPLAY_MESSAGE;
+
+    }
     function listenKeyDown(e){
     
         if(e.keyCode == LISTEN_KEY_CODE && !holding_listen_key){
@@ -435,13 +481,14 @@ if(isGamePage){
         window.open(newGameUrl);
     }
     
-    function rageQuit(){
+    async function rageQuit(){
     
         let pieceList = document.getElementsByTagName('piece');
     
         for(piece of pieceList)
             throwPiece(piece, getRandomArbitrary(10, 250));
         
+        await new Promise(r => setTimeout(r, 500));
         clickButton('fbt resign');
         clickButton('fbt abort');
     }
@@ -451,7 +498,7 @@ if(isGamePage){
         let id = null;
         let pos = 0;
         clearInterval(id);
-        id = setInterval(frame, 5);
+        id = setInterval(frame, 4);
         function frame() {
             if (pos >= endPosition) 
                 clearInterval(id); 

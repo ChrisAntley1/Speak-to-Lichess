@@ -156,7 +156,6 @@ function setUserPieces(){
     }
 
     console.log("game state initialized.");
-    console.log(board);
 
     userPieceMap.set('a' + pieceRow, userColor + 'R');
     userPieceMap.set('b' + pieceRow, userColor + 'N');

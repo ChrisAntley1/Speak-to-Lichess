@@ -2,30 +2,27 @@
 const _MOVES_DATA_IDENTIFIER = "\"moves\":";
 
 async function testToken(token){
-    //still throws 401 error in console if invalid token, there's probably some way to catch this
-    display_move.innerHTML = "Checking Token...";
-    fetch('https://lichess.org/api/account', {
+    //still throws 401 error in console if invalid token, there's probably some way to catch this    
+    return new Promise((resolve, reject) =>{
+        fetch('https://lichess.org/api/account', {
     
-        headers: {
-            'Authorization': 'Bearer ' + token
-        }
-    
-        })
-        .then(res => res.json())
-        .then(function(res){
-
-            if(res.hasOwnProperty('error')){
-                display_move.innerHTML = "API token fetch failed: " + res['error']
-                 + ". add new API token in options. User can still use SAN format submissions through the input text box.";
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        
+            })
+            .then(res => res.json())
+            .then(function(res){
                 
-            }
-            else {
-                console.log("Valid API token is in use!");
-                BOARD_API_TOKEN = token;
-                checkIfActiveGame();
-                display_move.innerHTML = DISPLAY_MESSAGE;
-            }
-        });
+                console.log(res);
+                if(res.hasOwnProperty('error')){
+                    reject(res);                    
+                }
+                else {
+                    resolve(token);
+                }
+            });
+    });
 }
 
 
@@ -36,7 +33,6 @@ async function checkIfActiveGame(){
     headers: {
       'Authorization': 'Bearer ' + BOARD_API_TOKEN
     }
-
     });
 
     if(!response.ok){
@@ -48,13 +44,23 @@ async function checkIfActiveGame(){
 
         if(game_info.fullId === lichessLocation || game_info.gameId === lichessLocation){
             
-            const color = game_info.color.charAt(0);
             console.log(game_info);
-            setInitialGameState(color);
-            streamGameData();
 
-            console.log(`You are playing the ${game_info.color} pieces!`);
+            const color = game_info.color.charAt(0);
+            const speed = game_info.speed;
+            const legalGameSpeeds = ['correspondence', 'rapid', 'classical'];
 
+            if(legalGameSpeeds.includes(speed)){
+                console.log(`${speed} allows API moves, setting up game state streaming...`);
+                setInitialGameState(color);
+                streamGameData();
+                console.log(`You are playing the ${game_info.color} pieces!`);    
+                legalGameSpeed = true;
+            }
+
+            else {
+                console.log(`${speed} does not allow API moves. Setting up textbox submission...`);
+            }
             // board_api_url = createTemplateURL();
         }
     }
@@ -63,11 +69,9 @@ async function checkIfActiveGame(){
 async function streamGameData(){
     
     let fetchRequestObject = {
-    
         headers: {
             'Authorization': 'Bearer ' + BOARD_API_TOKEN
         }
-        
     };
 
     fetch(`https://lichess.org/api/board/game/stream/${lichessLocation}`, fetchRequestObject)
@@ -78,7 +82,6 @@ async function streamGameData(){
         return new ReadableStream({
             async start(controller){
 
-                console.log("started");
                 while (true){
                     const {done, value} = await reader.read();
 
@@ -117,6 +120,7 @@ async function readBoardData(value){
 }
 
 async function postMove(chessMove){
+    
     let api_url = API_ADDRESS_TEMPLATE.replace('--UCI_MOVE--', chessMove);
     let fetchRequestObject = {
 
@@ -124,22 +128,22 @@ async function postMove(chessMove){
         headers: {
           'Authorization': 'Bearer ' + BOARD_API_TOKEN
         }
-    
     };
-    
-    //TODO: display move never actually displays move right now...
-    fetch(api_url, fetchRequestObject)
-        .then(res => res.json())
-        .then(function(res){
+
+    return new Promise((resolve, reject) =>{
+        
+        fetch(api_url, fetchRequestObject)
+        .then(res => res.json()).then(function(res){
             
             console.log(res);
             if(res['ok']){
-                display_move.innerHTML = API_SUBMIT_SUCCESS;
+                resolve();
             }
 
             else {
-                display_move.innerHTML = API_SUBMIT_FAIL;
+                console.log('reject comes next');
+                reject(res);
             }
+        });
     });
-
 }

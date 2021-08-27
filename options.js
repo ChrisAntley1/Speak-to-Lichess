@@ -173,7 +173,7 @@ function submitDelete(e){
         chrome.storage.local.set({'word_replacement_list': word_replacement_list});
 
         getAndDrawTable();
-        update_message.textContent = "Word removed: " + word_to_delete + " will no longer be replaced.";
+        update_message.textContent = word_to_delete + " will no longer be replaced.";
     }
 
     else update_message.textContent = word_to_delete + " is not a word that is currently being replaced.";
