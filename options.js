@@ -220,12 +220,7 @@ function checkTokenFormat(token){
         return false;
     }
 
-    if(token.length != 16){
-        tokenMessage.innerHTML = "Invalid token.";
-        return false;
-    }
-
-    tokenMessage.innerHTML = 'Format appears valid, checking with Lichess...';
+    tokenMessage.innerHTML = 'Checking with Lichess...';
     return true;
 }
 
