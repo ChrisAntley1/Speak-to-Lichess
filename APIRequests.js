@@ -28,42 +28,43 @@ async function testToken(token){
 
 async function checkIfActiveGame(){
     
-    let response = await fetch('https://lichess.org/api/account/playing', {
-    
-    headers: {
-      'Authorization': 'Bearer ' + BOARD_API_TOKEN
-    }
-    });
+    return new Promise((resolve, reject) =>{
 
-    if(!response.ok){
-        throw new Error("shit didn't work yo");
-    }
-    let gameList = await response.json();
-
-    for(game_info of gameList.nowPlaying){
-
-        if(game_info.fullId === lichessLocation || game_info.gameId === lichessLocation){
-            
-            console.log(game_info);
-
-            const color = game_info.color.charAt(0);
-            const speed = game_info.speed;
-            const legalGameSpeeds = ['correspondence', 'rapid', 'classical'];
-
-            if(legalGameSpeeds.includes(speed)){
-                console.log(`${speed} allows API moves, setting up game state streaming...`);
-                setInitialGameState(color);
-                streamGameData();
-                console.log(`You are playing the ${game_info.color} pieces!`);    
-                legalGameSpeed = true;
-            }
-
-            else {
-                console.log(`${speed} does not allow API moves. Setting up textbox submission...`);
-            }
-            // board_api_url = createTemplateURL();
+        let response = await fetch('https://lichess.org/api/account/playing', {
+        
+        headers: {
+        'Authorization': 'Bearer ' + BOARD_API_TOKEN
         }
-    }
+        });
+
+        if(!response.ok){
+            reject(response);
+        }
+
+        let gameList = await response.json();
+        let isActiveGame = false;
+        
+        for(game_info of gameList.nowPlaying){
+
+            if(game_info.fullId === lichessLocation || game_info.gameId === lichessLocation){
+                
+                isActiveGame = true;
+                console.log(game_info);
+    
+                const speed = game_info.speed;
+                const legalGameSpeeds = ['correspondence', 'rapid', 'classical'];
+    
+                if(legalGameSpeeds.includes(speed)){
+                    resolve(game_info);
+                }
+    
+                else {
+                    reject(game_info);
+                }
+            }
+        }
+        if(isActiveGame == false) reject(response);
+    });
 }
 
 async function streamGameData(){

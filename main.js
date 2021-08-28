@@ -43,49 +43,13 @@
 /**
  * NEW TODO: 
  * 
- * 1. BIG: try and capture current users' word replacement lists so that they are not lost with correct word_replacement_list retrieval
- * --Complete. TODO: copy over from test extension!
- * 
- * 2. Flip board button not being found in UI 
- * -- complete. turns out it switches between 'fbt flip' and 'fbt flip active'
- * --fixed: flipboard seemed to want a dispatch event instead of click(). dispatch event
- * --didn't work for other elements. Just calling both; doesn't seem problematic
- * 
- * 3. clean up logs, place more helpful logs to know what goes on/what's getting called
- * --partially complete
- * 
- * 4. seems like the boards API is successfully sending an update on takebacks; can probably handle properly now
- * --complete!
- * 
- * 5. place popup input elements in a form. Also focus the replacement word text box
- * --complete
- * 
  * 6. Figure out how we're going to handle optional text input box usage
- * 
- * 7. Figure out promises and move UI updates back to main
- * --nani the fuck
- * --complete! needed to create and return the promise at top function level it seems
  * 
  * 8. SAN format will only work consistently in Standard format matches (crazyhouse, 'from position', etc. formats not supported)
  * -- rewriting README and descriptions might be easiest
  * 
- * 9. Inform users that replacement words list may need to be updated
- * --programmatic solution? might be a little messy/might not be pretty
- * --TODO: NEED TO COPY OVER! oninstall details tells if the install is an update, and what the previous version was.
- * --Used this to update storage from 2.0's format.
- * 
  * 10. extension continues listening when switching application focus
  * -- https://stackoverflow.com/questions/2574204/detect-browser-focus-out-of-focus-via-google-chrome-extension
- * 
- * 11. add delay to ragequit before issuing quit/abort
- * --did i try this before?
- * --complete! definitely better feel/pace
- * 
- * 12. STILL: Make 'listen' message view not compete for space with material icons
- * --lol fack
- * --slight progress made: creating a div of the same class gets it in technically the correct place; can't seem to make it move down below the original div
- * --complete! though with hardcoded height adjustment
- * 
  */
 
 if(isGamePage){
@@ -109,7 +73,6 @@ if(isGamePage){
     var TOGGLE_LISTEN_MESSAGE = "Press ctrl to toggle dictation on or off";
     var HOLD_LISTEN_MESSAGE = "Hold ctrl to dictate";
     var API_ADDRESS_TEMPLATE = "https://lichess.org/api/board/game/--GAME_ID--/move/--UCI_MOVE--".replace('--GAME_ID--', lichessLocation);
-    var BOARD_API_TOKEN = '';
     var NO_TOKEN_MESSAGE = 
         "No API token! Open options page and set a valid API token to use both UCI format " +
         "and automatic move submission. You can still use SAN format moves, and press enter to submit them.";
@@ -133,6 +96,8 @@ if(isGamePage){
     var toggle_listen;
     var legalGameSpeed = false;
     
+    var BOARD_API_TOKEN = '';
+
     //element found flags; need to be global for observer
     var input_found = false;
     var underboard_found = false;
@@ -153,17 +118,14 @@ if(isGamePage){
     //Text processor
     var processor = new TextProcessor();
 
+    //Initialization
     accessChromeStorage();
     createMaps();
     setupRecognition();
 
     //document observer; observes DOM until inputBox (and a couple other elements) have been located.
-    var observer = new MutationObserver(waitForInputBox);
+    var observer = new MutationObserver(waitForPageElements);
     observer.observe(document, {subtree: true, childList: true});
-
-
-    //TEXT INPUT FUNCTION
-    // document.addEventListener('keydown', enterMove);
 
     document.addEventListener('keydown', listenKeyDown);
     document.addEventListener('keyup', listenKeyUp);
@@ -172,6 +134,11 @@ if(isGamePage){
         holding_listen_key = false;
     });
 
+
+    //TODO: Rename this function;
+    //figure out message displayed to users!
+    //use boolean or not for text input
+    //--probably; would let us easily give user the option to use input box even in slow formats (would anyone really want this?)
     function accessChromeStorage(){
         chrome.storage.local.get(['__toggle'], function(result){
             toggle_listen = result['__toggle'];
@@ -184,20 +151,49 @@ if(isGamePage){
     
             if(!result.hasOwnProperty('__board_api_token')){
                 display_move.innerHTML = NO_TOKEN_MESSAGE;
+                setupTextInput();
             }
             else {
                 display_move.innerHTML = "Checking Token...";
 
-                testToken(result['__board_api_token']).then(function(token) {
+                testToken(result['__board_api_token']).then((token)=> {
                     
                     console.log("Valid API token is in use!");
                     BOARD_API_TOKEN = token;
                     display_move.innerHTML = DEFAULT_DISPLAY_MESSAGE;
-                    checkIfActiveGame();
-                }).catch((res) => {
-                    display_move.innerHTML = "API token fetch failed: " + res['error']
-                    + ". add new API token in options. User can still use SAN format submissions through the input text box.";
 
+                    checkIfActiveGame().then((res) =>{
+                        
+                        legalGameSpeed = true;
+                        const color = res.color.charAt(0);
+
+                        setInitialGameState(color);
+                        streamGameData();
+
+                        console.log(`${res.speed} allows API moves, setting up game state streaming...`);
+                        console.log(`You are playing the ${color} pieces!`);    
+
+                    }).catch((res) =>{
+
+                        setupTextInput();
+                        display_move.innerHTML = 'No API Submission; check console for more details. Enable text input box to submit moves with enter key.';
+
+                        if(res.hasOwnProperty('ok'))
+                            console.log('API Submission: API request for games played by this account failed. Try submitting a new token.');
+                        
+                        else if(res.hasOwnProperty('speed'))
+                            console.log(`API Submission: ${res.speed} does not allow API moves.`);
+                        
+                        else {
+                            console.log('API Submission: Something else went wrong; see Lichess response below...');
+                            console.log(res);
+                        }
+                    });
+                }).catch((res) => {
+                    setupTextInput();
+
+                    display_move.innerHTML = 'No API Submission; check console for more details. Enable text input box to submit moves with enter key.';
+                    console.log(`API token fetch failed: ${res['error']}. add new API token in options.`);
                 });
             }
         });
@@ -256,7 +252,7 @@ if(isGamePage){
                 submit_function();
                 result_command = '';            
             }
-            else console.log("No move was stored.");
+            else console.log("No command or move was heard.");
         };
     
         /**
@@ -270,7 +266,7 @@ if(isGamePage){
          */
         recognition.onspeechend = function() {
             recognition.stop();
-            console.log("recognition speech end");
+            // console.log('recognition speech end');
         };
 
         recognition.onerror = function(event) {
@@ -329,25 +325,11 @@ if(isGamePage){
         display_move.innerHTML = "Result Move: " + result_command + ". submitting with Board API fetch request...";
 
         postMove(result_command).then(()=>{
-                display_move.innerHTML = API_SUBMIT_SUCCESS;
-                resetDisplay();
-            }).catch((res)=>{
-                display_move.innerHTML = API_SUBMIT_FAIL + res.error;
-            });
-        
-        // .then(res => {
-            
-        //     console.log(res);
-        //     //TODO: see if this works
-        //     if(res['ok']){
-        //         display_move.innerHTML = API_SUBMIT_SUCCESS;
-                
-        //     }
-
-        //     else {
-        //         display_move.innerHTML = API_SUBMIT_FAIL;
-        //     }
-        // });
+            display_move.innerHTML = API_SUBMIT_SUCCESS;
+            resetDisplay();
+        }).catch((res)=>{
+            display_move.innerHTML = API_SUBMIT_FAIL + res.error;
+        });
     }
         
     function isUCIFormat(chessMove){
@@ -356,7 +338,7 @@ if(isGamePage){
         return (chessMove.match(/^[a-h][1-8][a-h][1-8]$/) || chessMove.match(/^[a-h][1-8][a-h][1-8][qrbn]$/));
     }
 
-    function waitForInputBox(){
+    function waitForPageElements(){
     
         if(!input_found && document.getElementsByClassName('ready').length > 0){
             
@@ -390,6 +372,16 @@ if(isGamePage){
 
         if(input_found && underboard_found && material_bottom_found) 
             observer.disconnect();
+    }
+
+    function setupTextInput(){
+        console.log('text input enabled');
+        document.addEventListener('keydown', (e)=>{
+            if(e.keyCode == 13){
+                submitMove();
+            }
+        });
+
     }
 
     //TEXT INPUT FUNCTION
