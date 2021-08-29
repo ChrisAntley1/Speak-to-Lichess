@@ -28,7 +28,7 @@ async function testToken(token){
 
 async function checkIfActiveGame(){
     
-    return new Promise((resolve, reject) =>{
+    return new Promise(async (resolve, reject) =>{
 
         let response = await fetch('https://lichess.org/api/account/playing', {
         
@@ -63,7 +63,7 @@ async function checkIfActiveGame(){
                 }
             }
         }
-        if(isActiveGame == false) reject(response);
+        if(isActiveGame == false) reject({'isActiveGame': false});
     });
 }
 
@@ -110,7 +110,6 @@ async function readBoardData(value){
 
 
         let newMovesArray = line.substring(line.indexOf(_MOVES_DATA_IDENTIFIER) + _MOVES_DATA_IDENTIFIER.length + 1).split('\"')[0].split(' ');
-        console.log(newMovesArray.toString());
 
         if(newMovesArray.toString() !== movesList.toString()){
 

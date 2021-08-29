@@ -258,7 +258,6 @@ function updateUserPiece(previousSquare, newSquare){
 //TODO: currently assuming any non UCI format input is SAN; may be problematic later
 function getUCIFromSAN(sanMove){
 
-    console.log('converting...');
     sanMove = removeCaptureNotation(sanMove);
     //attempt to parse a SAN format move into a UCI format move
     if(/[a-h]/.test(sanMove.charAt(0))) return getPawnMove(sanMove);
@@ -290,7 +289,6 @@ function getPieceMove(sanMove){
 
 function getPawnMove(sanMove){
 
-    console.log('getPawnMove: ' + sanMove);
     sanMove = sanMove.replace('=', '');
 
     let destination = sanMove.match(/[a-h][1-8]/);
@@ -301,7 +299,6 @@ function getPawnMove(sanMove){
     }
     else destination = destination[0];
     
-    console.log('destination: ' + destination);
     if(destination === '')
         throw 'Failed to find destination square for pawn move.'
     

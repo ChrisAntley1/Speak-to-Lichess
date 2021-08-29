@@ -43,13 +43,13 @@
 /**
  * NEW TODO: 
  * 
- * 6. Figure out how we're going to handle optional text input box usage
- * 
- * 8. SAN format will only work consistently in Standard format matches (crazyhouse, 'from position', etc. formats not supported)
+ * 1. SAN format will only work consistently in Standard format matches (crazyhouse, 'from position', etc. formats not supported)
  * -- rewriting README and descriptions might be easiest
  * 
- * 10. extension continues listening when switching application focus
+ * 2. extension continues listening when switching application focus
  * -- https://stackoverflow.com/questions/2574204/detect-browser-focus-out-of-focus-via-google-chrome-extension
+ * 
+ * 3. Additional testing to make sure new changes aren't gonna fuck shit up
  */
 
 if(isGamePage){
@@ -80,6 +80,7 @@ if(isGamePage){
     var API_SUBMIT_SUCCESS = "Successfully submitted move with Lichess API!";
     var API_SUBMIT_FAIL = "Error - API move submission failed: ";
     
+    var INPUT_BOX_MESSAGE = ' Use Lichess text input box to submit moves with enter key. ---SAN FORMAT WORKS BEST---';
     //HTML elements. inputBox is created by another script most likely and is not yet created,
     //even when script is run at document_end (in manifest)
     var display_move = document.createElement('strong');
@@ -94,8 +95,7 @@ if(isGamePage){
     var holding_listen_key = false;
     var is_listening = false;
     var toggle_listen;
-    var legalGameSpeed = false;
-    
+    var use_text_input = false;    
     var BOARD_API_TOKEN = '';
 
     //element found flags; need to be global for observer
@@ -119,7 +119,7 @@ if(isGamePage){
     var processor = new TextProcessor();
 
     //Initialization
-    accessChromeStorage();
+    setupSubmission();
     createMaps();
     setupRecognition();
 
@@ -139,7 +139,7 @@ if(isGamePage){
     //figure out message displayed to users!
     //use boolean or not for text input
     //--probably; would let us easily give user the option to use input box even in slow formats (would anyone really want this?)
-    function accessChromeStorage(){
+    function setupSubmission(){
         chrome.storage.local.get(['__toggle'], function(result){
             toggle_listen = result['__toggle'];
         
@@ -164,7 +164,6 @@ if(isGamePage){
 
                     checkIfActiveGame().then((res) =>{
                         
-                        legalGameSpeed = true;
                         const color = res.color.charAt(0);
 
                         setInitialGameState(color);
@@ -175,24 +174,23 @@ if(isGamePage){
 
                     }).catch((res) =>{
 
-                        setupTextInput();
-                        display_move.innerHTML = 'No API Submission; check console for more details. Enable text input box to submit moves with enter key.';
+                        if(res.hasOwnProperty('isActiveGame') && res.isActiveGame == false){
 
-                        if(res.hasOwnProperty('ok'))
-                            console.log('API Submission: API request for games played by this account failed. Try submitting a new token.');
-                        
-                        else if(res.hasOwnProperty('speed'))
-                            console.log(`API Submission: ${res.speed} does not allow API moves.`);
-                        
-                        else {
-                            console.log('API Submission: Something else went wrong; see Lichess response below...');
+                            cancelExtensionChanges();
+                            console.log('API Submission: This does not appear to be an active game.');
                             console.log(res);
                         }
+
+                        else if(res.hasOwnProperty('speed')){
+
+                            setupTextInput();
+                            console.log(`API Submission: ${res.speed} does not allow API move submission.`);
+                            display_move.innerHTML = `No API Submission; ${res.speed} does not allow API move submission.` + INPUT_BOX_MESSAGE;
+                        }    
                     });
                 }).catch((res) => {
                     setupTextInput();
-
-                    display_move.innerHTML = 'No API Submission; check console for more details. Enable text input box to submit moves with enter key.';
+                    display_move.innerHTML = 'No API Submission; try submitting a new API token.'  + INPUT_BOX_MESSAGE;
                     console.log(`API token fetch failed: ${res['error']}. add new API token in options.`);
                 });
             }
@@ -249,10 +247,12 @@ if(isGamePage){
 
             if(result_command != undefined && result_command.length != 0){
                 
-                submit_function();
-                result_command = '';            
+                if(use_text_input == false) submit_function();
+                result_command = '';
+                submit_function = null;
             }
-            else console.log("No command or move was heard.");
+
+            else console.log("No valid command or move was heard.");
         };
     
         /**
@@ -306,17 +306,18 @@ if(isGamePage){
             result_chess_move = processor.extractChessMove(componentWords);
 
             //if Board API does not support the current game speed, use text input submission
-            if(legalGameSpeed == false){
+            if(use_text_input == false){
 
-                //populate text input box, do other things
+                if(isUCIFormat(result_chess_move)) result_command = result_chess_move;
+
+                else result_command = getUCIFromSAN(result_chess_move);
+
+                submit_function = submitMove;
             }
-            else if(isUCIFormat(result_chess_move))
-                result_command = result_chess_move;
-            
-            else result_command = getUCIFromSAN(result_chess_move);
 
-            submit_function = submitMove;
+            else result_command = result_chess_move;
         }
+
         console.log('result command or move: ' + result_command);
     }
   
@@ -331,7 +332,10 @@ if(isGamePage){
             display_move.innerHTML = API_SUBMIT_FAIL + res.error;
         });
     }
-        
+    
+    function submitToInputBox(){
+        inputBox.value = result_chess_move;
+    }
     function isUCIFormat(chessMove){
         //API actually accepts invalid promotion moves and just ignores the promotion. 
         //For example: d2d4q will be interpreted as d2d4.
@@ -376,21 +380,25 @@ if(isGamePage){
 
     function setupTextInput(){
         console.log('text input enabled');
+        use_text_input = true;
         document.addEventListener('keydown', (e)=>{
-            if(e.keyCode == 13){
-                submitMove();
-            }
+            
+            if(e.key === 'Enter') submitToInputBox();
         });
 
     }
 
-    //TEXT INPUT FUNCTION
-    // function enterMove(e){
-    
-    //     if(e.keyCode == 13){
-    //         submitMove();
-    //     }
-    // }
+    function cancelExtensionChanges(){
+        display_listen_status.remove();
+        display_move.remove();
+        document.removeEventListener('keydown', listenKeyDown);
+        document.removeEventListener('keyup', listenKeyUp);
+        document.removeEventListener('visibilitychange', function() {
+            stopDictation();
+            holding_listen_key = false;
+        });
+        
+    }
     
     async function resetDisplay(){
         await new Promise(r => setTimeout(r, 1400));

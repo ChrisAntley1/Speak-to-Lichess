@@ -70,8 +70,8 @@ chrome.runtime.onInstalled.addListener((details)=>{
 function newInstallStorage(){
 
     //this storing is intentionally wrong, don't keep when copying over
-    chrome.storage.local.set(word_replacement_list);
-    chrome.storage.local.set(TOGGLE_LISTEN);
+    chrome.storage.local.set({'word_replacement_list': word_replacement_list});
+    chrome.storage.local.set({'__toggle': TOGGLE_LISTEN});
     
     // let TEXT_INPUT = {'__text_input': false};
     // chrome.storage.local.set(TEXT_INPUT);
