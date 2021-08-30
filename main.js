@@ -6,7 +6,7 @@
  * 2. Prepare for firefox release; experiment in firefox extension with functional speech grammar
  * -- could probably easily port the extension as is to firefox as a start
  * -- if grammar works, would be fairly easy to set up 1 syllabel letter replacements; maybe even allow certain letters
- * 
+ * -- can check crx with tool from firefox; however not sure how to extract crx from unpacked extension; maybe wait till pushed this version
  * 3. Possibly use interim results from recognition to more quickly submit to the API
  * 
  * 4. Home page controls: quick pairing button control!
@@ -60,63 +60,63 @@ if(isGamePage){
      */
     // console.log("Might be ongoing game, doing the thing");
 
-    // Grammar = broken
+    // Speech Grammar is broken when used in Chromium applications:
+    //https://bugs.chromium.org/p/chromium/issues/detail?id=680944
     // var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
     // var grammar = '#JSGF V1.0;';
     // var speechRecognitionGrammarList = new SpeechGrammarList();
     // speechRecognitionGrammarList.addFromString(grammar, 1);
     // recognition.grammars = speechRecognitionGrammarList;
 
-    //Constants (declared as var for scope; probably some noob shit)
-    var LISTEN_KEY_CODE = 17;
-    var DEFAULT_DISPLAY_MESSAGE = "Your move will appear here.";
-    var TOGGLE_LISTEN_MESSAGE = "Press ctrl to toggle dictation on or off";
-    var HOLD_LISTEN_MESSAGE = "Hold ctrl to dictate";
-    var API_ADDRESS_TEMPLATE = "https://lichess.org/api/board/game/--GAME_ID--/move/--UCI_MOVE--".replace('--GAME_ID--', lichessLocation);
-    var NO_TOKEN_MESSAGE = 
+    const LISTEN_KEY_CODE = 17;
+    const DEFAULT_DISPLAY_MESSAGE = "Dictated move information will appear here.";
+    const TOGGLE_LISTEN_MESSAGE = "Press ctrl to toggle dictation on or off";
+    const HOLD_LISTEN_MESSAGE = "Hold ctrl to dictate";
+    const API_SUBMIT_SUCCESS = "Successfully submitted move with Lichess API!";
+    const API_SUBMIT_FAIL = "Error - API move submission failed: ";
+    const INPUT_BOX_MESSAGE = ' Use Lichess text input box to submit moves with enter key. ---SAN FORMAT WORKS BEST---';
+    const CONVERSION_FAIL_MESSAGE = 'Unable to interpret valid move given the known board state; check console for more details.'
+    const NO_TOKEN_MESSAGE = 
         "No API token! Open options page and set a valid API token to use both UCI format " +
         "and automatic move submission. You can still use SAN format moves, and press enter to submit them.";
     
-    var API_SUBMIT_SUCCESS = "Successfully submitted move with Lichess API!";
-    var API_SUBMIT_FAIL = "Error - API move submission failed: ";
-    
-    var INPUT_BOX_MESSAGE = ' Use Lichess text input box to submit moves with enter key. ---SAN FORMAT WORKS BEST---';
+
     //HTML elements. inputBox is created by another script most likely and is not yet created,
     //even when script is run at document_end (in manifest)
-    var display_move = document.createElement('strong');
-    var display_listen_status = document.createElement('strong');
-    var inputBox; 
+    const display_move = document.createElement('strong');
+    const display_listen_status = document.createElement('strong');
+    let inputBox; 
 
     //flags and other variables
-    var toggle_hold_message = '';
-    var result_command = '';
-    var result_chess_move = '';
-    var result_UI_element = '';
-    var holding_listen_key = false;
-    var is_listening = false;
-    var toggle_listen;
-    var use_text_input = false;    
-    var BOARD_API_TOKEN = '';
+    let toggle_hold_message = '';
+    let result_command = '';
+    let result_chess_move = '';
+    let result_UI_element = '';
+    let holding_listen_key = false;
+    let is_listening = false;
+    let toggle_listen;
+    let use_text_input = false;    
 
     //element found flags; need to be global for observer
-    var input_found = false;
-    var underboard_found = false;
-    var material_bottom_found = false;
+    let input_found = false;
+    let underboard_found = false;
+    let material_bottom_found = false;
 
     //function that will be called depending on spoken command/move
-    var submit_function;
+    let submit_function;
 
     //Map for catching and handling special commands
-    var specialCommandMap;
-    var elementNameMap;
+    let specialCommandMap;
+    let elementNameMap;
     
     //initializing speech recognition 
     var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
-    var recognition;
-    //var recognition = setupRecognition();
+    let recognition;
+
+    //let recognition = setupRecognition();
 
     //Text processor
-    var processor = new TextProcessor();
+    let processor = new TextProcessor();
 
     //Initialization
     setupSubmission();
@@ -124,7 +124,7 @@ if(isGamePage){
     setupRecognition();
 
     //document observer; observes DOM until inputBox (and a couple other elements) have been located.
-    var observer = new MutationObserver(waitForPageElements);
+    let observer = new MutationObserver(waitForPageElements);
     observer.observe(document, {subtree: true, childList: true});
 
     document.addEventListener('keydown', listenKeyDown);
@@ -134,11 +134,6 @@ if(isGamePage){
         holding_listen_key = false;
     });
 
-
-    //TODO: Rename this function;
-    //figure out message displayed to users!
-    //use boolean or not for text input
-    //--probably; would let us easily give user the option to use input box even in slow formats (would anyone really want this?)
     function setupSubmission(){
         chrome.storage.local.get(['__toggle'], function(result){
             toggle_listen = result['__toggle'];
@@ -159,7 +154,7 @@ if(isGamePage){
                 testToken(result['__board_api_token']).then((token)=> {
                     
                     console.log("Valid API token is in use!");
-                    BOARD_API_TOKEN = token;
+                    setAPIToken(token);
                     display_move.innerHTML = DEFAULT_DISPLAY_MESSAGE;
 
                     checkIfActiveGame().then((res) =>{
@@ -245,14 +240,19 @@ if(isGamePage){
         recognition.onresult = function(event) {
             parseSpeech(event);
 
-            if(result_command != undefined && result_command.length != 0){
-                
-                if(use_text_input == false) submit_function();
-                result_command = '';
-                submit_function = null;
+            if(result_command == -1){
+                display_move.innerHTML = result_chess_move + ': ' + CONVERSION_FAIL_MESSAGE;
             }
 
-            else console.log("No valid command or move was heard.");
+            else if(result_command != undefined && result_command.length != 0){
+                
+                if(use_text_input == false) submit_function();
+            }
+
+            else console.log("No valid command or move was interpreted.");
+
+            result_command = '';
+            submit_function = null;
         };
     
         /**
@@ -266,7 +266,6 @@ if(isGamePage){
          */
         recognition.onspeechend = function() {
             recognition.stop();
-            // console.log('recognition speech end');
         };
 
         recognition.onerror = function(event) {
@@ -298,7 +297,7 @@ if(isGamePage){
         else if (elementNameMap.has(result_command)){
             submit_function = clickButton;
 
-            //TODO: global variable for the UI element. Find way to do this without global variable?
+            //global variable for the UI element. Probably better way to do this
             result_UI_element = elementNameMap.get(result_command);
         }
         //is not a special command; we now process into chess move
@@ -311,8 +310,8 @@ if(isGamePage){
                 if(isUCIFormat(result_chess_move)) result_command = result_chess_move;
 
                 else result_command = getUCIFromSAN(result_chess_move);
-
-                submit_function = submitMove;
+                
+                submit_function = apiSubmitMove;
             }
 
             else result_command = result_chess_move;
@@ -321,7 +320,7 @@ if(isGamePage){
         console.log('result command or move: ' + result_command);
     }
   
-    async function submitMove(){
+    async function apiSubmitMove(){
 
         display_move.innerHTML = "Result Move: " + result_command + ". submitting with Board API fetch request...";
 
@@ -339,6 +338,7 @@ if(isGamePage){
     function isUCIFormat(chessMove){
         //API actually accepts invalid promotion moves and just ignores the promotion. 
         //For example: d2d4q will be interpreted as d2d4.
+        //not sure why that's relevant when checking if UCI format or not lel
         return (chessMove.match(/^[a-h][1-8][a-h][1-8]$/) || chessMove.match(/^[a-h][1-8][a-h][1-8][qrbn]$/));
     }
 
@@ -388,6 +388,7 @@ if(isGamePage){
 
     }
 
+    //TODO: this seems to work; visibilitychange event listener removal looks silly including the function
     function cancelExtensionChanges(){
         display_listen_status.remove();
         display_move.remove();
@@ -397,7 +398,6 @@ if(isGamePage){
             stopDictation();
             holding_listen_key = false;
         });
-        
     }
     
     async function resetDisplay(){

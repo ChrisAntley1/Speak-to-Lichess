@@ -1,5 +1,8 @@
-//Trying a file dedicated to API calls
 const _MOVES_DATA_IDENTIFIER = "\"moves\":";
+const API_ADDRESS_TEMPLATE = "https://lichess.org/api/board/game/--GAME_ID--/move/--UCI_MOVE--".replace('--GAME_ID--', lichessLocation);
+
+//user's personal Board API compatible token. Only needs Board API permissions
+var board_api_token = '';
 
 async function testToken(token){
     //still throws 401 error in console if invalid token, there's probably some way to catch this    
@@ -33,7 +36,7 @@ async function checkIfActiveGame(){
         let response = await fetch('https://lichess.org/api/account/playing', {
         
         headers: {
-        'Authorization': 'Bearer ' + BOARD_API_TOKEN
+        'Authorization': 'Bearer ' + board_api_token
         }
         });
 
@@ -71,7 +74,7 @@ async function streamGameData(){
     
     let fetchRequestObject = {
         headers: {
-            'Authorization': 'Bearer ' + BOARD_API_TOKEN
+            'Authorization': 'Bearer ' + board_api_token
         }
     };
 
@@ -126,7 +129,7 @@ async function postMove(chessMove){
 
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer ' + BOARD_API_TOKEN
+          'Authorization': 'Bearer ' + board_api_token
         }
     };
 
@@ -146,4 +149,8 @@ async function postMove(chessMove){
             }
         });
     });
+}
+
+function setAPIToken(token){
+    board_api_token = token;
 }

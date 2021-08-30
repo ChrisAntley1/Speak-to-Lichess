@@ -260,31 +260,15 @@ function getUCIFromSAN(sanMove){
 
     sanMove = removeCaptureNotation(sanMove);
     //attempt to parse a SAN format move into a UCI format move
-    if(/[a-h]/.test(sanMove.charAt(0))) return getPawnMove(sanMove);
 
-    if(/[QRBNK]/.test(sanMove.charAt(0))) return getPieceMove(sanMove);
+    resultMove = -1;
+    if(/[a-h]/.test(sanMove.charAt(0))) resultMove =  getPawnMove(sanMove);
 
-    if(sanMove === '0-0' || sanMove === '0-0-0') return getCastleMove(sanMove);
+    else if(/[QRBNK]/.test(sanMove.charAt(0))) resultMove =  getPieceMove(sanMove);
 
-}
+    else if(sanMove === '0-0' || sanMove === '0-0-0') resultMove =  getCastleMove(sanMove);
 
-function getPieceMove(sanMove){
-
-    let translatedMove = '';
-    const piece = sanMove[0];
-    let pieceList = getPieceList(piece);
-
-    if(pieceList == -1)
-        throw 'panik';
-    
-    let moveComponents = getPieceMoveComponents(sanMove);
-
-    if(pieceList.length == 1)
-        translatedMove = pieceList[0] + moveComponents.destination;
-    
-    else translatedMove = findValidPiece(pieceList, moveComponents) + moveComponents.destination;
-    
-    return translatedMove;
+    return resultMove;
 }
 
 function getPawnMove(sanMove){
@@ -295,13 +279,14 @@ function getPawnMove(sanMove){
 
     if(destination == null){
         console.log(INVALID_MOVE);
-        return;
+        return -1;
     }
     else destination = destination[0];
     
-    if(destination === '')
-        throw 'Failed to find destination square for pawn move.'
-    
+    if(destination === ''){
+        console.log(INVALID_MOVE);
+        return -1;
+    }
     
     const col = destination[0];
     const destRow = parseInt(destination[1]);
@@ -347,6 +332,31 @@ function getCastleMove(sanMove){
     if(sanMove === '0-0-0') return queenSideCastle;
 
     return -1;
+}
+
+function getPieceMove(sanMove){
+
+    let translatedMove = '';
+    const piece = sanMove[0];
+    let pieceList = getPieceList(piece);
+
+    if(pieceList == -1){
+        // throw 'panik';
+        return -1;
+    }
+    let moveComponents = getPieceMoveComponents(sanMove);
+
+    if(pieceList.length == 1)
+        translatedMove = pieceList[0] + moveComponents.destination;
+    
+    else {
+
+        const validPiece = findValidPiece(pieceList, moveComponents);
+        if(validPiece == -1)
+            return -1;
+        translatedMove =  validPiece + moveComponents.destination;
+    }
+    return translatedMove;
 }
 
 function getPieceList(piece){
@@ -396,7 +406,7 @@ function findValidPiece(pieceList, moveComponents){
         }
     
         if(validPieces.length == 0){
-            console.log('no valid squares found, probably throw error for user');
+            console.log('No piece with access to destination square found');
             return -1;
         }
         
@@ -404,7 +414,7 @@ function findValidPiece(pieceList, moveComponents){
             return validPieces[0];
         
         else {
-            console.log('squareInfo allows for more than 1 piece, throw error for user');
+            console.log('squareInfo allows for more than 1 valid piece; user must identify piece');
             return -1;
         }
     }
@@ -418,9 +428,10 @@ function findValidPiece(pieceList, moveComponents){
         }
     }
 
-    if(validPieces.length == 0)
-    console.log('None of the valid pieces found are in range of the destination square, probably throw error');
-
+    if(validPieces.length == 0){
+        console.log('None of the valid pieces found are in range of the destination square');
+        return -1;
+    }
     else if (validPieces.length == 1)
         return validPieces[0];
     
@@ -429,7 +440,6 @@ function findValidPiece(pieceList, moveComponents){
     return -1;
 }
 
-//TODO: Handle if destination square is piece belonging to user?? prob not
 function pieceHasAccess(start, dest, piece){
     coordinates = getNumericCoordinates(start, dest);
     if(piece.match('N'))
@@ -455,9 +465,10 @@ function inKnightRange(coordinates){
     let diffCol = Math.abs(coordinates.startCol - coordinates.destCol);
     let diffRow = Math.abs(coordinates.startRow - coordinates.destRow);
 
-    if(Math.abs(diffCol - diffRow) == 1){
-        return true;
-    }
+    if(diffRow > 2 || diffCol > 2) return false;
+    
+    if(Math.abs(diffCol - diffRow) == 1) return true;
+    
     return false;
 }
 
