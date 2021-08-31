@@ -75,6 +75,7 @@ let userPieceMap;
 let kingSideCastle;
 let queenSideCastle;
 
+//this probably doesn't need to be var
 var board;
 
 const columns = ['-','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -300,12 +301,12 @@ function getPawnMove(sanMove){
 
     if(sanMove.length == 2){
         //if move to rank 4 for white or rank 5 for black, check pawn map
-        //else assume pawn's position
         if((destRow == 5 && userColor == 'b') || (destRow == 4 && userColor == 'w')){ 
             if(board[col][destRow - direction] !== (userColor + 'p'))
                 return col + (destRow - (direction * 2)) + destination;
             
         }
+        //else assume pawn's position
         return  col + (destRow - direction) + destination;
     }
 

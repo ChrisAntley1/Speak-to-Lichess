@@ -22,7 +22,7 @@
         "128": "/images/yellow_chess_talk_128.png"
       },
       "default_popup": "popup.html",
-      "default_title": "A popup will come here."
+      "default_title": "Quick Settings"
     },
 
     "permissions": [

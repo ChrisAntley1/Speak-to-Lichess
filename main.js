@@ -50,6 +50,8 @@
  * -- https://stackoverflow.com/questions/2574204/detect-browser-focus-out-of-focus-via-google-chrome-extension
  * 
  * 3. Additional testing to make sure new changes aren't gonna fuck shit up
+ * 
+ * 4. Show user message on update to 2.1 letting them know they can use SAN with Automatic Submission
  */
 
 if(isGamePage){

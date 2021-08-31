@@ -78,7 +78,6 @@ class TextProcessor {
     
                 //split replacement phrase. if just a single word, replacementPhrase will be an array of length 1; 
                 //no additional code should be needed.
-                console.log('found word to replace');
                 replacementPhrase = word_replacement_list[word].split(' ');
                 for(const subWord of replacementPhrase){
                     result.push(subWord);
@@ -117,7 +116,6 @@ class TextProcessor {
         console.log('setting replacement list');
         chrome.storage.local.get(['word_replacement_list'], function(result){
             this.word_replacement_list = result['word_replacement_list'];
-            console.log(this.word_replacement_list);
         });
     }
 
