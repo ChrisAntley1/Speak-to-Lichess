@@ -61,16 +61,12 @@
 *          -- probably inform user of both
 *          -- send move using arbitrary piece of target type regardless?
 */
-const INVALID_MOVE = 'Invalid move detected; your move did not follow any expected SAN or UCI formats.'
-const BUILDING_BOARD = 'movelist length was 0 or takeback occured. Building board state from starting position...';
-const NO_SUCH_PIECE = 'updateUserPiece: attempting to update piece that does not exist in userPieceMap!';
-const MUST_SPECIFY_PIECE = 'More than 1 piece has access to this square; user must specify the correct piece!';
+const REBUILDING_BOARD_STATE = 'updateGameState: either more than 1 new move received, or takeback has occured; rebuilding board...';
+const NO_SUCH_PIECE = 'updateUserPiece: attempting to update piece that does not exist in userPieceMap...';
+const MUST_SPECIFY_PIECE = 'findValidPiece: more than 1 piece of this type has access to destination square; user must further specify target piece...';
 
-let castleMap;
 let movesList = [];
 let userColor = '';
-let pieceRow = 0;
-let pawnRow = 0;
 let userPieceMap;
 let kingSideCastle;
 let queenSideCastle;
@@ -78,18 +74,24 @@ let queenSideCastle;
 //this probably doesn't need to be var
 var board;
 
+let castleRookMoveMap = new Map();
+
+castleRookMoveMap.set('e8c8', 'a8d8');
+castleRookMoveMap.set('e8g8', 'h8f8');
+castleRookMoveMap.set('e1c1', 'a1d1');
+castleRookMoveMap.set('e1g1', 'h1f1');
+
+
 const columns = ['-','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
 function setInitialGameState(color){
     
+    console.log('Setting board state to starting position...');
     setStartingPosition();
     userColor = color;
-    castleMap = new Map();
 
-    castleMap.set('e8c8', 'a8d8');
-    castleMap.set('e8g8', 'h8f8');
-    castleMap.set('e1c1', 'a1d1');
-    castleMap.set('e1g1', 'h1f1');
+    let pieceRow = 0;
+    let pawnRow = 0;
 
     if(userColor === "w"){
         pawnRow = 2;
@@ -101,9 +103,9 @@ function setInitialGameState(color){
         pieceRow = 8;
     }
     kingSideCastle = `e${pieceRow}g${pieceRow}`;
-    queenSideCaslte = `e${pieceRow}c${pieceRow}`;
+    queenSideCastle = `e${pieceRow}c${pieceRow}`;
 
-    setUserPieces();
+    setUserPieces(pieceRow, pawnRow);
 }
 
 /**
@@ -111,26 +113,22 @@ function setInitialGameState(color){
  */
 function updateGameState(updatedMoveList){
 
-    //if no moves recorded yet OR if a takeback possibly occured
-    if(movesList.length == 0 || updatedMoveList.length - movesList.length != 1){
+    if(updatedMoveList.length - movesList.length == 1 && isMovesListValid(updatedMoveList) == true){
+        const newMove = updatedMoveList[updatedMoveList.length - 1];
+        movePiece(newMove);
+    }
+
+    else {
+        console.log(REBUILDING_BOARD_STATE);
         
-        console.log(BUILDING_BOARD);
-        setStartingPosition();
-        setUserPieces();
+        setInitialGameState(userColor);
         for(move of updatedMoveList)
             movePiece(move);
     }
 
-    //make sure our lists are consistent up to the point of the last known move; if not, a takeback has occured and shits gotta change
-    else if(isMovesListValid(updatedMoveList) == true){
-        const newMove = updatedMoveList[updatedMoveList.length - 1];
-        movePiece(newMove);
-    }
-    
     movesList = updatedMoveList;
 
     console.log(board);
-
 }
 
 function setStartingPosition(){
@@ -146,7 +144,7 @@ function setStartingPosition(){
     });
 }
 
-function setUserPieces(){
+function setUserPieces(pieceRow, pawnRow){
 
     userPieceMap = new Map();
 
@@ -155,8 +153,6 @@ function setUserPieces(){
     for(let i = 1; i<= 8; i++){
         userPieceMap.set(columns[i] + pawnRow, userPawn);
     }
-
-    console.log("game state initialized.");
 
     userPieceMap.set('a' + pieceRow, userColor + 'R');
     userPieceMap.set('b' + pieceRow, userColor + 'N');
@@ -203,8 +199,8 @@ function movePiece(move){
     board[startingSquare[0]][startingSquare[1]] = '--';
 
     //CASTLE REVISED 
-    if(castleMap.has(move) && movingPiece.includes('K')){
-        movePiece(castleMap.get(move));
+    if(castleRookMoveMap.has(move) && movingPiece.includes('K')){
+        movePiece(castleRookMoveMap.get(move));
     }
     
 }
@@ -252,42 +248,34 @@ function updateUserPiece(previousSquare, newSquare){
     
     userPieceMap.delete(previousSquare);
     userPieceMap.set(newSquare, piece);
-
-    console.log('updateUserPiece: success');
 }
 
-//TODO: currently assuming any non UCI format input is SAN; may be problematic later
 function getUCIFromSAN(sanMove){
 
-    sanMove = removeCaptureNotation(sanMove);
-    //attempt to parse a SAN format move into a UCI format move
+    //this trimmedMove business feels weird but it works
+    let trimmedMove = trimSAN(sanMove);
+    let resultMove = sanMove;
+    
+    if(/[a-h]/.test(sanMove.charAt(0))) resultMove = getPawnMove(trimmedMove);
 
-    resultMove = -1;
-    if(/[a-h]/.test(sanMove.charAt(0))) resultMove =  getPawnMove(sanMove);
+    else if(/[QRBNK]/.test(sanMove.charAt(0))) resultMove = getPieceMove(trimmedMove);
 
-    else if(/[QRBNK]/.test(sanMove.charAt(0))) resultMove =  getPieceMove(sanMove);
+    else if(sanMove === '0-0' || sanMove === '0-0-0') resultMove = getCastleMove(trimmedMove);
 
-    else if(sanMove === '0-0' || sanMove === '0-0-0') resultMove =  getCastleMove(sanMove);
-
+    if(resultMove === trimmedMove) return sanMove;
+    
     return resultMove;
 }
 
 function getPawnMove(sanMove){
 
-    sanMove = sanMove.replace('=', '');
-
     let destination = sanMove.match(/[a-h][1-8]/);
 
-    if(destination == null){
-        console.log(INVALID_MOVE);
-        return -1;
-    }
+    if(destination == null) return sanMove;
+    
     else destination = destination[0];
     
-    if(destination === ''){
-        console.log(INVALID_MOVE);
-        return -1;
-    }
+    if(destination === '') return sanMove;
     
     const col = destination[0];
     const destRow = parseInt(destination[1]);
@@ -324,40 +312,37 @@ function getPawnMove(sanMove){
         if(/[a-h][a-h][1-8][QRBN]/.test(sanMove))
             return sanMove[0] + (destRow - direction) + destination + sanMove[sanMove.length - 1];
     
-    return -1;
+    return sanMove;
 }
 
 function getCastleMove(sanMove){
     
     if(sanMove === '0-0') return kingSideCastle;
     if(sanMove === '0-0-0') return queenSideCastle;
-
-    return -1;
+    return sanMove;
 }
 
 function getPieceMove(sanMove){
 
-    let translatedMove = '';
     const piece = sanMove[0];
     let pieceList = getPieceList(piece);
 
     if(pieceList == -1){
         // throw 'panik';
-        return -1;
+        return sanMove;
     }
     let moveComponents = getPieceMoveComponents(sanMove);
 
     if(pieceList.length == 1)
-        translatedMove = pieceList[0] + moveComponents.destination;
+        return pieceList[0] + moveComponents.destination;
     
-    else {
 
-        const validPiece = findValidPiece(pieceList, moveComponents);
-        if(validPiece == -1)
-            return -1;
-        translatedMove =  validPiece + moveComponents.destination;
-    }
-    return translatedMove;
+    const validPiece = findValidPiece(pieceList, moveComponents);
+    
+    if(validPiece == -1)
+        return sanMove;
+        
+    return validPiece + moveComponents.destination;
 }
 
 function getPieceList(piece){
@@ -536,6 +521,6 @@ function isBlocked(coordinates){
     return false;
 }
 
-function removeCaptureNotation(sanMove){
-    return sanMove.replace('x', '');
+function trimSAN(sanMove){;
+    return sanMove.replace('x', '').replace('=', '');
 }

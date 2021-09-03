@@ -77,7 +77,7 @@ if(isGamePage){
     const API_SUBMIT_SUCCESS = "Successfully submitted move with Lichess API!";
     const API_SUBMIT_FAIL = "Error - API move submission failed: ";
     const INPUT_BOX_MESSAGE = ' Use Lichess text input box to submit moves with enter key. ---SAN FORMAT WORKS BEST---';
-    const CONVERSION_FAIL_MESSAGE = 'Unable to interpret valid move given the known board state; check console for more details.'
+    const CONVERSION_FAIL_MESSAGE = 'Failed to Convert '
     const NO_TOKEN_MESSAGE = 
         "No API token! Open options page and set a valid API token to use both UCI format " +
         "and automatic move submission. You can still use SAN format moves, and press enter to submit them.";
@@ -90,15 +90,15 @@ if(isGamePage){
     let inputBox; 
 
     //flags and other variables
-    let toggle_hold_message = '';
-    let result_command = '';
-    let result_chess_move = '';
-    let result_UI_element = '';
+    // let toggle_hold_message = '';
+    // let result_command = '';
+    // let result_chess_move = '';
+    // let result_UI_element = '';
     let holding_listen_key = false;
     let is_listening = false;
     let toggle_listen;
     let use_text_input = false;    
-
+    let text_input_move = '';
     //element found flags; need to be global for observer
     let input_found = false;
     let underboard_found = false;
@@ -162,12 +162,12 @@ if(isGamePage){
                     checkIfActiveGame().then((res) =>{
                         
                         const color = res.color.charAt(0);
-
+                        
                         setInitialGameState(color);
                         streamGameData();
 
                         console.log(`${res.speed} allows API moves, setting up game state streaming...`);
-                        console.log(`You are playing the ${color} pieces!`);    
+                        console.log(`You are playing the ${res.color} pieces!`);    
 
                     }).catch((res) =>{
 
@@ -239,33 +239,8 @@ if(isGamePage){
         recognition.lang = 'en-US';
         recognition.interimResults = false;
     
-        recognition.onresult = function(event) {
-            parseSpeech(event);
-
-            if(result_command == -1){
-                display_move.innerHTML = result_chess_move + ': ' + CONVERSION_FAIL_MESSAGE;
-            }
-
-            else if(result_command != undefined && result_command.length != 0){
-                
-                if(use_text_input == false) submit_function();
-            }
-
-            else console.log("No valid command or move was interpreted.");
-
-            result_command = '';
-            submit_function = null;
-        };
+        recognition.onresult = parseSpeech;
     
-        /**
-         * TODO: there was something about the listening I wanted to change.
-         * 
-         * While using toggle listening, for the sake of speed, provide user key to immediately submit a move?
-         * In the same vein, provide key to ignore whatever has been heard in the immediate listening sesion?
-         * 
-         * Implement known single syllable word list for letters - possibly
-         * 
-         */
         recognition.onspeechend = function() {
             recognition.stop();
         };
@@ -280,54 +255,69 @@ if(isGamePage){
     }
 
     function parseSpeech(event){
+
         const speechText = event.results[event.results.length - 1][0].transcript;
 
-        console.log("Raw voice input: " + speechText);
+        if(speechText == undefined || speechText == null || speechText.length == 0){
+            return;
+        }
+
+        console.log(`Raw voice input: ${speechText}`);
 
         let componentWords = processor.processSpeechInput(speechText);
-        result_command = componentWords.join(' ');
-        console.log('Processed voice input: ' + result_command);
+        let result_command = componentWords.join(' ');
+        let result_chess_move = '';
+        console.log(`Processed voice input: ${result_command}`);
 
         //store command in last_command, to display in popup window
         chrome.storage.local.set({last_command: result_command});
 
         //check if spoken command is special command for controlling UI
         if(specialCommandMap.has(result_command)){
-            submit_function = specialCommandMap.get(result_command);
+            // let submit_function = specialCommandMap.get(result_command);
+            // submit_function();
+            specialCommandMap.get(result_command)();
         }
 
         else if (elementNameMap.has(result_command)){
-            submit_function = clickButton;
+            // submit_function = clickButton;
 
-            //global variable for the UI element. Probably better way to do this
-            result_UI_element = elementNameMap.get(result_command);
+            // //global variable for the UI element. Probably better way to do this
+            // result_UI_element = elementNameMap.get(result_command);
+            clickButton(elementNameMap.get(result_command));
         }
-        //is not a special command; we now process into chess move
+        //is not a special command; we now attempt to process into a chess move
         else {
             result_chess_move = processor.extractChessMove(componentWords);
-
             //if Board API does not support the current game speed, use text input submission
             if(use_text_input == false){
-
-                if(isUCIFormat(result_chess_move)) result_command = result_chess_move;
-
-                else result_command = getUCIFromSAN(result_chess_move);
                 
-                submit_function = apiSubmitMove;
+                if(isUCIFormat(result_chess_move) == false)
+                    result_chess_move = getUCIFromSAN(result_chess_move);
+                
+                //if still not UCI Format, display error to user
+                if(isUCIFormat(result_chess_move) == false)
+                    display_move.innerHTML = CONVERSION_FAIL_MESSAGE + `(${result_command} -> ${result_chess_move})`
+                
+                else apiSubmitMove(result_chess_move);
             }
 
-            else result_command = result_chess_move;
+            else text_input_move = result_chess_move;
         }
 
-        console.log('result command or move: ' + result_command);
+        //still sorta fucky
+        if(result_chess_move !== '') 
+            console.log(`result move: ${result_chess_move}`);
+
+        else console.log(`result command: ${result_command}`);
     }
   
-    async function apiSubmitMove(){
+    async function apiSubmitMove(resultMove){
 
-        display_move.innerHTML = "Result Move: " + result_command + ". submitting with Board API fetch request...";
+        display_move.innerHTML = "Result Move: " + resultMove + ". submitting with Board API fetch request...";
 
-        postMove(result_command).then(()=>{
-            display_move.innerHTML = API_SUBMIT_SUCCESS;
+        postMove(resultMove).then(()=>{
+            display_move.innerHTML = `${resultMove}: ` + API_SUBMIT_SUCCESS;
             resetDisplay();
         }).catch((res)=>{
             display_move.innerHTML = API_SUBMIT_FAIL + res.error;
@@ -335,27 +325,27 @@ if(isGamePage){
     }
     
     function submitToInputBox(){
-        inputBox.value = result_chess_move;
+        inputBox.value = text_input_move;
+        text_input_move = '';
     }
     function isUCIFormat(chessMove){
         //API actually accepts invalid promotion moves and just ignores the promotion. 
         //For example: d2d4q will be interpreted as d2d4.
-        //not sure why that's relevant when checking if UCI format or not lel
-        return (chessMove.match(/^[a-h][1-8][a-h][1-8]$/) || chessMove.match(/^[a-h][1-8][a-h][1-8][qrbn]$/));
+        //not sure why that's relevant when checking if UCI format or not lel        
+        return (chessMove.match(/^[a-h][1-8][a-h][1-8]$/) != null || chessMove.match(/^[a-h][1-8][a-h][1-8][qrbn]$/) != null);
     }
 
     function waitForPageElements(){
     
         if(!input_found && document.getElementsByClassName('ready').length > 0){
             
-            console.log("input found.");
+            console.log("input box found.");
             inputBox = document.getElementsByClassName('ready')[0];            
             input_found = true;
         }
     
         if(!underboard_found && document.getElementsByClassName('round__underboard').length > 0){
             
-            console.log("underboard found.");
             let under_board = document.getElementsByClassName('round__underboard')[0];
             under_board.insertBefore(display_move, under_board.firstChild);
             underboard_found = true;
@@ -363,7 +353,6 @@ if(isGamePage){
     
         if(!material_bottom_found && (document.getElementsByClassName('material material-bottom').length > 0)){
             
-            console.log("material bottom found.");
             let bottom = document.getElementsByClassName('material material-bottom')[0];
             let bottomParent = bottom.parentNode;
             let newDiv = document.createElement('div');
@@ -390,7 +379,7 @@ if(isGamePage){
 
     }
 
-    //TODO: this seems to work; visibilitychange event listener removal looks silly including the function
+    //TODO: this seems to work; visibilitychange event listener removal looks silly when including the function previously added
     function cancelExtensionChanges(){
         display_listen_status.remove();
         display_move.remove();
@@ -403,7 +392,7 @@ if(isGamePage){
     }
     
     async function resetDisplay(){
-        await new Promise(r => setTimeout(r, 1400));
+        await new Promise(r => setTimeout(r, 3400));
         display_move.innerHTML = DEFAULT_DISPLAY_MESSAGE;
 
     }
@@ -447,31 +436,31 @@ if(isGamePage){
     
     function clickButton(ui_element){
 
-        let className = ui_element || result_UI_element;
-        let elements = document.getElementsByClassName(className);
+        // let className = ui_element || result_UI_element;
+        let elements = document.getElementsByClassName(ui_element);
         let button = elements[0];
       
         if(button == null){
 
-            if(className === 'fbt flip active')
+            if(ui_element === 'fbt flip active')
                 clickButton('fbt flip');
             else {
-                console.log(`did not find ${className} button.`);
+                console.log(`did not find ${ui_element} button.`);
                 return;
             }        
         }
     
         else {
 
-            console.log(`clicking ${className} button.`);
+            console.log(`clicking ${ui_element} button.`);
 
             let evt = document.createEvent('MouseEvents');
             evt.initMouseEvent('mousedown', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
             button.dispatchEvent(evt);
             button.click();
 
-            if (className === 'fbt resign') clickButton('fbt yes');
-            if (className === 'fbt draw-yes') clickButton('fbt yes draw-yes');
+            if (ui_element === 'fbt resign') clickButton('fbt yes');
+            if (ui_element === 'fbt draw-yes') clickButton('fbt yes draw-yes');
         }
 
         result_UI_element = '';

@@ -138,13 +138,11 @@ async function postMove(chessMove){
         fetch(api_url, fetchRequestObject)
         .then(res => res.json()).then(function(res){
             
-            console.log(res);
             if(res['ok']){
                 resolve();
             }
 
             else {
-                console.log('reject comes next');
                 reject(res);
             }
         });
