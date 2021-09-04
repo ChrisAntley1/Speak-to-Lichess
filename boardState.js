@@ -126,7 +126,10 @@ function updateGameState(updatedMoveList){
     }
 
     movesList = updatedMoveList;
-    console.log(board);
+
+    //setting board back to starting position creates issue where movesList ends up with a single move ""
+    if(updatedMoveList.length == 1 && updatedMoveList[0] === '')
+        movesList = [];
 }
 
 function setStartingPosition(){
@@ -159,9 +162,12 @@ function setUserPieces(pieceRow, pawnRow){
     userPieceMap.set('f' + pieceRow, userColor + 'B');
     userPieceMap.set('g' + pieceRow, userColor + 'N');
     userPieceMap.set('h' + pieceRow, userColor + 'R');
-
 }
+
 function movePiece(move){
+
+    if(move == '')
+        return;
 
     const startingSquare = move.slice(0, 2);
     const destinationSquare = move.slice(2, 4);
@@ -186,7 +192,6 @@ function movePiece(move){
     if (destPiece.includes(userColor))
         deleteUserPiece(destinationSquare);
     
-
     if (movingPiece.includes(userColor))
         updateUserPiece(startingSquare, destinationSquare);
     

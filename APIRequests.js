@@ -107,7 +107,6 @@ async function readBoardData(value){
         if(newMovesArray.toString() !== movesList.toString()){
 
             updateGameState(newMovesArray);
-            console.log("game moves updated.");
         }
     }
 }

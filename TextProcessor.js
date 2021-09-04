@@ -99,7 +99,6 @@ class TextProcessor {
     }
     
     setReplacementList(){
-        console.log('setting replacement list');
         chrome.storage.local.get(['word_replacement_list'], function(result){
             this.word_replacement_list = result['word_replacement_list'];
         });
