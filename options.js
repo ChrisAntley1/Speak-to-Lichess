@@ -21,12 +21,14 @@ let newWordForm = document.getElementById('new_word_form');
 let deleteForm = document.getElementById('delete_form');
 let tokenForm = document.getElementById('token_form');
 
-var word_replacement_list;
-var replacement_word_keys;
-var board_api_token;
-var ignoreList = ['last_command', '__toggle', '__board_api_token'];
+let word_replacement_list;
+let replacement_word_keys;
+let board_api_token;
 
-getStoredTable();
+//ignore list should no longer be needed
+let ignoreList = ['last_command', '__toggle', '__board_api_token'];
+
+getAndDrawTable();
 
 chrome.storage.local.get(['__board_api_token'], function(result){
 
@@ -47,25 +49,22 @@ generateButton.addEventListener('click', generateToken);
 searchInput.addEventListener('keyup', filterBySearch);
 
 
-function addTableRows(array) {
+function addTableRows(array){
     
     let newTableBody = document.createElement('tbody');
 
-    
-    //check to make sure the entry is not an option. Should definitely 
-    //change storage management so that this can't happen!
-    for (var i = 0; i < array.length; i++) {
+    for (let i = 0; i < array.length; i++) {
         
         if(ignoreList.includes(array[i])){
             continue;
         } 
         // Create the table row:
-        var item = document.createElement('tr');
+        let item = document.createElement('tr');
         item.id = array[i]+word_replacement_list[array[i]];
         // add the problematic word and it's replacement phrase:
-        var problem_col = document.createElement('td');
+        let problem_col = document.createElement('td');
         problem_col.innerHTML = array[i];
-        var correct_col = document.createElement('td');
+        let correct_col = document.createElement('td');
         correct_col.innerHTML = word_replacement_list[array[i]];
         
         item.appendChild(problem_col);
@@ -87,34 +86,30 @@ function filterBySearch(){
         let searchText = searchInput.value;
         for(key of replacement_word_keys){
             
-            if(ignoreList.includes(key)){
-                continue;
-            } 
+            if(ignoreList.includes(key))
+                continue; 
 
             let tableRow = document.getElementById(key+word_replacement_list[key]);
 
-            if(searchText == null || searchText == undefined || searchText.length == 0){
+            if(searchText == null || searchText == undefined || searchText.length == 0)
                 tableRow.style.display = null;
-            }
-            else if(key.includes(searchText)){
-                tableRow.style.display = null;
-            }
-
-            else if(word_replacement_list[key].includes(searchText)){
-                tableRow.style.display = null;
-            }
             
-            else {
-                tableRow.style.display = "none";
-            }
+            else if(key.includes(searchText))
+                tableRow.style.display = null;
+
+            else if(word_replacement_list[key].includes(searchText))
+                tableRow.style.display = null;
+            
+            else tableRow.style.display = "none";
+            
         }
     }
 }
 function submitPhrase(e){
     
     e.preventDefault();
-    var trouble_word = trouble_input.value;
-    var correct_phrase = correct_input.value; 
+    let trouble_word = trouble_input.value;
+    let correct_phrase = correct_input.value; 
     if(trouble_word == null || trouble_word == undefined || trouble_word.length == 0) return;
     if(correct_phrase == null || correct_phrase == undefined || correct_phrase.length == 0) return;
     
@@ -128,21 +123,16 @@ function submitPhrase(e){
         trouble_input.value = '';
         displayMessage.innerHTML = "Replacement word must be a single word and contain no spaces."
         return;
-
     }
-    console.log("replace " + trouble_word + " with: " + correct_phrase);
-
-    var phrase_updated = word_replacement_list.hasOwnProperty(trouble_word);
+    let phrase_updated = word_replacement_list.hasOwnProperty(trouble_word);
 
     if(correct_phrase = checkProposedPhrase(correct_phrase)){
     
-        console.log("checkProposedPhrase returned true!");
         word_replacement_list[trouble_word] = correct_phrase;
-        chrome.storage.local.set(word_replacement_list);
+        chrome.storage.local.set({'word_replacement_list': word_replacement_list});
 
         //try updating table here
-        getStoredTable();
-
+        getAndDrawTable();
 
         if (phrase_updated){
             update_message.textContent = "Word updated: '" + trouble_word + "' will now be interpreted as: '" + correct_phrase +"'";
@@ -152,7 +142,6 @@ function submitPhrase(e){
 
         correct_input.value = '';
         trouble_input.value = '';
-
     }
 }
 
@@ -175,28 +164,19 @@ function checkProposedPhrase(phrase){
 function submitDelete(e){
     e.preventDefault();
 
-    var word_to_delete = delete_input.value;
+    let word_to_delete = delete_input.value;
     if(word_to_delete == null || word_to_delete == undefined || word_to_delete.length == 0) return;
 
     if(word_replacement_list.hasOwnProperty(word_to_delete)){
 
         delete word_replacement_list[word_to_delete];
-        console.log(word_replacement_list);
-        console.log(word_replacement_list[word_to_delete]);
-        chrome.storage.local.clear(function(){
-            chrome.storage.local.set(word_replacement_list);
-        });
+        chrome.storage.local.set({'word_replacement_list': word_replacement_list});
 
-        //try updating table here
-        getStoredTable();
-
-        update_message.textContent = "Word removed: " + word_to_delete + " will no longer be replaced.";
-
+        getAndDrawTable();
+        update_message.textContent = word_to_delete + " will no longer be replaced.";
     }
 
-    else {
-        update_message.textContent = word_to_delete + " is not a word that is currently being replaced.";
-    }
+    else update_message.textContent = word_to_delete + " is not a word that is currently being replaced.";
 
     delete_input.value = '';
 
@@ -204,6 +184,7 @@ function submitDelete(e){
 
 function generateToken(){
     window.open(_GENERATE_TOKEN_URL, '_blank');
+    tokenInput.focus();
 }
 
 async function submitToken(e){
@@ -225,19 +206,14 @@ function checkTokenFormat(token){
         return false;
     }
 
-    if(token.length != 16){
-        tokenMessage.innerHTML = "Invalid token.";
-        return false;
-    }
-
-    tokenMessage.innerHTML = 'Format appears valid, checking with Lichess...';
+    tokenMessage.innerHTML = 'Checking token with Lichess...';
     return true;
 }
 
-function getStoredTable(){
+function getAndDrawTable(){
     
-    chrome.storage.local.get(word_replacement_list, function(result){
-        word_replacement_list = result;
+    chrome.storage.local.get(['word_replacement_list'], function(result){
+        word_replacement_list = result['word_replacement_list'];
         replacement_word_keys = Object.keys(word_replacement_list);
         console.log(replacement_word_keys);
         addTableRows(replacement_word_keys);
