@@ -1,9 +1,5 @@
 
-
-//TODO: destroy this and make just a javascript file, not a class. binding is stupid
-//tho it is working right now? i dunno
-
-
+//The text processing portion of the extension. Currently exists as a class, but there's really no need for this...
 const EXCLUDE_LIST = ['__board_api_token', '__toggle'];
 
 class TextProcessor {
@@ -12,12 +8,10 @@ class TextProcessor {
     numberMap;
     chessTermMap;
 
-
     constructor(){
-        if(TextProcessor._instance){
+        if(TextProcessor._instance)
             return TextProcessor._instance;
-        }
-
+        
         TextProcessor._instance = this;
 
         this.createKeyWordMaps();
@@ -34,7 +28,6 @@ class TextProcessor {
 
         return this.replaceWords(filteredText.split(' '));
     }
-
 
     filterRawInput(speechText){
     
@@ -62,6 +55,7 @@ class TextProcessor {
         for(const word of componentWords){
             chessMove += this.extractCharacter(word);
         }
+        
         return chessMove;
     }
 
@@ -79,9 +73,8 @@ class TextProcessor {
                 //split replacement phrase. if just a single word, replacementPhrase will be an array of length 1; 
                 //no additional code should be needed.
                 replacementPhrase = word_replacement_list[word].split(' ');
-                for(const subWord of replacementPhrase){
+                for(const subWord of replacementPhrase)
                     result.push(subWord);
-                }
             }
     
             else result.push(word);
@@ -94,24 +87,17 @@ class TextProcessor {
     
         if(word.match(/\d/) == null){
     
-            if(this.chessTermMap.has(word)){
+            if(this.chessTermMap.has(word))
                 return this.chessTermMap.get(word);
-            }
-    
-            else if(this.numberMap.has(word)){
+            
+            else if(this.numberMap.has(word))
                 return this.numberMap.get(word);
-            }
         }
     
-        //if here: get first letter of word/get digit
+        //Not a known term or a number; get first character
         return word.charAt(0);
     }
     
-    //not currently being used
-    replacePunctuation(word){
-        return word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ');
-    }
-        
     setReplacementList(){
         console.log('setting replacement list');
         chrome.storage.local.get(['word_replacement_list'], function(result){
@@ -150,8 +136,3 @@ class TextProcessor {
         this.chessTermMap.set('short', '');
     }
 }
-
-
-// let testInstance = new TextProcessor();
-
-// console.log(testInstance.numberMap);

@@ -7,6 +7,8 @@
  * -- could probably easily port the extension as is to firefox as a start
  * -- if grammar works, would be fairly easy to set up 1 syllabel letter replacements; maybe even allow certain letters
  * -- can check crx with tool from firefox; however not sure how to extract crx from unpacked extension; maybe wait till pushed this version
+ * -- RIP Firefox Dream
+ * 
  * 3. Possibly use interim results from recognition to more quickly submit to the API
  * 
  * 4. Home page controls: quick pairing button control!
@@ -35,9 +37,20 @@
  */
 
 /**
- * ADDITIONS TO DEFAULT REPLACED WORDS OR PHRASES:
+ * Use notes/Pecularities to display to users:
+ * 1. SAN format moves may not work correctly from non-standard game modes (crazyhouse, 'from position', etc.)
  * 
+ * 2. BISHOPS and Piece Interpretation: The extension recognizes the word 'bishop' and will correctly attempt to create a valid bishop move using the game state. 
+ *      It differentiates bishop moves from 'b' pawn moves using a capital 'B'. Replace any word you wish to use to make bishop moves SPECIFICALLY with 'bishop'.
+ *      This should really only be a problem if you wish to use a word other than 'bishop', say because the Web Speech API is failing to correctly hear the word
+ *      'bishop'.
  * 
+ *      With that said: since no other piece has this problem (of sharing their starting letter with a board column letter), the board state will accept lowercase
+ *      letters for any piece other than a bishop. For example, if the Speech API incorrectly hears "Rick echo 1" instead of "rook echo 1", the generated move
+ *      're1' will be interpreted as a rook move.
+ * 
+ * 3. If the extension is listening for speech (you have toggled 'listen' on, or are holding ctrl) the moment you switch tabs, it will stop listening. It will not stop listening, however, on switching from Chrome to 
+ *      another application
  */
 
 /**
@@ -55,12 +68,6 @@
  */
 
 if(isGamePage){
-    /**
-     * So here we know that the page may contain an active game. We need these variables declared outside of functions for global use.
-     * However, we could instantiate them in an async function that waits for the results of the API call; 
-     * and if the API call returns negative, then we can save some space and work by not initializing anything else. 
-     */
-    // console.log("Might be ongoing game, doing the thing");
 
     // Speech Grammar is broken when used in Chromium applications:
     //https://bugs.chromium.org/p/chromium/issues/detail?id=680944
@@ -74,61 +81,51 @@ if(isGamePage){
     const DEFAULT_DISPLAY_MESSAGE = "Dictated move information will appear here.";
     const TOGGLE_LISTEN_MESSAGE = "Press ctrl to toggle dictation on or off";
     const HOLD_LISTEN_MESSAGE = "Hold ctrl to dictate";
-    const API_SUBMIT_SUCCESS = "Successfully submitted move with Lichess API!";
-    const API_SUBMIT_FAIL = "Error - API move submission failed: ";
+    const API_SUBMIT_SUCCESS = "Successfully posted move using Board API";
+    const API_SUBMIT_FAIL = "API move submission failed: ";
     const INPUT_BOX_MESSAGE = ' Use Lichess text input box to submit moves with enter key. ---SAN FORMAT WORKS BEST---';
-    const CONVERSION_FAIL_MESSAGE = 'Failed to Convert '
+    const CONVERSION_FAIL_MESSAGE = 'Failed to Convert move to UCI for API: '
     const NO_TOKEN_MESSAGE = 
         "No API token! Open options page and set a valid API token to use both UCI format " +
-        "and automatic move submission. You can still use SAN format moves, and press enter to submit them.";
+        "and automatic move submission. The text input box may be used to submit with the 'enter' key.";
     
 
-    //HTML elements. inputBox is created by another script most likely and is not yet created,
-    //even when script is run at document_end (in manifest)
+    //HTML elements. inputBox may not have been created yet; will find using observer
     const display_move = document.createElement('strong');
     const display_listen_status = document.createElement('strong');
     let inputBox; 
 
-    //flags and other variables
-    // let toggle_hold_message = '';
-    // let result_command = '';
-    // let result_chess_move = '';
-    // let result_UI_element = '';
+    //element found flags
+    let input_found = false;
+    let underboard_found = false;
+    let material_bottom_found = false;
+    
+    //listening flags and other variables
     let holding_listen_key = false;
     let is_listening = false;
     let toggle_listen;
     let use_text_input = false;    
     let text_input_move = '';
-    //element found flags; need to be global for observer
-    let input_found = false;
-    let underboard_found = false;
-    let material_bottom_found = false;
 
-    //function that will be called depending on spoken command/move
-    let submit_function;
-
-    //Map for catching and handling special commands
-    let specialCommandMap;
-    let elementNameMap;
+    //Maps for catching and handling special commands
+    let [specialCommandMap, elementNameMap] = createMaps();
     
-    //initializing speech recognition 
+    //Speech Recognition
     var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
     let recognition;
-
-    //let recognition = setupRecognition();
 
     //Text processor
     let processor = new TextProcessor();
 
     //Initialization
     setupSubmission();
-    createMaps();
     setupRecognition();
 
     //document observer; observes DOM until inputBox (and a couple other elements) have been located.
     let observer = new MutationObserver(waitForPageElements);
     observer.observe(document, {subtree: true, childList: true});
 
+    //key event listeners; 'enter' key listener for text input submission is conditionally added elsewhere with setupTextInput();
     document.addEventListener('keydown', listenKeyDown);
     document.addEventListener('keyup', listenKeyUp);
     document.addEventListener('visibilitychange', function() {
@@ -136,6 +133,7 @@ if(isGamePage){
         holding_listen_key = false;
     });
 
+    //gets user settings; checks API Token status; checks if current game is active; sets up either API submission or text submission accordingly
     function setupSubmission(){
         chrome.storage.local.get(['__toggle'], function(result){
             toggle_listen = result['__toggle'];
@@ -214,25 +212,25 @@ if(isGamePage){
     };
 
     function createMaps(){
-        specialCommandMap = new Map();
-        specialCommandMap.set('new game', findNewGame);
-        specialCommandMap.set('rage quit', rageQuit);
+        commandMap = new Map();
+        commandMap.set('new game', findNewGame);
+        commandMap.set('rage quit', rageQuit);
 
-        elementNameMap = new Map();
-        elementNameMap.set('resign', 'fbt resign');
-        elementNameMap.set('offer draw', 'fbt draw-yes');
-        elementNameMap.set('abort', 'fbt abort');
-        elementNameMap.set('accept', 'accept');
-        elementNameMap.set('decline', 'decline');
-        elementNameMap.set('take back', 'fbt takeback-yes');
-        elementNameMap.set('rematch', 'fbt rematch white');
-        elementNameMap.set('flip board', 'fbt flip');
-        elementNameMap.set('analyze game', 'fbt analysis');
+        nameMap = new Map();
+        nameMap.set('resign', 'fbt resign');
+        nameMap.set('offer draw', 'fbt draw-yes');
+        nameMap.set('abort', 'fbt abort');
+        nameMap.set('accept', 'accept');
+        nameMap.set('decline', 'decline');
+        nameMap.set('take back', 'fbt takeback-yes');
+        nameMap.set('rematch', 'fbt rematch white');
+        nameMap.set('flip board', 'fbt flip');
+        nameMap.set('analyze game', 'fbt analysis');
+
+        return [commandMap, nameMap];
     }
 
-    /**
-     * SPEECH RECOGNITION SECTION 
-     */
+    //Speech Recognition
     function setupRecognition(){
 
         recognition =  new SpeechRecognition();
@@ -258,9 +256,8 @@ if(isGamePage){
 
         const speechText = event.results[event.results.length - 1][0].transcript;
 
-        if(speechText == undefined || speechText == null || speechText.length == 0){
+        if(speechText == undefined || speechText == null || speechText.length == 0)
             return;
-        }
 
         console.log(`Raw voice input: ${speechText}`);
 
@@ -273,35 +270,34 @@ if(isGamePage){
         chrome.storage.local.set({last_command: result_command});
 
         //check if spoken command is special command for controlling UI
-        if(specialCommandMap.has(result_command)){
-            // let submit_function = specialCommandMap.get(result_command);
-            // submit_function();
+        if(specialCommandMap.has(result_command))
             specialCommandMap.get(result_command)();
-        }
 
-        else if (elementNameMap.has(result_command)){
-            // submit_function = clickButton;
-
-            // //global variable for the UI element. Probably better way to do this
-            // result_UI_element = elementNameMap.get(result_command);
+        else if (elementNameMap.has(result_command))
             clickButton(elementNameMap.get(result_command));
-        }
-        //is not a special command; we now attempt to process into a chess move
+        
+        //Phrase was not a special command; now attempt to process into a chess move
         else {
+            
             result_chess_move = processor.extractChessMove(componentWords);
-            //if Board API does not support the current game speed, use text input submission
-            if(use_text_input == false){
+
+            if(result_chess_move.length < 2)
+                display_move.innerHTML = `Invalid move: ${result_chess_move}`;
+            
+            //if using API submission
+            else if(use_text_input == false){
                 
                 if(isUCIFormat(result_chess_move) == false)
                     result_chess_move = getUCIFromSAN(result_chess_move);
                 
                 //if still not UCI Format, display error to user
                 if(isUCIFormat(result_chess_move) == false)
-                    display_move.innerHTML = CONVERSION_FAIL_MESSAGE + `(${result_command} -> ${result_chess_move})`
+                    display_move.innerHTML = CONVERSION_FAIL_MESSAGE + `${result_chess_move} (${result_command}).`;
                 
                 else apiSubmitMove(result_chess_move);
             }
 
+            //else using text input submission
             else text_input_move = result_chess_move;
         }
 
@@ -376,7 +372,6 @@ if(isGamePage){
             
             if(e.key === 'Enter') submitToInputBox();
         });
-
     }
 
     //TODO: this seems to work; visibilitychange event listener removal looks silly when including the function previously added
@@ -394,7 +389,6 @@ if(isGamePage){
     async function resetDisplay(){
         await new Promise(r => setTimeout(r, 3400));
         display_move.innerHTML = DEFAULT_DISPLAY_MESSAGE;
-
     }
     function listenKeyDown(e){
     
@@ -466,6 +460,7 @@ if(isGamePage){
         result_UI_element = '';
     }
 
+    //TODO: against computer, currently just opens home page to the Lobby section
     function findNewGame(){
     
         let newGameUrl = "https://lichess.org/?hook_like=" + lichessLocation;

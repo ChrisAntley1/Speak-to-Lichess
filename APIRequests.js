@@ -12,19 +12,15 @@ async function testToken(token){
             headers: {
                 'Authorization': 'Bearer ' + token
             }
-        
-            })
-            .then(res => res.json())
-            .then(function(res){
-                
-                console.log(res);
-                if(res.hasOwnProperty('error')){
-                    reject(res);                    
-                }
-                else {
-                    resolve(token);
-                }
-            });
+        })
+        .then(res => res.json())
+        .then(function(res){
+            
+            if(res.hasOwnProperty('error'))
+                reject(res);                    
+            
+            else resolve(token);
+        });
     });
 }
 
@@ -35,14 +31,13 @@ async function checkIfActiveGame(){
 
         let response = await fetch('https://lichess.org/api/account/playing', {
         
-        headers: {
-        'Authorization': 'Bearer ' + board_api_token
-        }
+            headers: {
+                'Authorization': 'Bearer ' + board_api_token
+            }
         });
 
-        if(!response.ok){
+        if(!response.ok)
             reject(response);
-        }
 
         let gameList = await response.json();
         let isActiveGame = false;
@@ -57,13 +52,10 @@ async function checkIfActiveGame(){
                 const speed = game_info.speed;
                 const legalGameSpeeds = ['correspondence', 'rapid', 'classical'];
     
-                if(legalGameSpeeds.includes(speed)){
+                if(legalGameSpeeds.includes(speed))
                     resolve(game_info);
-                }
     
-                else {
-                    reject(game_info);
-                }
+                else reject(game_info);
             }
         }
         if(isActiveGame == false) reject({'isActiveGame': false});
@@ -101,7 +93,6 @@ async function streamGameData(){
                 controller.close();
                 reader.releaseLock();
             }
-
         });
     });
 }
@@ -110,7 +101,6 @@ async function readBoardData(value){
     let line = new TextDecoder().decode(value);
 
     if(line.length > 0 && line.includes(_MOVES_DATA_IDENTIFIER)){
-
 
         let newMovesArray = line.substring(line.indexOf(_MOVES_DATA_IDENTIFIER) + _MOVES_DATA_IDENTIFIER.length + 1).split('\"')[0].split(' ');
 
@@ -138,13 +128,9 @@ async function postMove(chessMove){
         fetch(api_url, fetchRequestObject)
         .then(res => res.json()).then(function(res){
             
-            if(res['ok']){
-                resolve();
-            }
+            if(res['ok']) resolve();
 
-            else {
-                reject(res);
-            }
+            else reject(res);
         });
     });
 }

@@ -61,9 +61,12 @@
 *          -- probably inform user of both
 *          -- send move using arbitrary piece of target type regardless?
 */
-const REBUILDING_BOARD_STATE = 'updateGameState: either more than 1 new move received, or takeback has occured; rebuilding board...';
+const REBUILDING_BOARD_STATE = 'updateGameState: either more than 1 new move received, or takeback has occured; building board state from starting position...';
 const NO_SUCH_PIECE = 'updateUserPiece: attempting to update piece that does not exist in userPieceMap...';
 const MUST_SPECIFY_PIECE = 'findValidPiece: more than 1 piece of this type has access to destination square; user must further specify target piece...';
+const ALL_PIECES_BLOCKED = 'findValidPiece: more than 1 piece of this type has access to destination square AND are all blocked... '
+const NONE_IN_RANGE = 'findValidPiece: valid pieces discovered are all not in range of the destination square...'
+
 
 let movesList = [];
 let userColor = '';
@@ -72,7 +75,7 @@ let kingSideCastle;
 let queenSideCastle;
 
 //this probably doesn't need to be var
-var board;
+let board;
 
 let castleRookMoveMap = new Map();
 
@@ -86,7 +89,6 @@ const columns = ['-','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
 function setInitialGameState(color){
     
-    console.log('Setting board state to starting position...');
     setStartingPosition();
     userColor = color;
 
@@ -108,9 +110,6 @@ function setInitialGameState(color){
     setUserPieces(pieceRow, pawnRow);
 }
 
-/**
- * TODO: 
- */
 function updateGameState(updatedMoveList){
 
     if(updatedMoveList.length - movesList.length == 1 && isMovesListValid(updatedMoveList) == true){
@@ -127,7 +126,6 @@ function updateGameState(updatedMoveList){
     }
 
     movesList = updatedMoveList;
-
     console.log(board);
 }
 
@@ -150,9 +148,8 @@ function setUserPieces(pieceRow, pawnRow){
 
     const userPawn = userColor+'p';
 
-    for(let i = 1; i<= 8; i++){
+    for(let i = 1; i<= 8; i++)
         userPieceMap.set(columns[i] + pawnRow, userPawn);
-    }
 
     userPieceMap.set('a' + pieceRow, userColor + 'R');
     userPieceMap.set('b' + pieceRow, userColor + 'N');
@@ -173,17 +170,15 @@ function movePiece(move){
     // const pieceColor = movingPiece.charAt(0);
     const destPiece = board[destinationSquare[0]][destinationSquare[1]];
 
-    if (movingPiece === '--'){
+    if (movingPiece === '--')
         throw 'there is no piece on the starting square; you done fucked up now';
-    }
 
     //check if piece is promoting; this move will always be from the Board API response, format should be consistent
     if(move.length == 5){
         movingPiece = movingPiece[0] + move[4].toUpperCase();
-        if (movingPiece.includes(userColor)){
-            promoteUserPawn(startingSquare, movingPiece);
 
-        }
+        if (movingPiece.includes(userColor))
+            promoteUserPawn(startingSquare, movingPiece);
 
         console.log(movingPiece + ' was created on the board via promotion.');
     }
@@ -198,41 +193,31 @@ function movePiece(move){
     board[destinationSquare[0]][destinationSquare[1]] = movingPiece;
     board[startingSquare[0]][startingSquare[1]] = '--';
 
-    //CASTLE REVISED 
-    if(castleRookMoveMap.has(move) && movingPiece.includes('K')){
+    if(castleRookMoveMap.has(move) && movingPiece.includes('K'))
         movePiece(castleRookMoveMap.get(move));
-    }
-    
 }
 
 function isMovesListValid(updatedMoveList){
 
-    //start from back of moves list to find discrepancies more quickly
-    for(let i = movesList.length - 1; i>= 0; i--){
-
+    for(let i = movesList.length - 1; i>= 0; i--)
         if(updatedMoveList[i] !== movesList[i]) return false;
-    }
-
+    
     return true;
 }
 
 function deleteUserPiece(capturedPieceSquare){
     
-    //lol
-    if(userPieceMap.delete(capturedPieceSquare));
+    if(userPieceMap.get(capturedPieceSquare) == undefined)
+        console.log('deleteUserPiece: ' + NO_SUCH_PIECE);
     
-    else throw 'attempted to delete piece that did not exist in user piece list??';
-
-
+    userPieceMap.delete(capturedPieceSquare);
 }
 
 function promoteUserPawn(startingSquare, newPiece){
     
-    if (userPieceMap.get(startingSquare) == undefined){
+    if (userPieceMap.get(startingSquare) == undefined)
         throw 'promoteUserPawn: attempting to promote pawn that does not exist in userPieceMap!';
-    }
 
-    // newPiece = newPiece[0] + newPiece[1];
     userPieceMap.set(startingSquare, newPiece);
 
     console.log('promoteUserPawn: success');
@@ -242,9 +227,8 @@ function updateUserPiece(previousSquare, newSquare){
 
     const piece = userPieceMap.get(previousSquare);
 
-    if(piece == undefined){
+    if(piece == undefined)
         console.log(NO_SUCH_PIECE);
-    }
     
     userPieceMap.delete(previousSquare);
     userPieceMap.set(newSquare, piece);
@@ -255,10 +239,19 @@ function getUCIFromSAN(sanMove){
     //this trimmedMove business feels weird but it works
     let trimmedMove = trimSAN(sanMove);
     let resultMove = sanMove;
-    
-    if(/[a-h]/.test(sanMove.charAt(0))) resultMove = getPawnMove(trimmedMove);
+    const firstChar = sanMove.charAt(0);
 
-    else if(/[QRBNK]/.test(sanMove.charAt(0))) resultMove = getPieceMove(trimmedMove);
+    if(/[a-h]/.test(firstChar)){
+        
+        resultMove = getPawnMove(trimmedMove);
+
+        //Special bishop handling check; still undecided
+        // if(resultMove == trimmedMove && firstChar === 'b')
+        //     resultMove = getPieceMove(trimmedMove);
+    }
+    
+    //checks for lowercase as well, for now
+    else if(/[QRBNKqrnk]/.test(firstChar)) resultMove = getPieceMove(trimmedMove);
 
     else if(sanMove === '0-0' || sanMove === '0-0-0') resultMove = getCastleMove(trimmedMove);
 
@@ -288,11 +281,11 @@ function getPawnMove(sanMove){
         direction = 1;
 
     if(sanMove.length == 2){
+        
         //if move to rank 4 for white or rank 5 for black, check pawn map
         if((destRow == 5 && userColor == 'b') || (destRow == 4 && userColor == 'w')){ 
             if(board[col][destRow - direction] !== (userColor + 'p'))
                 return col + (destRow - (direction * 2)) + destination;
-            
         }
         //else assume pawn's position
         return  col + (destRow - direction) + destination;
@@ -323,24 +316,28 @@ function getCastleMove(sanMove){
 }
 
 function getPieceMove(sanMove){
-
-    const piece = sanMove[0];
-    let pieceList = getPieceList(piece);
-
-    if(pieceList == -1){
-        // throw 'panik';
+    
+    if(sanMove.length < 3){
+        console.log(`getPieceMove: invalid move format: ${sanMove}`);
         return sanMove;
     }
     let moveComponents = getPieceMoveComponents(sanMove);
 
+    if(/[a-h][1-8]/.test(moveComponents.destination) == false){
+        console.log(`getPieceMove: invalid destination square format: ${moveComponents.destination}`);
+        return sanMove;
+    }
+
+    let pieceList = getPieceList(sanMove[0]);
+
+    if(pieceList == -1) return sanMove;
+    
     if(pieceList.length == 1)
         return pieceList[0] + moveComponents.destination;
     
-
     const validPiece = findValidPiece(pieceList, moveComponents);
     
-    if(validPiece == -1)
-        return sanMove;
+    if(validPiece == -1) return sanMove;
         
     return validPiece + moveComponents.destination;
 }
@@ -350,7 +347,6 @@ function getPieceList(piece){
     const userPiece = userColor + piece.toUpperCase();
     let pieceList = [];
 
-    //do we need to get the tuple of key and value or just the value? Value might be more simple?
     for(entry of userPieceMap.entries()){
         if (entry[1] == userPiece)
             pieceList.push(entry[0]); //pushing just the key 
@@ -366,7 +362,7 @@ function getPieceMoveComponents(sanMove){
     
     const moveLength = sanMove.length;
     let moveComponents = {};
-    moveComponents.piece = sanMove[0];
+    moveComponents.piece = sanMove[0].toUpperCase();
 
     moveComponents.squareInfo = sanMove.substr(1, moveLength - 3);
     moveComponents.destination = sanMove.substr(moveLength - 2, 2);
@@ -376,6 +372,7 @@ function getPieceMoveComponents(sanMove){
 
 //called if pieceList is longer than 1
 //TODO: if we do not need to check for pins, there may be no need to store squares in arrays; consider changing at some point
+//This logic could be simplified
 function findValidPiece(pieceList, moveComponents){
 
     //piece list has a list of keys (squares) from map
@@ -385,63 +382,79 @@ function findValidPiece(pieceList, moveComponents){
     //first, check if identifying info successfully narrows it down to a single piece
     if(moveComponents.squareInfo !== ''){
         
-        for (square of pieceList){
-            if(square.includes(moveComponents.squareInfo)){
+        for(square of pieceList){
+            if(square.includes(moveComponents.squareInfo))
                 validPieces.push(square);
-            }
         }
     
         if(validPieces.length == 0){
-            console.log('No piece with access to destination square found');
+            console.log(`No piece was found using provided squareInfo: ${moveComponents.squareInfo}`);
             return -1;
         }
         
-        else if (validPieces.length == 1)
+        else if(validPieces.length == 1)
             return validPieces[0];
         
         else {
-            console.log('squareInfo allows for more than 1 valid piece; user must identify piece');
+            console.log(MUST_SPECIFY_PIECE);
             return -1;
         }
     }
 
-    //no starting square info; now checking which pieces are in range of the target square
-    //must ALSO check for blocking
+    //no starting square info; now check for pieces in range. If only 1, return that piece
     for(square of pieceList){
-        if (pieceHasAccess(square, moveComponents.destination, moveComponents.piece)){
+        if (inPieceRange(square, moveComponents.destination, moveComponents.piece))
             validPieces.push(square);
-            //add to valid squares
-        }
     }
 
     if(validPieces.length == 0){
-        console.log('None of the valid pieces found are in range of the destination square');
+        console.log(NONE_IN_RANGE);
         return -1;
     }
     else if (validPieces.length == 1)
         return validPieces[0];
     
-    else console.log(MUST_SPECIFY_PIECE);
-    
-    return -1;
+    //If more than 1 piece in range and piece is Knight, no need to check for blocking
+    else if(moveComponents.piece === 'N'){
+        console.log(MUST_SPECIFY_PIECE);
+        return -1;
+    }
+
+    //More than 1 piece is in range; now check for blocking. If only 1 piece not blocked, return that piece
+    else {
+        let unfetteredPiece;
+
+        for(square of validPieces){
+            if(isBlocked(square, moveComponents.destination) == false){
+                if(unfetteredPiece == undefined)
+                    unfetteredPiece = square;
+                
+                else {
+                    console.log(MUST_SPECIFY_PIECE);
+                    return -1;
+                }
+            }
+        }
+
+        if(unfetteredPiece != undefined) return unfetteredPiece;
+
+        console.log(ALL_PIECES_BLOCKED);
+        return -1;
+    }
 }
 
-function pieceHasAccess(start, dest, piece){
+function inPieceRange(start, dest, piece){
+    
     coordinates = getNumericCoordinates(start, dest);
+    
     if(piece.match('N'))
         return inKnightRange(coordinates);
 
-    else if((sharesColumn(coordinates) || sharesRow(coordinates)) && piece.match(/[QR]/) && !isBlocked(coordinates)){
-
-        //if not blocked
-        //involves checking squares between starting and ending squares in the board object
+    else if(piece.match(/[QR]/) && (sharesColumn(coordinates) || sharesRow(coordinates)))
         return true;
-    }
-    else if(sharesDiagonal(coordinates) && piece.match(/[QB]/) && !isBlocked(coordinates)){
-
-        //if not blocked
+    
+    else if(piece.match(/[QB]/) && sharesDiagonal(coordinates))
         return true;
-    }
     
     return false;
 }
@@ -479,9 +492,11 @@ function getNumericCoordinates(start, dest){
     }
 }
 
-function isBlocked(coordinates){
+function isBlocked(start, dest){
+    coordinates = getNumericCoordinates(start, dest);
 
     let rowDir, colDir;
+
     //squares are on the same column
     if(coordinates.startCol - coordinates.destCol == 0){
         colDir = 0;
@@ -506,12 +521,11 @@ function isBlocked(coordinates){
     let checkCol = coordinates.startCol + colDir;
 
     //checks squares between start and dest; if blocked, returns true
-    while(!(coordinates.destRow == checkRow && coordinates.destCol == checkCol)){
+    while((coordinates.destRow == checkRow && coordinates.destCol == checkCol) == false){
         
         //if square is occupied
-        if(board[columns[checkCol]][checkRow] !== '--'){
+        if(board[columns[checkCol]][checkRow] !== '--')
             return true;
-        }
         
         checkRow += rowDir;
         checkCol += colDir;
@@ -521,6 +535,6 @@ function isBlocked(coordinates){
     return false;
 }
 
-function trimSAN(sanMove){;
+function trimSAN(sanMove){
     return sanMove.replace('x', '').replace('=', '');
 }
