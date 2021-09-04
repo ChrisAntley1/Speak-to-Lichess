@@ -165,7 +165,6 @@ if(isGamePage){
                         streamGameData();
 
                         console.log(`${res.speed} allows API moves, setting up game state streaming...`);
-                        console.log(`You are playing the ${res.color} pieces!`);    
 
                     }).catch((res) =>{
 
@@ -300,12 +299,6 @@ if(isGamePage){
             //else using text input submission
             else text_input_move = result_chess_move;
         }
-
-        //still sorta fucky
-        if(result_chess_move !== '') 
-            console.log(`result move: ${result_chess_move}`);
-
-        else console.log(`result command: ${result_command}`);
     }
   
     async function apiSubmitMove(resultMove){
@@ -335,7 +328,7 @@ if(isGamePage){
     
         if(!input_found && document.getElementsByClassName('ready').length > 0){
             
-            console.log("input box found.");
+            console.log("input box found...");
             inputBox = document.getElementsByClassName('ready')[0];            
             input_found = true;
         }
@@ -445,9 +438,7 @@ if(isGamePage){
         }
     
         else {
-
-            console.log(`clicking ${ui_element} button.`);
-
+            
             let evt = document.createEvent('MouseEvents');
             evt.initMouseEvent('mousedown', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
             button.dispatchEvent(evt);
