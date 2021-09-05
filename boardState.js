@@ -214,12 +214,20 @@ function getPawnMove(sanMove){
     const destRow = parseInt(destination[1]);
 
     let direction = 0;
-    if(userColor === 'b')
-        direction = -1;
-    
-    if(userColor === 'w')
-        direction = 1;
+    if(userColor === 'b'){
+        
+        if(destRow > 6)
+            return sanMove;
+            
+        else direction = -1;
+    }
+    if(userColor === 'w'){
+        
+        if(destRow < 3)
+            return sanMove;
 
+        else direction = 1;
+}
     if(sanMove.length == 2){
         
         //if move to rank 4 for white or rank 5 for black, check pawn map
