@@ -1,3 +1,4 @@
+
 let word_replacement_list = {
 
     "night": "knight",
@@ -9,7 +10,7 @@ let word_replacement_list = {
     "takes": "take",
     "captures": "capture",
     "clean": "queen",
-    "echosex": "echo six",
+    
     "won": "1",
 
     "to": "2",
@@ -22,6 +23,8 @@ let word_replacement_list = {
     "force": "4",
     "ford": "4",
     "iv": "4",
+    "war": "4",
+
 
     "v": "5",
 
@@ -34,6 +37,9 @@ let word_replacement_list = {
     "hate": "8",
     "ate": "8",
     "viii": "8",
+
+    "echosex": "echo 6",
+    "gulfport": "golf 4",
 
     "except": "accept",
     "excepts": "accept",
@@ -62,21 +68,16 @@ chrome.runtime.onInstalled.addListener((details)=>{
             break;
         
         case 'update':
-            if(previousVersion === '2.0')
+            if(previousVersion.includes('2.0'))
                 updateOldStorage();
             break;
     }
 });
 
-
 function newInstallStorage(){
 
-    //this storing is intentionally wrong, don't keep when copying over
     chrome.storage.local.set({'word_replacement_list': word_replacement_list});
     chrome.storage.local.set({'__toggle': TOGGLE_LISTEN});
-    
-    // let TEXT_INPUT = {'__text_input': false};
-    // chrome.storage.local.set(TEXT_INPUT);
 }
 
 function updateOldStorage(){

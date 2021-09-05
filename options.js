@@ -4,10 +4,10 @@ const _GENERATE_TOKEN_URL = 'https://lichess.org/account/oauth/token/create?scop
 const VALID_TOKEN_MESSAGE = "Current token is valid for Lichess user ";
 const NO_TOKEN_MESSAGE = "No token stored."
 
-let trouble_input = document.getElementById('trouble_input');
-let correct_input = document.getElementById('correct_input');
-let update_message = document.getElementById('update_message');
-let delete_input = document.getElementById('delete_input');
+let troubleInput = document.getElementById('trouble_input');
+let correctInput = document.getElementById('correct_input');
+let updateMessage = document.getElementById('update_message');
+let deleteInput = document.getElementById('delete_input');
 let generateButton = document.getElementById('generate_token_button');
 let tokenInput = document.getElementById('board_token_input');
 let tokenMessage = document.getElementById('token_message');
@@ -18,8 +18,9 @@ let searchInput = document.getElementById('search_input');
 let table = document.getElementById('replacement_table');
 let tableBody = document.getElementById('table_body');
 let newWordForm = document.getElementById('new_word_form');
-let deleteForm = document.getElementById('delete_form');
+let deleteWordForm = document.getElementById('delete_form');
 let tokenForm = document.getElementById('token_form');
+let deleteTokenForm = document.getElementById('delete_token_form');
 
 let word_replacement_list;
 let replacement_word_keys;
@@ -42,12 +43,22 @@ chrome.storage.local.get(['__board_api_token'], function(result){
 });
 
 newWordForm.addEventListener('submit', submitPhrase);
-deleteForm.addEventListener('submit', submitDelete);
+deleteWordForm.addEventListener('submit', deleteWord);
 tokenForm.addEventListener('submit', submitToken);
-
+deleteTokenForm.addEventListener('submit', deleteToken);
 generateButton.addEventListener('click', generateToken);
 searchInput.addEventListener('keyup', filterBySearch);
 
+
+function getAndDrawTable(){
+    
+    chrome.storage.local.get(['word_replacement_list'], function(result){
+        word_replacement_list = result['word_replacement_list'];
+        replacement_word_keys = Object.keys(word_replacement_list);
+        console.log(replacement_word_keys);
+        addTableRows(replacement_word_keys);
+    });    
+}
 
 function addTableRows(array){
     
@@ -108,19 +119,19 @@ function filterBySearch(){
 function submitPhrase(e){
     
     e.preventDefault();
-    let trouble_word = trouble_input.value;
-    let correct_phrase = correct_input.value; 
+    let trouble_word = troubleInput.value;
+    let correct_phrase = correctInput.value; 
     if(trouble_word == null || trouble_word == undefined || trouble_word.length == 0) return;
     if(correct_phrase == null || correct_phrase == undefined || correct_phrase.length == 0) return;
     
     if(!trouble_word.match(/^[a-z0-9]+$/i)){
-        trouble_input.value = '';
+        troubleInput.value = '';
         displayMessage.innerHTML = "Replacement word must be alphanumeric."
         return;
     }
 
     if(trouble_word.includes(' ')){
-        trouble_input.value = '';
+        troubleInput.value = '';
         displayMessage.innerHTML = "Replacement word must be a single word and contain no spaces."
         return;
     }
@@ -135,20 +146,20 @@ function submitPhrase(e){
         getAndDrawTable();
 
         if (phrase_updated){
-            update_message.textContent = "Word updated: '" + trouble_word + "' will now be interpreted as: '" + correct_phrase +"'";
+            updateMessage.textContent = "Word updated: '" + trouble_word + "' will now be interpreted as: '" + correct_phrase +"'";
         }
 
-        else update_message.textContent = "Word added: '" + trouble_word + "' will now be interpreted as: '" + correct_phrase +"'";
+        else updateMessage.textContent = "Word added: '" + trouble_word + "' will now be interpreted as: '" + correct_phrase +"'";
 
-        correct_input.value = '';
-        trouble_input.value = '';
+        correctInput.value = '';
+        troubleInput.value = '';
     }
 }
 
 function checkProposedPhrase(phrase){
 
     if (/[,;:"<>.'?\-]/.test(phrase)) {
-        correct_input.value = '';
+        correctInput.value = '';
         displayMessage.innerHTML = "Replacement phrase cannot not include punctuation. Use space ' ' to seperate words."
         return false;
     }
@@ -161,10 +172,10 @@ function checkProposedPhrase(phrase){
     return phrase;
 }
 
-function submitDelete(e){
+function deleteWord(e){
     e.preventDefault();
 
-    let word_to_delete = delete_input.value;
+    let word_to_delete = deleteInput.value;
     if(word_to_delete == null || word_to_delete == undefined || word_to_delete.length == 0) return;
 
     if(word_replacement_list.hasOwnProperty(word_to_delete)){
@@ -173,12 +184,12 @@ function submitDelete(e){
         chrome.storage.local.set({'word_replacement_list': word_replacement_list});
 
         getAndDrawTable();
-        update_message.textContent = word_to_delete + " will no longer be replaced.";
+        updateMessage.textContent = word_to_delete + " will no longer be replaced.";
     }
 
-    else update_message.textContent = word_to_delete + " is not a word that is currently being replaced.";
+    else updateMessage.textContent = word_to_delete + " is not a word that is currently being replaced.";
 
-    delete_input.value = '';
+    deleteInput.value = '';
 
 }
 
@@ -208,16 +219,6 @@ function checkTokenFormat(token){
 
     tokenMessage.innerHTML = 'Checking token with Lichess...';
     return true;
-}
-
-function getAndDrawTable(){
-    
-    chrome.storage.local.get(['word_replacement_list'], function(result){
-        word_replacement_list = result['word_replacement_list'];
-        replacement_word_keys = Object.keys(word_replacement_list);
-        console.log(replacement_word_keys);
-        addTableRows(replacement_word_keys);
-    });    
 }
 
 function storeToken(token){
@@ -255,3 +256,13 @@ async function testToken(token, isNewToken){
             }
         });
 }
+
+function deleteToken(e){
+    e.preventDefault();
+    chrome.storage.local.remove('__board_api_token');
+    
+    tokenMessage.innerHTML = 'Removed token from local storage (if one existed). You should alse delete this token on Lichess: https://lichess.org/account/oauth/token';
+    tokenStatus.innerHTML = NO_TOKEN_MESSAGE;
+    statusImage.src = "images/redChess512.png";
+}
+

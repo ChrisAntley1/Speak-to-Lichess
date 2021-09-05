@@ -1,8 +1,9 @@
+
 const _MOVES_DATA_IDENTIFIER = "\"moves\":";
 const API_ADDRESS_TEMPLATE = "https://lichess.org/api/board/game/--GAME_ID--/move/--UCI_MOVE--".replace('--GAME_ID--', lichessLocation);
 
 //user's personal Board API compatible token. Only needs Board API permissions
-var board_api_token = '';
+let board_api_token = '';
 
 async function testToken(token){
     //still throws 401 error in console if invalid token, there's probably some way to catch this    
@@ -23,7 +24,6 @@ async function testToken(token){
         });
     });
 }
-
 
 async function checkIfActiveGame(){
     

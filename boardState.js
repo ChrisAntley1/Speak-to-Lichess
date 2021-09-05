@@ -1,66 +1,4 @@
-/**
- * Must keep track of USER's pieces, not so much opponent's pieces; HOWEVER, must recognize when opponent has captured one of our pieces.
- * To do this, keep a board map; square coordinate will be the key, and will specify which of the user's pieces resides there.
- * When new game data comes in, update according to whether it is our turn or not (if index of move in translatedMoveList is odd(white) or even(black))
- * 
- * If OUR turn, update the position of one of our pieces. If castles, update both king and rook location. If promotion, update piece value. 
- * 
- * If OPPONENTS turn, read the square their piece has moved to; if one of our pieces resides at that square, delete it from board map (captured!)
- * 
- * 
- * PROBLEM: SAN doesn't require you to specify between 2 same-type pieces if both pieces can technically access a square, but one is blocked
- * 
- * EXAMPLE: You have 2 rooks, 1 on a1, the other on a8. Your opponent has a pawn on a2 and a queen on a4. Ra4 is a valid move; knows that the blocked rook
- * is not a candidate piece.
- * 
- * Revised Requirements:
- * 
- * Keep track of whole board, including user and opponent's pieces. 
- *      - handle special special cases: castles (for both sides) and promotions
- *      - in ALL cases where the API returns an error: inform user that take-backs can break piece recognition; advise refreshing; 
- *      - also advise to check if valid move since game won't give as much feedback as clicking and moving a piece would
- *      - keep seperate lists of each piece type; each entry will simply be the location of that piece
- *      - must keep track of opponent's piece type to check for pins to king
- * Try and generate valid UCI move based on the board state and the provided UCI move.
- * 
- * For all pieces:
- *      - do NOT have to check if target square is occupied. User is simply submitting an invalid move; API will handle
- *      - DO have to check for castling; might include flag to stop this check once castling occurs. 
- * For pawns: 
- *      - user is white and moves a pawn to the 4th rank: check 3rd and THEN 2nd ranks for pawns on that column
- *      - user is black and moves a pawn to the 5th rank: check 6th and THEN 7th rank for pawns on that column
- *          ** for either of the above case where a 2 square pawn move appears to be the request, no need to check if piece is blocked. 
- *              User is simply submitting an invalid move; API will handle
- *      - else assume pawn's location is one square behind target square 
- * 
- * For queens/bishops/rooks/knights:
- *      0. check if a piece of the target piece type exists in user's piece list
- *          -- if NOT, inform user target piece was not found; advise that they should refresh page (since we know take-backs will not be tracked)
- *      
- *      1. check if there is only one piece of the target piece type; if so, simply generate the move regardless of validity
- * 
- *      2. if MORE than one, check if there is identifying information specifying the piece location
- *          -- if this successfully narrows it down to one piece, simply generate the move regardless of validity
- *          -- technically NOT valid SAN format in case where piece identification is not necessary??
- *      
- *      3. if MORE than one AND no identifying information, only NOW do we read the board state and determine which piece could move to that square:
- *          -- if only one piece has line of sight to target square, generate move using this piece. Line of sight means NOT BLOCKED!
- *              **for knights: if only 1 knight is within knight's range of the target square
- *      
- ̶*̶ ̶ ̶ ̶ ̶ ̶ ̶4̶.̶ ̶i̶f̶ ̶m̶o̶r̶e̶ ̶t̶h̶a̶n̶ ̶o̶n̶e̶ ̶h̶a̶s̶ ̶l̶i̶n̶e̶ ̶o̶f̶ ̶s̶i̶t̶e̶ ̶(̶k̶n̶i̶g̶h̶t̶s̶:̶ ̶i̶s̶ ̶w̶i̶t̶h̶i̶n̶ ̶r̶a̶n̶g̶e̶)̶ ̶o̶f̶ ̶t̶a̶r̶g̶e̶t̶ ̶s̶q̶u̶a̶r̶e̶,̶ ̶c̶h̶e̶c̶k̶ ̶f̶o̶r̶ ̶p̶i̶n̶s̶ ̶t̶o̶ ̶k̶i̶n̶g
-*̶ ̶ ̶ ̶ ̶ ̶ ̶ ̶ ̶ ̶ ̶-̶-̶ ̶i̶f̶ ̶p̶i̶e̶c̶e̶ ̶h̶a̶s̶ ̶l̶i̶n̶e̶ ̶o̶f̶ ̶s̶i̶g̶h̶t̶ ̶t̶o̶ ̶o̶w̶n̶ ̶k̶i̶n̶g̶ ̶A̶N̶D̶ ̶e̶n̶e̶m̶y̶ ̶p̶i̶e̶c̶e̶ ̶i̶s̶ ̶a̶t̶t̶a̶c̶k̶i̶n̶g̶ ̶o̶n̶ ̶t̶h̶a̶t̶ ̶c̶o̶l̶u̶m̶n̶/̶r̶o̶w̶/̶d̶i̶a̶g̶o̶n̶a̶l̶,̶ ̶r̶e̶m̶o̶v̶e̶ ̶a̶s̶ ̶c̶a̶n̶d̶i̶d̶a̶t̶e̶ ̶p̶i̶e̶c̶e̶
-̶*̶ ̶ ̶ ̶ ̶ ̶ ̶ ̶ ̶ ̶ ̶-̶-̶ ̶i̶f̶ ̶o̶n̶l̶y̶ ̶o̶n̶e̶ ̶p̶i̶e̶c̶e̶ ̶r̶e̶m̶a̶i̶n̶s̶ ̶t̶h̶a̶t̶ ̶c̶a̶n̶ ̶l̶e̶g̶a̶l̶l̶y̶ ̶m̶o̶v̶e̶,̶ ̶g̶e̶n̶e̶r̶a̶t̶e̶ ̶m̶o̶v̶e̶ ̶u̶s̶i̶n̶g̶ ̶t̶h̶i̶s̶ ̶p̶i̶e̶c̶e̶*     
-*      
-*      4. We DO NOT check for pins! Even though Lichess records moves in SAN format without specifying the not-pinned piece, user is 
-*          expected to specify the piece when using the text input box. We will assume the same requirement; do not want our extension 
-*          to "assist" the user by automatically picking the valid piece.
-*          -- fuck yeah less work lmao
-* 
-*      5. if at this point, then all hope is lost. 
-*          -- user is either not giving enough information to specify their target piece, or our board state is incorrect
-*          -- probably inform user of both
-*          -- send move using arbitrary piece of target type regardless?
-*/
+
 const REBUILDING_BOARD_STATE = 'updateGameState: either more than 1 new move received, or takeback has occured; building board state from starting position...';
 const NO_SUCH_PIECE = 'updateUserPiece: attempting to update piece that does not exist in userPieceMap...';
 const MUST_SPECIFY_PIECE = 'findValidPiece: more than 1 piece of this type has access to destination square; user must further specify target piece...';
@@ -74,7 +12,6 @@ let userPieceMap;
 let kingSideCastle;
 let queenSideCastle;
 
-//this probably doesn't need to be var
 let board;
 
 let castleRookMoveMap = new Map();
@@ -83,7 +20,6 @@ castleRookMoveMap.set('e8c8', 'a8d8');
 castleRookMoveMap.set('e8g8', 'h8f8');
 castleRookMoveMap.set('e1c1', 'a1d1');
 castleRookMoveMap.set('e1g1', 'h1f1');
-
 
 const columns = ['-','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
@@ -173,7 +109,6 @@ function movePiece(move){
     const destinationSquare = move.slice(2, 4);
 
     let movingPiece = board[startingSquare[0]][startingSquare[1]].toString();
-    // const pieceColor = movingPiece.charAt(0);
     const destPiece = board[destinationSquare[0]][destinationSquare[1]];
 
     if (movingPiece === '--')
@@ -292,6 +227,7 @@ function getPawnMove(sanMove){
             if(board[col][destRow - direction] !== (userColor + 'p'))
                 return col + (destRow - (direction * 2)) + destination;
         }
+
         //else assume pawn's position
         return  col + (destRow - direction) + destination;
     }
@@ -376,15 +312,14 @@ function getPieceMoveComponents(sanMove){
 }
 
 //called if pieceList is longer than 1
-//TODO: if we do not need to check for pins, there may be no need to store squares in arrays; consider changing at some point
 //This logic could be simplified
 function findValidPiece(pieceList, moveComponents){
 
-    //piece list has a list of keys (squares) from map
+    //pieceList has a list of keys (squares) from map
     //moveComponents has piece, squareInfo, destination
     let validPieces = [];
     
-    //first, check if identifying info successfully narrows it down to a single piece
+    //check if identifying info successfully narrows candidates down to a single piece
     if(moveComponents.squareInfo !== ''){
         
         for(square of pieceList){

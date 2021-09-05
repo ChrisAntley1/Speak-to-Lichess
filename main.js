@@ -1,81 +1,18 @@
-/**
- * LARGER GOALS/ POTENTIAL FEATURES:
- * 
- * 1. stream game state data from Lichess; track game state and convert SAN to UCI according to user settings
- *  -- COMPLETE ^^^^^
- * 2. Prepare for firefox release; experiment in firefox extension with functional speech grammar
- * -- could probably easily port the extension as is to firefox as a start
- * -- if grammar works, would be fairly easy to set up 1 syllabel letter replacements; maybe even allow certain letters
- * -- can check crx with tool from firefox; however not sure how to extract crx from unpacked extension; maybe wait till pushed this version
- * -- RIP Firefox Dream
- * 
- * 3. Possibly use interim results from recognition to more quickly submit to the API
- * 
- * 4. Home page controls: quick pairing button control!
- * -- need to behave a lot differently from a game page? 
- * -- might initially just use entire body; use gamePage flag to avoid accepting moves
- * -- probably just a homepage.js would be the simplest solution; except voice control stuff
- * 
- * 5. Log speech interpretations up to a certain amount; allows user to go back and see everything that may cause problems
- * -- Up to 100 maybe
- * -- maybe show last 5 in popup
- * 
 
- * Promotional/supplemental work:
- * 
- * 1. more detailed screenshots on web store page
- * 
- * 2. Video of game fully played with speech
- * 
- * 3. Video of hilarious rage quit command
- * --no one's found it yet :(
- * 
- * 4. Try and poke Eric Rosen and see if he likes it
- * -- Maybe best after SAN gets auto-submitted, but also might just go for it
- * 
- * 5. Reformat Spreadsheet; seperate UCI and SAN example commands
- */
 
 /**
- * Use notes/Pecularities to display to users:
- * 1. SAN format moves may not work correctly from non-standard game modes (crazyhouse, 'from position', etc.)
+ * TODO:
  * 
- * 2. BISHOPS and Piece Interpretation: The extension recognizes the word 'bishop' and will correctly attempt to create a valid bishop move using the game state. 
- *      It differentiates bishop moves from 'b' pawn moves using a capital 'B'. Replace any word you wish to use to make bishop moves SPECIFICALLY with 'bishop'.
- *      This should really only be a problem if you wish to use a word other than 'bishop', say because the Web Speech API is failing to correctly hear the word
- *      'bishop'.
+ * 1. DELETE THIS
+ *      -- NEPHEW
+ * 2. test version update with includes()
  * 
- *      With that said: since no other piece has this problem (of sharing their starting letter with a board column letter), the board state will accept lowercase
- *      letters for any piece other than a bishop. For example, if the Speech API incorrectly hears "Rick echo 1" instead of "rook echo 1", the generated move
- *      're1' will be interpreted as a rook move.
+ * 3. Update README
  * 
- * 3. If the extension is listening for speech (you have toggled 'listen' on, or are holding ctrl) the moment you switch tabs, it will stop listening. It will not stop listening, however, on switching from Chrome to 
- *      another application
- */
-
-/**
- * NEW TODO: 
- * 
- * 1. SAN format will only work consistently in Standard format matches (crazyhouse, 'from position', etc. formats not supported)
- * -- rewriting README and descriptions might be easiest
- * 
- * 2. extension continues listening when switching application focus
- * -- https://stackoverflow.com/questions/2574204/detect-browser-focus-out-of-focus-via-google-chrome-extension
- * 
- * 3. Additional testing to make sure new changes aren't gonna fuck shit up
- * 
- * 4. Show user message on update to 2.1 letting them know they can use SAN with Automatic Submission
+ * 4. delete token button?
  */
 
 if(isGamePage){
-
-    // Speech Grammar is broken when used in Chromium applications:
-    //https://bugs.chromium.org/p/chromium/issues/detail?id=680944
-    // var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
-    // var grammar = '#JSGF V1.0;';
-    // var speechRecognitionGrammarList = new SpeechGrammarList();
-    // speechRecognitionGrammarList.addFromString(grammar, 1);
-    // recognition.grammars = speechRecognitionGrammarList;
 
     const LISTEN_KEY_CODE = 17;
     const DEFAULT_DISPLAY_MESSAGE = "Dictated move information will appear here.";
@@ -84,12 +21,13 @@ if(isGamePage){
     const API_SUBMIT_SUCCESS = "Successfully posted move using Board API";
     const API_SUBMIT_FAIL = "API move submission failed: ";
     const INPUT_BOX_MESSAGE = ' Use Lichess text input box to submit moves with enter key. ---SAN FORMAT WORKS BEST---';
+    const TEXT_INPUT_READY = 'Press enter to submit ';
+    const TEXT_INPUT_DEFAULT_MESSAGE  = 'Waiting for SAN format move';
     const CONVERSION_FAIL_MESSAGE = 'Failed to Convert move to UCI for API: '
     const NO_TOKEN_MESSAGE = 
-        "No API token! Open options page and set a valid API token to use both UCI format " +
-        "and automatic move submission. The text input box may be used to submit with the 'enter' key.";
+        "No API token. Open extension options and set a valid API token to use hands-free move submission. " +
+        "The text input box may be used to submit with the 'enter' key.";
     
-
     //HTML elements. inputBox may not have been created yet; will find using observer
     const display_move = document.createElement('strong');
     const display_listen_status = document.createElement('strong');
@@ -232,6 +170,14 @@ if(isGamePage){
     //Speech Recognition
     function setupRecognition(){
 
+        // Speech Grammar is broken when used in Chromium applications:
+        // https://bugs.chromium.org/p/chromium/issues/detail?id=680944
+        // var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
+        // var grammar = '#JSGF V1.0;';
+        // var speechRecognitionGrammarList = new SpeechGrammarList();
+        // speechRecognitionGrammarList.addFromString(grammar, 1);
+        // recognition.grammars = speechRecognitionGrammarList;
+
         recognition =  new SpeechRecognition();
         recognition.lang = 'en-US';
         recognition.interimResults = false;
@@ -263,7 +209,7 @@ if(isGamePage){
         let componentWords = processor.processSpeechInput(speechText);
         let result_command = componentWords.join(' ');
         let result_chess_move = '';
-        console.log(`Processed voice input: ${result_command}`);
+        console.log(`Processed: ${result_command}`);
 
         //store command in last_command, to display in popup window
         chrome.storage.local.set({last_command: result_command});
@@ -297,7 +243,10 @@ if(isGamePage){
             }
 
             //else using text input submission
-            else text_input_move = result_chess_move;
+            else {
+                text_input_move = result_chess_move;
+                display_move.innerHTML = TEXT_INPUT_READY + text_input_move;
+            }
         }
     }
   
@@ -313,15 +262,27 @@ if(isGamePage){
         });
     }
     
-    function submitToInputBox(){
-        inputBox.value = text_input_move;
-        text_input_move = '';
-    }
     function isUCIFormat(chessMove){
+
         //API actually accepts invalid promotion moves and just ignores the promotion. 
         //For example: d2d4q will be interpreted as d2d4.
         //not sure why that's relevant when checking if UCI format or not lel        
         return (chessMove.match(/^[a-h][1-8][a-h][1-8]$/) != null || chessMove.match(/^[a-h][1-8][a-h][1-8][qrbn]$/) != null);
+    }
+
+    function setupTextInput(){
+        console.log('text input enabled');
+        use_text_input = true;
+        document.addEventListener('keydown', (e)=>{
+            
+            if(e.key === 'Enter') submitToInputBox();
+        });
+    }
+
+    function submitToInputBox(){
+        inputBox.value = text_input_move;
+        text_input_move = '';
+        display_move.innerHTML = TEXT_INPUT_DEFAULT_MESSAGE;
     }
 
     function waitForPageElements(){
@@ -356,15 +317,6 @@ if(isGamePage){
 
         if(input_found && underboard_found && material_bottom_found) 
             observer.disconnect();
-    }
-
-    function setupTextInput(){
-        console.log('text input enabled');
-        use_text_input = true;
-        document.addEventListener('keydown', (e)=>{
-            
-            if(e.key === 'Enter') submitToInputBox();
-        });
     }
 
     //TODO: this seems to work; visibilitychange event listener removal looks silly when including the function previously added
@@ -438,7 +390,6 @@ if(isGamePage){
         }
     
         else {
-            
             let evt = document.createEvent('MouseEvents');
             evt.initMouseEvent('mousedown', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
             button.dispatchEvent(evt);
