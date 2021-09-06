@@ -54,9 +54,9 @@ Examples:
 
 ## Word Correction
 
-You may come across a word that is frequently mistaken for another word by the recognition service. For example "rook" is almost always interpreted as "Brooke"* (in my experience). The extension can track a word correction list to help provide a more consistent experience.
+You may come across a word that is frequently mistaken for another word by the recognition service. For example "rook" is almost always interpreted as "Brooke". The extension tracks a word-correction list to help provide a more consistent experience.
 
-Pin the extension to your Chrome toolbar and click the icon to open the word replacement popup menu. It will display the most recently heard word or phrase, text fields for the word to replace and what to replace it with, and a button that navigates to the options page. In the options page you may view your replaced-words list, search for words being replaced/ being substituted in, and delete entries. 
+Pin the extension to your Chrome toolbar, and click the icon to open the popup menu. It will display the most recent heard word or phrase, text fields for the word to replace and what to replace it with, and a button that navigates to the options page. In the options page you may view your replaced-words list, search for words being replaced/ being substituted in, and delete entries. 
 
 Non-English language users could also theoretically replace English piece names with piece names in their preferred language. For example, a Spanish-speaking player could tell the extension that any time it hears 'torre', to interpret it instead as 'rook'. 
 
@@ -64,7 +64,7 @@ Note that you can use any word you want to identify a piece (e.g. 'noon' for Kni
 
 *The extension comes preloaded with some problematic words already replaced, including "Brooke".
 
-Technical stuff/why this is necessary: The Web Speech API, which is currently considered an 'experimental technology', is set up to use the SpeechGrammar interface. This interface represents a set of words or patterns of words that the recognition service should look for specifically. This would allow us to set a list of well known words to represent columns and receive consistent recognition results. Unfortunately, the recognition service provided by Chrome currently ignores this list. See the 'Handling errors and unrecognized speech' section of this page: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API/Using_the_Web_Speech_API. 
+Technical stuff/why this is necessary: The Web Speech API, which is currently considered 'experimental technology', is set up to use the SpeechGrammar interface. This interface represents a set of words or patterns of words that the recognition service should look for specifically. This would allow us to set a list of well known words to represent columns and receive consistent recognition results. Unfortunately, the recognition service provided by Chrome ignores this list. See the 'Handling errors and unrecognized speech' section of this page: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API/Using_the_Web_Speech_API. 
 
 More command examples, and words that are generally interpreted consistently, can be found here: https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0Tsxo/edit?usp=sharing
 
@@ -125,4 +125,4 @@ Some users have reported very poor recognition results; this will have to do wit
 
 Speech recognition does offer alternative results, which might be used in the future to help the extension more accurately interpret moves. 
 
-I had plans to port this extension to Firefox, where I somehow got the impression that the SpeechGrammar interface would be correctly referenced as a vocabulary list. Unfortunately, it turns out that Firefox does not support the Web Speech API's speech recognition service at the moment.
+I had plans to port this extension to Firefox, where I somehow got the impression that the SpeechGrammar interface would be correctly referenced as a vocabulary list. It turns out that Firefox does not support the Web Speech API's speech recognition service at the moment.
