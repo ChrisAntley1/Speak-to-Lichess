@@ -1,62 +1,69 @@
 
-var command = document.querySelector('#command');
-var trouble_input = document.querySelector('#trouble_input');
-var correct_input = document.querySelector('#correct_input');
-var submit = document.querySelector('#submit');
-var manage = document.querySelector('#manage');
-var displayResult = document.querySelector('#display_result');
-var hold_radio = document.querySelector('#hold');
-var toggle_radio = document.querySelector('#toggle');
+let command = document.getElementById('command');
+let trouble_input = document.getElementById('trouble_input');
+let correct_input = document.getElementById('correct_input');
+let submit = document.getElementById('submit');
+let manage = document.getElementById('manage');
+let displayResult = document.getElementById('display_result');
+let hold_radio = document.getElementById('hold');
+let toggle_radio = document.getElementById('toggle');
+let replaceForm = document.getElementById('replace_form');
+let word_replacement_list;
+let toggle_listen;
+let last_command;
 
-var speech_to_text_Lichess_fuzzy_words;
-var TOGGLE_LISTEN;
-chrome.storage.local.get(speech_to_text_Lichess_fuzzy_words, function(result){
-    speech_to_text_Lichess_fuzzy_words = result;
-
-});
+accessStorage();
+createEventListeners();
+trouble_input.focus();
 
 
+function accessStorage(){
 
-chrome.storage.local.get(['last_command'], function(result){
-
-    var last_command = result['last_command'];
-    if(last_command == undefined){
-        last_command = 'nothing yet!'
-    }
-    command.innerHTML = last_command;
-});
-
-chrome.storage.local.get(TOGGLE_LISTEN, function(result){
-    TOGGLE_LISTEN = result;
-
-    if (TOGGLE_LISTEN['__toggle']) toggle_radio.checked = true;
-    else hold_radio.checked = true;
-
-});
-
-hold_radio.addEventListener("change", function(event){
-    console.log("toggle off");
-    TOGGLE_LISTEN['__toggle'] = false;
-    chrome.storage.local.set(TOGGLE_LISTEN);
-});
-
-toggle_radio.addEventListener("change", function(event){
-    console.log("toggle on");
-    TOGGLE_LISTEN['__toggle'] = true;
-    chrome.storage.local.set(TOGGLE_LISTEN);
-});
-submit.addEventListener("click", submitPhrase);
-manage.addEventListener("click", openOptions);
-
-function submitPhrase(){
+    chrome.storage.local.get(['word_replacement_list'], function(result){
+        word_replacement_list = result['word_replacement_list'];
+    });
     
+    chrome.storage.local.get(['last_command'], function(result){
+    
+        last_command = result['last_command'];
+        if(last_command == undefined){
+            last_command = 'nothing yet!'
+        }
+        command.innerHTML = last_command;
+    });
+    
+    chrome.storage.local.get(['__toggle'], function(result){
+        toggle_listen = result['__toggle'];
+    
+        if (toggle_listen) toggle_radio.checked = true;
+        else hold_radio.checked = true;
+    });    
+}
 
-    var trouble_word = trouble_input.value;
-    var correct_phrase = correct_input.value; 
+function createEventListeners(){
+
+    hold_radio.addEventListener("change", function(event){
+        console.log("toggle off");
+        toggle_listen = false;
+        chrome.storage.local.set({'__toggle': toggle_listen});
+    });
+    
+    toggle_radio.addEventListener("change", function(event){
+        console.log("toggle on");
+        toggle_listen = true;
+        chrome.storage.local.set({'__toggle': toggle_listen});
+    });
+    
+    replaceForm.addEventListener("submit", submitPhrase);
+    manage.addEventListener("click", openOptions);    
+}
+function submitPhrase(e){
+
+    e.preventDefault();
+    let trouble_word = trouble_input.value;
+    let correct_phrase = correct_input.value; 
     if(trouble_word == null || trouble_word == undefined || trouble_word.length == 0) return;
     if(correct_phrase == null || correct_phrase == undefined || correct_phrase.length == 0) return;
-
-    console.log(" Attempting to replace " + trouble_word + " with: " + correct_phrase);
 
     if(!trouble_word.match(/^[a-z0-9]+$/i)){
         trouble_input.value = '';
@@ -68,21 +75,18 @@ function submitPhrase(){
         trouble_input.value = '';
         displayResult.innerHTML = "Replacement word must be a single word and contain no spaces."
         return;
-
     }
-
-    if (speech_to_text_Lichess_fuzzy_words.hasOwnProperty(trouble_word)){
-        console.log(trouble_word + " is already a replaced word...");
-        displayResult.innerHTML = trouble_word + " is already replaced; manage your replaced words to change.";
-        return;
-    }
+    let phrase_updated = word_replacement_list.hasOwnProperty(trouble_word);
 
     if(correct_phrase = checkProposedPhrase(correct_phrase)){
 
-        speech_to_text_Lichess_fuzzy_words[trouble_word] = correct_phrase;
-        chrome.storage.local.set(speech_to_text_Lichess_fuzzy_words);
+        word_replacement_list[trouble_word] = correct_phrase;
+        chrome.storage.local.set({'word_replacement_list': word_replacement_list});
 
-        displayResult.innerHTML = trouble_word + " will now be reinterpreted as: " + correct_phrase;
+        let updateOrAdd = (phrase_updated) ? 'Word updated: ' : 'Word added: ';
+
+        displayResult.innerHTML = updateOrAdd + trouble_word + " will now be reinterpreted as: " + correct_phrase;
+        
         correct_input.value = '';
         trouble_input.value = '';
 
