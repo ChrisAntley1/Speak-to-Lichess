@@ -220,7 +220,7 @@ function checkTokenFormat(token){
         return false;
     }
 
-    tokenMessage.innerHTML = 'Checking token with Lichess...';
+    tokenMessage.innerHTML = 'Checking with Lichess...';
     return true;
 }
 
