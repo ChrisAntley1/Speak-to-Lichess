@@ -119,7 +119,7 @@ The Lichess Board API: https://lichess.org/blog/XlRW5REAAB8AUJJ-/welcome-lichess
 
 Speak to Lichess is open source. Feedback welcome here on Github or sent to speak2lichess@gmail.com
 
-### Other/Known issues:
+### Known Issues/Other:
 
 Some users have reported very poor recognition results; this will have to do with the speech recognition software. Until the speech recognition provided by Chrome correctly uses the SpeechGrammar interface, this may be a persistent issue. The best advice I can give is to keep trying different words until you find a set that the software recognizes more consistently for you, and to make use of the word correction feature. 
 
