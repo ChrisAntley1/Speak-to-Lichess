@@ -16,7 +16,7 @@ Commands, SAN and UCI examples, and well-recognized words: https://docs.google.c
 
 This extension is great for slower formats and not so great for faster formats. It is a great supplement for blindfolded chess! Lichess provides move playback (in most browsers) so that you can hear each move: enter a game and click on your name in the top right -> sound -> Speech.
 
-### Adding Your API Token
+## Adding Your API Token
 
 A personal Lichess API token is required to use automatic submission. From the options page, you can navigate to Lichess's personal token creation page. The name and required scope of the token will already be set; do not add any additional permissions. Simply press the blue 'submit' button and copy the generated token. Close this page and paste your token into the appropriate field in options; then press 'enter' or submit. The red Icon will turn green if a valid token is provided.
 
@@ -26,7 +26,7 @@ The 'delete stored token' button will delete your token from the extension. Note
 
 Read more about the Lichess Board API here: https://lichess.org/blog/XlRW5REAAB8AUJJ-/welcome-lichess-boards
 
-### Using this Extension
+## Using this Extension
 
 Now that you have provided an API key, the extension is ready for use. It's recommended that you play a rapid, classical, or correspondence game against the computer first to get a feel for the extension. Be sure to read the "Successful Dictation" section below.
 
@@ -34,7 +34,7 @@ The 'ctrl' key is used for either 'toggle' or 'push-to-talk' recording. You shou
 
 Correctly interprets 'capture', 'take', 'short', 'long', 'castle', 'promote', 'equals' into chess notation. Note that supplemental words such as 'capture' and 'promote' can be omitted. 
 
-### Successful Dictation
+## Successful Dictation
 
 **To specify a column, you will have much more success saying a word that begins with that letter, such as "delta" for the d column, than you will saying the actual letter. The speech processing service has a very difficult time discerning individual letters.**
 
@@ -50,7 +50,7 @@ Examples:
 
 **The word 'to' will always be interpreted as '2'; phrases such as 'knight to delta four' will be interpreted as 'N2d4'.**
 
-### Word Correction
+## Word Correction
 
 You may come across a word that is frequently mistaken for another word by the recognition service. For example "rook" is almost always interpreted as "Brooke"* (in my experience). The extension can track a word correction list to help provide a more consistent experience.
 
@@ -66,7 +66,7 @@ Technical stuff/why this is necessary: The Web Speech API, which is currently co
 
 More command examples, and words that are generally interpreted consistently, can be found here: https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0Tsxo/edit?usp=sharing
 
-### Text Input Box submission
+## Text Input Box submission
 
 For Blitz or faster formats, or if you are unable to/uninterested in using an API token, you may use Lichess's text input box to submit moves. This requires that you press 'enter' to submit moves, and that you dictate SAN format moves.
 
@@ -76,7 +76,7 @@ For Blitz or faster formats, or if you are unable to/uninterested in using an AP
 
 3. Dictate your move in SAN format. When you are finished, you should see the message near the input box display your move. Press enter to submit the displayed move to the input box, or dictate another move if the displayed move is incorrect.
 
-### Additional Commands:
+## Additional Commands:
 You may interact automatically with certain html elements on the game page using the following commands:
 
 resign
@@ -91,7 +91,7 @@ analyze game
 new game
 rage quit
 
-### Install Guide:
+## Install Guide:
 
 --Chrome Web Store: https://chrome.google.com/webstore/detail/speak-to-lichess/ldiiocggpmgljihlkgpngjlhnggpapig
 
@@ -109,7 +109,7 @@ rage quit
 
 6. At the top right of chrome, click the puzzle piece icon, and pin Speak to Lichess. This will let you use the pop up menu to specify words that the speech recognition software is mishearing and manage your list of replaced words. 
 
-### Notes:
+## Notes:
 
 The Web Speech API: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API
 
