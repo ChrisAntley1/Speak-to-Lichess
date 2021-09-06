@@ -1,17 +1,5 @@
 
-
-/**
- * TODO:
- * 
- * 1. DELETE THIS
- *      -- NEPHEW
- * 2. test version update with includes()
- * 
- * 3. Update README
- * 
- * 4. delete token button?
- */
-
+//Main extension script. Only runs if *probably* on a game page on Lichess
 if(isGamePage){
 
     const LISTEN_KEY_CODE = 17;
@@ -170,7 +158,7 @@ if(isGamePage){
     //Speech Recognition
     function setupRecognition(){
 
-        // Speech Grammar is broken when used in Chromium applications:
+        // Speech Grammar is (unfortunately) ignored when used in Chromium applications:
         // https://bugs.chromium.org/p/chromium/issues/detail?id=680944
         // var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
         // var grammar = '#JSGF V1.0;';
@@ -266,7 +254,6 @@ if(isGamePage){
 
         //API actually accepts invalid promotion moves and just ignores the promotion. 
         //For example: d2d4q will be interpreted as d2d4.
-        //not sure why that's relevant when checking if UCI format or not lel        
         return (chessMove.match(/^[a-h][1-8][a-h][1-8]$/) != null || chessMove.match(/^[a-h][1-8][a-h][1-8][qrbn]$/) != null);
     }
 
@@ -319,7 +306,8 @@ if(isGamePage){
             observer.disconnect();
     }
 
-    //TODO: this seems to work; visibilitychange event listener removal looks silly when including the function previously added
+    //looks ridiculous to include the entire previously added function when removing the visiblitychange event listener
+    //but seems to work ¯\_(ツ)_/¯
     function cancelExtensionChanges(){
         display_listen_status.remove();
         display_move.remove();
@@ -375,7 +363,6 @@ if(isGamePage){
     
     function clickButton(ui_element){
 
-        // let className = ui_element || result_UI_element;
         let elements = document.getElementsByClassName(ui_element);
         let button = elements[0];
       

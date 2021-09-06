@@ -72,10 +72,12 @@ function addTableRows(array){
         // Create the table row:
         let item = document.createElement('tr');
         item.id = array[i]+word_replacement_list[array[i]];
+
         // add the problematic word and it's replacement phrase:
         let problem_col = document.createElement('td');
-        problem_col.innerHTML = array[i];
         let correct_col = document.createElement('td');
+
+        problem_col.innerHTML = array[i];
         correct_col.innerHTML = word_replacement_list[array[i]];
         
         item.appendChild(problem_col);
@@ -88,6 +90,8 @@ function addTableRows(array){
     table.replaceChild(newTableBody, tableBody);
     tableBody = newTableBody;
     // Finally, return the constructed list:
+
+    //...eh?
 }
 
 function filterBySearch(){
@@ -142,7 +146,6 @@ function submitPhrase(e){
         word_replacement_list[trouble_word] = correct_phrase;
         chrome.storage.local.set({'word_replacement_list': word_replacement_list});
 
-        //try updating table here
         getAndDrawTable();
 
         if (phrase_updated){

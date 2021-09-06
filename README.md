@@ -1,8 +1,8 @@
 # Speak to Lichess 2.1 
 
-Provides Speech Recognition to Lichess.org games. Uses the Web Speech API to process speech and the Lichess Board API to read the board state and submits moves. API move submission available in Rapid, Classical, and Correspondence time formats. Blitz or faster time formats require some keyboard input and the use of SAN format moves specifically.
+Provides Speech Recognition to Lichess.org games. Uses the Web Speech API to process speech, and the Lichess Board API to track the board state and submit moves. API move submission available in Rapid, Classical, and Correspondence time formats. Blitz or faster time formats require some keyboard input and the use of SAN format moves specifically.
 
-Supports standard games; alternative modes (such as crazyhouse, 'from position', etc.) should support UCI format moves, but will likely be unable to correctly process SAN format moves.
+Supports standard games; alternative modes (such as crazyhouse, 'from position', etc.) should support UCI format moves, but will are likely to incorrectly process SAN format moves.
 
 Check out the 'Using this Extension' section to learn how to effectively dictate moves.
 
@@ -14,11 +14,13 @@ Chrome Web Store: https://chrome.google.com/webstore/detail/speak-to-lichess/ldi
 
 Commands, SAN and UCI examples, and well-recognized words: https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0Tsxo/edit?usp=sharing
 
+This extension is great for slower formats and not so great for faster formats. It is a great supplement for blindfolded chess! Lichess provides move playback (in most browsers) so that you can hear each move: enter a game and click on your name in the top right -> sound -> Speech.
+
 ### Adding Your API Token
 
-A personal Lichess API token is required to use automatic submission. From the options page, you can navigate to Lichess's personal token creation page. The name and required scope will already be set; do not add any additional permissions. Simply press the blue 'submit' button and copy the generated token. Close this page and paste your token into the appropriate field in options; then press 'enter' or submit. The red Icon will turn green if a valid token is provided.
+A personal Lichess API token is required to use automatic submission. From the options page, you can navigate to Lichess's personal token creation page. The name and required scope of the token will already be set; do not add any additional permissions. Simply press the blue 'submit' button and copy the generated token. Close this page and paste your token into the appropriate field in options; then press 'enter' or submit. The red Icon will turn green if a valid token is provided.
 
-The 'delete stored token' button will delete your token from this extension. Note, however, that the token is still valid for your Lichess account. If you feel your token has been compromised, make sure to delete it on Lichess as well: https://lichess.org/account/oauth/token
+The 'delete stored token' button will delete your token from the extension. Note, however, that the token is still valid for your Lichess account. If you feel your token has been compromised, make sure to delete it on Lichess as well: https://lichess.org/account/oauth/token
 
 **--Warning: Do not add additional permissions to your token! Token is stored in plain text!--**
 
@@ -44,13 +46,15 @@ Examples:
 
 "Queen edge 7" -> Qe7
 
+"fetch eight Queen" -> f8=Q
+
 **The word 'to' will always be interpreted as '2'; phrases such as 'knight to delta four' will be interpreted as 'N2d4'.**
 
 ### Word Correction
 
-You may come across a word that is frequently mistaken for another word by the recognition service. For example "rook" is almost always (in my experience) interpreted as "Brooke"*. The extension provides word correction to help provide a more consistent experience.
+You may come across a word that is frequently mistaken for another word by the recognition service. For example "rook" is almost always interpreted as "Brooke"* (in my experience). The extension can track a word correction list to help provide a more consistent experience.
 
-Pin the extension to your chrome toolbar and click the icon to open the word replacement popup menu. It will display the most recently heard word or phrase, text fields for the word to replace and what to replace it with, and a button that navigates to the options page. In the options page you may view your replaced-words list, search for words being replaced/ being substituted in, and delete entries. 
+Pin the extension to your Chrome toolbar and click the icon to open the word replacement popup menu. It will display the most recently heard word or phrase, text fields for the word to replace and what to replace it with, and a button that navigates to the options page. In the options page you may view your replaced-words list, search for words being replaced/ being substituted in, and delete entries. 
 
 Non-English language users could also theoretically replace English piece names with piece names in their preferred language. For example, a Spanish-speaking player could tell the extension that any time it hears 'torre', to interpret it instead as 'rook'. 
 
@@ -58,22 +62,22 @@ Note that you can use any word you want to identify a piece (e.g. 'noon' for Kni
 
 *The extension comes preloaded with some problematic words already replaced, including "Brooke".
 
-Technical stuff/why this is necessary: The Web Speech API, which is currently considered an 'experimental technology', is set up to use the SpeechGrammar interface. This interface represents a set of words or patterns of words that the recognition service should look for specifically. Unfortunately, the recognition service provided by Chrome currently ignores this list. See the 'Handling errors and unrecognized speech' section of this page: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API/Using_the_Web_Speech_API 
+Technical stuff/why this is necessary: The Web Speech API, which is currently considered an 'experimental technology', is set up to use the SpeechGrammar interface. This interface represents a set of words or patterns of words that the recognition service should look for specifically. This would allow us to set a list of well known words to represent columns and receive consistent voice data interpretations. Unfortunately, the recognition service provided by Chrome currently ignores this list. See the 'Handling errors and unrecognized speech' section of this page: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API/Using_the_Web_Speech_API. That said, individual letter recognition would likely still be very inconsistent, even with a vocabulary list of letters. 
 
-More command examples, and words that are generally interpreted well, can be found here https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0Tsxo/edit?usp=sharing
+More command examples, and words that are generally interpreted consistently, can be found here: https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0Tsxo/edit?usp=sharing
 
 ### Text Input Box submission
 
-For Blitz or faster formats, or if you are unable to/uninterested in using an API token, you may use Lichess's text input box to submit moves. This requires you to press 'enter' to submit moves, and that you use SAN format moves.
+For Blitz or faster formats, or if you are unable to/uninterested in using an API token, you may use Lichess's text input box to submit moves. This requires that you press 'enter' to submit moves, and that you dictate SAN format moves.
 
-1. On Lichess, enable text input by going to https://lichess.org/account/preferences/game-behavior and enabling "Input moves with the keyboard". Optional: to turn on move playback, enter a game and click on your name in the top right-> sound -> Speech.
+1. On Lichess, enable text input by going to https://lichess.org/account/preferences/game-behavior and enabling "Input moves with the keyboard"
 
 2. Make sure the extension is listening for your input using the 'ctrl' key. You should see the message to the bottom right of the board change to "Listening...".
 
 3. Dictate your move in SAN format. When you are finished, you should see the message near the input box display your move. Press enter to submit the displayed move to the input box, or dictate another move if the displayed move is incorrect.
 
 ### Additional Commands:
-You may interact automatically with certain html elements on game pages using the following commands:
+You may interact automatically with certain html elements on the game page using the following commands:
 
 resign
 offer draw
@@ -119,4 +123,4 @@ Some users have reported very poor recognition results; this will have to do wit
 
 Speech recognition does offer alternative results, which might be used in the future to help the extension more accurately interpret moves. 
 
-I had plans to port this extension to Firefox, where I (somehow) got the impression that the SpeechGrammar interface would be correctly referenced as a vocabulary list. It turns out, unfortunatel, that Firefox does not support the Web Speech API's speech recognition at all!
+I had plans to port this extension to Firefox, where I somehow got the impression that the SpeechGrammar interface would be correctly referenced as a vocabulary list. But it turns out, unfortunately, that Firefox does not support the Web Speech API's speech recognition at all!

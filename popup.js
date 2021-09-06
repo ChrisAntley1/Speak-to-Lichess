@@ -12,7 +12,6 @@ let word_replacement_list;
 let toggle_listen;
 let last_command;
 
-//TODO: consider adding listener to storage? 
 accessStorage();
 createEventListeners();
 trouble_input.focus();
@@ -78,12 +77,6 @@ function submitPhrase(e){
         return;
     }
     let phrase_updated = word_replacement_list.hasOwnProperty(trouble_word);
-
-    // if (word_replacement_list.hasOwnProperty(trouble_word)){
-    //     console.log(trouble_word + " is already a replaced word...");
-    //     displayResult.innerHTML = trouble_word + " is already replaced; manage your replaced words to change.";
-    //     return;
-    // }
 
     if(correct_phrase = checkProposedPhrase(correct_phrase)){
 

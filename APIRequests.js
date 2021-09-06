@@ -81,7 +81,6 @@ async function streamGameData(){
                 while (true){
                     const {done, value} = await reader.read();
 
-                    //value is the ndjson we need to read *I think*
                     readBoardData(value);
 
                     if(done) break;

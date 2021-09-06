@@ -479,7 +479,7 @@ function isBlocked(start, dest){
         checkCol += colDir;
     }
 
-    //squares have line of sight of each other
+    //squares have clear line of sight to each other; unblocked
     return false;
 }
 
