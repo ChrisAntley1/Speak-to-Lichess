@@ -230,14 +230,22 @@ function getPawnMove(sanMove){
 }
     if(sanMove.length == 2){
         
-        //if move to rank 4 for white or rank 5 for black, check pawn map
-        if((destRow == 5 && userColor == 'b') || (destRow == 4 && userColor == 'w')){ 
-            if(board[col][destRow - direction] !== (userColor + 'p'))
-                return col + (destRow - (direction * 2)) + destination;
-        }
+        const userPawn = userColor+'p';
 
-        //else assume pawn's position
-        return  col + (destRow - direction) + destination;
+        //make sure a pawn belonging to the user is on the appropriate square
+        //previously did not check for this; allowed for PIECES to move as well
+        if(board[col][destRow - direction] === userPawn || board[col][destRow - (direction * 2)] === userPawn){
+            
+            //if move to rank 4 for white or rank 5 for black, check pawn map
+            if((destRow == 5 && userColor == 'b') || (destRow == 4 && userColor == 'w')){ 
+                
+                if(board[col][destRow - direction] !== (userColor + 'p'))
+                    return col + (destRow - (direction * 2)) + destination;
+            }
+
+            //else assume pawn's position
+            return  col + (destRow - direction) + destination;
+        }
     }
 
     if (sanMove.length == 3){
