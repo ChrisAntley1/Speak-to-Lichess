@@ -212,6 +212,7 @@ function getPawnMove(sanMove){
     
     const col = destination[0];
     const destRow = parseInt(destination[1]);
+    const userPawn = userColor + 'p';
 
     let direction = 0;
     if(userColor === 'b'){
@@ -227,10 +228,10 @@ function getPawnMove(sanMove){
             return sanMove;
 
         else direction = 1;
-}
+    }
+    
     if(sanMove.length == 2){
         
-        const userPawn = userColor+'p';
 
         //make sure a pawn belonging to the user is on the appropriate square
         //previously did not check for this; allowed for PIECES to move as well
@@ -248,19 +249,23 @@ function getPawnMove(sanMove){
         }
     }
 
+    const startingCol = sanMove[0];
+
     if (sanMove.length == 3){
 
         //capturing
-        if(/[a-h][a-h][1-8]/.test(sanMove))
-            return sanMove[0] + (destRow - direction) + destination;
+        if(/[a-h][a-h][1-8]/.test(sanMove) && board[startingCol][destRow - direction] === userPawn)
+            return startingCol + (destRow - direction) + destination;
         
-        if(/[a-h][1-8][QRBN]/.test(sanMove))
+        //promoting
+        if(/[a-h][1-8][QRBN]/.test(sanMove) && board[startingCol][destRow - direction] === userPawn)
             return col + (destRow - direction) + destination + sanMove[sanMove.length - 1];
     }
 
+    //capturing AND promoting
     if(sanMove.length == 4)
-        if(/[a-h][a-h][1-8][QRBN]/.test(sanMove))
-            return sanMove[0] + (destRow - direction) + destination + sanMove[sanMove.length - 1];
+        if(/[a-h][a-h][1-8][QRBN]/.test(sanMove) && board[startingCol][destRow - direction] === userPawn)
+            return startingCol + (destRow - direction) + destination + sanMove[sanMove.length - 1];
     
     return sanMove;
 }
