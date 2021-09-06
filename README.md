@@ -1,24 +1,26 @@
 # Speak to Lichess 2.1 
 
-Provides Speech Recognition to Lichess.org games. Uses the Web Speech API to process speech, and the Lichess Board API to track the board state and submit moves. API move submission available in Rapid, Classical, and Correspondence time formats. Blitz or faster time formats require some keyboard input and the use of SAN format moves specifically.
+Provides Speech Recognition to Lichess.org games. Uses the Web Speech API to process speech, and the Lichess Board API to track the board state and submit moves. API move submission available in Rapid, Classical, and Correspondence time formats. Blitz or faster time formats require some keyboard input and SAN format moves.
 
-Supports standard games; alternative modes (such as crazyhouse, 'from position', etc.) should support UCI format moves, but will are likely to incorrectly process SAN format moves.
+Supports standard games; alternative modes (such as crazyhouse, 'from position', etc.) should support UCI format moves, but are likely to incorrectly process SAN format moves.
 
 Check out the 'Using this Extension' section to learn how to effectively dictate moves.
 
-2.1 Board State Tracking Demo: 
+2.1 Board State Tracking Demo: https://www.youtube.com/watch?v=V3aak7WYozs
 
-2.0 Demo (SAN moves and text input sections out of date): https://www.youtube.com/watch?v=FB0uJwfo87k
+2.0 Demo Showing most features (SAN and text-input-box info is out-of-date): https://www.youtube.com/watch?v=FB0uJwfo87k
 
-Chrome Web Store: https://chrome.google.com/webstore/detail/speak-to-lichess/ldiiocggpmgljihlkgpngjlhnggpapig 
+Install from the Chrome Web Store: https://chrome.google.com/webstore/detail/speak-to-lichess/ldiiocggpmgljihlkgpngjlhnggpapig 
 
 Commands, SAN and UCI examples, and well-recognized words: https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0Tsxo/edit?usp=sharing
 
 This extension is great for slower formats and not so great for faster formats. It is a great supplement for blindfolded chess! Lichess provides move playback (in most browsers) so that you can hear each move: enter a game and click on your name in the top right -> sound -> Speech.
 
+Speak to Lichess is open source. Feedback welcome here on Github or at speak2lichess@gmail.com
+
 ## Adding Your API Token
 
-A personal Lichess API token is required to use automatic submission. From the options page, you can navigate to Lichess's personal token creation page. The name and required scope of the token will already be set; do not add any additional permissions. Simply press the blue 'submit' button and copy the generated token. Close this page and paste your token into the appropriate field in options; then press 'enter' or submit. The red Icon will turn green if a valid token is provided.
+A personal Lichess API token is required for true hands-free voice control. From the options page, you can navigate to Lichess's personal token creation page. The name and required scope of the token will already be set; do not add any additional permissions. Simply press the blue 'submit' button and copy the generated token. Close this page and paste your token into the appropriate field in options; then press 'enter' or submit. The red Icon will turn green if a valid token is provided.
 
 The 'delete stored token' button will delete your token from the extension. Note, however, that the token is still valid for your Lichess account. If you feel your token has been compromised, make sure to delete it on Lichess as well: https://lichess.org/account/oauth/token
 
@@ -28,11 +30,11 @@ Read more about the Lichess Board API here: https://lichess.org/blog/XlRW5REAAB8
 
 ## Using this Extension
 
-Now that you have provided an API key, the extension is ready for use. It's recommended that you play a rapid, classical, or correspondence game against the computer first to get a feel for the extension. Be sure to read the "Successful Dictation" section below.
+It's recommended that you play a rapid, classical, or correspondence game against the computer first to get a feel for the speech recognition and dictating squares. Be sure to read the "Successful Dictation" section below.
 
-The 'ctrl' key is used for either 'toggle' or 'push-to-talk' recording. You should see the message at the bottom right of the board change to 'listening...' when the extension is recording. Say your move clearly. When you are finished speaking, the extension will attempt to use your processed voice data to create a valid chess move. You should see a 'success' or 'failure' message below the board. You can also view the console (f12) for more info.
+The 'ctrl' key is used for either 'toggle' or 'push-to-talk' recording. You should see the message at the bottom right of the board change to 'listening...' when the extension is recording. Clearly say your move out loud. When you are finished speaking, the extension will attempt to use your processed voice data to create a valid chess move. You should see a 'success' or 'failure' message below the board. You can also view the console (f12) for more info.
 
-Correctly interprets 'capture', 'take', 'short', 'long', 'castle', 'promote', 'equals' into chess notation. Note that supplemental words such as 'capture' and 'promote' can be omitted. 
+Correctly interprets 'capture', 'take', 'short', 'long', 'castle', 'promote', and 'equals' into chess notation. Note that supplemental words such as 'capture' and 'promote' are not necessary.
 
 ## Successful Dictation
 
@@ -62,13 +64,13 @@ Note that you can use any word you want to identify a piece (e.g. 'noon' for Kni
 
 *The extension comes preloaded with some problematic words already replaced, including "Brooke".
 
-Technical stuff/why this is necessary: The Web Speech API, which is currently considered an 'experimental technology', is set up to use the SpeechGrammar interface. This interface represents a set of words or patterns of words that the recognition service should look for specifically. This would allow us to set a list of well known words to represent columns and receive consistent voice data interpretations. Unfortunately, the recognition service provided by Chrome currently ignores this list. See the 'Handling errors and unrecognized speech' section of this page: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API/Using_the_Web_Speech_API. That said, individual letter recognition would likely still be very inconsistent, even with a vocabulary list of letters. 
+Technical stuff/why this is necessary: The Web Speech API, which is currently considered an 'experimental technology', is set up to use the SpeechGrammar interface. This interface represents a set of words or patterns of words that the recognition service should look for specifically. This would allow us to set a list of well known words to represent columns and receive consistent recognition results. Unfortunately, the recognition service provided by Chrome currently ignores this list. See the 'Handling errors and unrecognized speech' section of this page: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API/Using_the_Web_Speech_API. 
 
 More command examples, and words that are generally interpreted consistently, can be found here: https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0Tsxo/edit?usp=sharing
 
 ## Text Input Box submission
 
-For Blitz or faster formats, or if you are unable to/uninterested in using an API token, you may use Lichess's text input box to submit moves. This requires that you press 'enter' to submit moves, and that you dictate SAN format moves.
+For Blitz or faster formats, or if you are unable to/uninterested in using an API token, you may use the Lichess text input box to submit moves. This requires that you press 'enter' to submit moves, and that you dictate SAN format moves.
 
 1. On Lichess, enable text input by going to https://lichess.org/account/preferences/game-behavior and enabling "Input moves with the keyboard"
 
@@ -115,7 +117,7 @@ The Web Speech API: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_
 
 The Lichess Board API: https://lichess.org/blog/XlRW5REAAB8AUJJ-/welcome-lichess-boards, https://lichess.org/api#tag/Board 
 
-Speak to Lichess is Open Source. Feedback welcome here on Github or sent to speak2lichess@gmail.com
+Speak to Lichess is open source. Feedback welcome here on Github or sent to speak2lichess@gmail.com
 
 ### Other/Known issues:
 
@@ -123,4 +125,4 @@ Some users have reported very poor recognition results; this will have to do wit
 
 Speech recognition does offer alternative results, which might be used in the future to help the extension more accurately interpret moves. 
 
-I had plans to port this extension to Firefox, where I somehow got the impression that the SpeechGrammar interface would be correctly referenced as a vocabulary list. But it turns out, unfortunately, that Firefox does not support the Web Speech API's speech recognition at all!
+I had plans to port this extension to Firefox, where I somehow got the impression that the SpeechGrammar interface would be correctly referenced as a vocabulary list. Unfortunately, it turns out that Firefox does not support the Web Speech API's speech recognition service at the moment.
