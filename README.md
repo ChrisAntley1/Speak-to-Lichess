@@ -6,6 +6,14 @@ Supports standard games; alternative modes (such as crazyhouse, 'from position',
 
 Check out the 'Using this Extension' section to learn how to effectively dictate moves.
 
+---Learn more about the APIs used--- 
+
+The Web Speech API: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API
+
+The Lichess Board API: https://lichess.org/blog/XlRW5REAAB8AUJJ-/welcome-lichess-boards, https://lichess.org/api#tag/Board 
+
+---Speak to Lichess links---
+
 2.1 Board State Tracking Demo: https://www.youtube.com/watch?v=V3aak7WYozs
 
 2.0 Demo Showing most features (SAN and text-input-box info is out-of-date): https://www.youtube.com/watch?v=FB0uJwfo87k
