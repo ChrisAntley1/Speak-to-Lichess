@@ -1,24 +1,26 @@
 # Speak to Lichess 2.1 
 
-Provides Speech Recognition to Lichess.org games. Uses the Web Speech API to process speech, and the Lichess Board API to track the board state and submit moves. API move submission available in Rapid, Classical, and Correspondence time formats. Blitz or faster time formats require some keyboard input and SAN format moves.
+Speak to Lichess is an open source Chrome extension that allows you to dictate moves on Lichess.org. It uses the Web Speech API to interpret voice data and the awesome Lichess Board API to read the board state and submit moves. 
 
-Supports standard games; alternative modes (such as crazyhouse, 'from position', etc.) should support UCI format moves, but are likely to incorrectly process SAN format moves.
+API move submission available in Rapid, Classical, and Correspondence time formats. Blitz or faster time formats require some keyboard input and SAN format moves.
+
+Supports standard games; alternative modes (such as crazyhouse, 'from position', etc.) should support UCI format moves, but are likely to incorrectly process SAN format moves (when submitting with the API).
 
 Check out the 'Using this Extension' section to learn how to effectively dictate moves.
 
-###---Learn more about the APIs used--- 
+### ---Learn more about the APIs used--- 
 
 The Web Speech API: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API
 
 The Lichess Board API: https://lichess.org/blog/XlRW5REAAB8AUJJ-/welcome-lichess-boards, https://lichess.org/api#tag/Board 
 
-###---Speak to Lichess links---
+### ---Downloads/Demos/Resources---
+
+Install from the Chrome Web Store: https://chrome.google.com/webstore/detail/speak-to-lichess/ldiiocggpmgljihlkgpngjlhnggpapig 
 
 2.1 Board State Tracking Demo: https://www.youtube.com/watch?v=V3aak7WYozs
 
 2.0 Demo Showing most features (SAN and text-input-box info is out-of-date): https://www.youtube.com/watch?v=FB0uJwfo87k
-
-Install from the Chrome Web Store: https://chrome.google.com/webstore/detail/speak-to-lichess/ldiiocggpmgljihlkgpngjlhnggpapig 
 
 Commands, SAN and UCI examples, and well-recognized words: https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0Tsxo/edit?usp=sharing
 
