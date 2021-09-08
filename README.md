@@ -96,15 +96,25 @@ For Blitz or faster formats, or if you are unable to/uninterested in using an AP
 You may interact automatically with certain html elements on the game page using the following commands:
 
 resign
+
 offer draw
+
 take back
+
 accept
+
 decline
+
 abort
+
 rematch
+
 flip board
+
 analyze game
+
 new game
+
 rage quit
 
 ## Install Guide:
