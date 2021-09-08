@@ -8,11 +8,16 @@ Supports standard games; alternative modes (such as crazyhouse, 'from position',
 
 Check out the 'Using this Extension' section to learn how to effectively dictate moves.
 
+This extension is great for slower time formats and not-so-great for faster formats. It can be a great tool for blindfolded chess. Lichess provides move playback (in most browsers) so that you can hear each move: enter a game and click on your name in the top right -> sound -> Speech.
+
 ### ---Learn more about the APIs used--- 
 
 The Web Speech API: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API
 
-The Lichess Board API: https://lichess.org/blog/XlRW5REAAB8AUJJ-/welcome-lichess-boards, https://lichess.org/api#tag/Board 
+The Lichess Board API: https://lichess.org/blog/XlRW5REAAB8AUJJ-/welcome-lichess-boards
+
+### ---Support Lichess.org---
+https://lichess.org/help/contribute
 
 ### ---Downloads/Demos/Resources---
 
@@ -20,11 +25,9 @@ Install from the Chrome Web Store: https://chrome.google.com/webstore/detail/spe
 
 2.1 Board State Tracking Demo: https://www.youtube.com/watch?v=V3aak7WYozs
 
-2.0 Demo Showing most features (SAN and text-input-box info is out-of-date): https://www.youtube.com/watch?v=FB0uJwfo87k
+2.0 Demo Showing most features (NOTE: Information regarding SAN vs UCI move submission out of date as of 2.1): https://www.youtube.com/watch?v=FB0uJwfo87k
 
 Commands, SAN and UCI examples, and well-recognized words: https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0Tsxo/edit?usp=sharing
-
-This extension is great for slower formats and not so great for faster formats. It is a great supplement for blindfolded chess! Lichess provides move playback (in most browsers) so that you can hear each move: enter a game and click on your name in the top right -> sound -> Speech.
 
 Speak to Lichess is open source. Feedback welcome here on Github or at speak2lichess@gmail.com
 
