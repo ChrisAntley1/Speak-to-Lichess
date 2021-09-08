@@ -141,12 +141,14 @@ The Web Speech API: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_
 
 The Lichess Board API: https://lichess.org/blog/XlRW5REAAB8AUJJ-/welcome-lichess-boards, https://lichess.org/api#tag/Board 
 
-Speak to Lichess is open source. Feedback welcome here on Github or sent to speak2lichess@gmail.com
+Speak to Lichess is open source. Feedback welcome here on Github, or sent to speak2lichess@gmail.com
+
+If you like the app, give it a nice review on the Chrome Web Store!
 
 ### Known Issues/Other:
 
-Some users have reported very poor recognition results; this will have to do with the speech recognition software. Until the speech recognition provided by Chrome correctly uses the SpeechGrammar interface, this may be a persistent issue. The best advice I can give is to keep trying different words until you find a set that the software recognizes more consistently for you, and to make use of the word correction feature. 
+Some users have reported very poor recognition results. This all depends on how well the speech recognition service interprets your voice. To get the best results, make sure to articulate each component of your move clearly and distinctly. Keep trying different words until you find a set that the software recognizes consistently. And make use of the word correction feature.
 
-Speech recognition does offer alternative results, which might be used in the future to help the extension more accurately interpret moves. 
+The speech recognition service does offer alternative results, which will hopefully be used in the future to help more accurately interpret moves. 
 
 I had plans to port this extension to Firefox, where I somehow got the impression that the SpeechGrammar interface would be correctly referenced as a vocabulary list. It turns out that Firefox does not support the Web Speech API's speech recognition service at the moment.
