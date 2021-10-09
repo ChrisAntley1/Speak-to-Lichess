@@ -425,8 +425,10 @@ function inKnightRange(coordinates){
     let diffCol = Math.abs(coordinates.startCol - coordinates.destCol);
     let diffRow = Math.abs(coordinates.startRow - coordinates.destRow);
 
+    if(diffRow == 0 || diffCol == 0) return false;
+
     if(diffRow > 2 || diffCol > 2) return false;
-    
+
     if(Math.abs(diffCol - diffRow) == 1) return true;
     
     return false;
