@@ -1,19 +1,6 @@
 
 //Main extension script. Only runs if *probably* on a game page on Lichess
 
-/**
- * 1. Phrase replacement list; is checked before word replacement list, to avoid jumping to conclusions
- * and misinterpreting individual words
- * 
- * 2. Alternate results: Could use 10+ results from speech recognition, check each for what might be the correct move
- * If we only look for certain words, and don't accept any words for columns, could become mo better
- * 
- * 3. Caliberation: let user initiate a caliberation mode. Would have them say certain well known chess phrases, coordinates, etc.
- * Knowing what the user was intending to say, could record all the alternative interpretations returned
- * by recognition. Then when user dictates a move, catch and replace these phrases appropriately. 
- * Could make recognition experience more consistent for each user regardless of accent/speech features.
- * 
- */
 if(isGamePage){
 
     const LISTEN_KEY_CODE = 17;
