@@ -1,19 +1,6 @@
 
 //Main extension script. Only runs if *probably* on a game page on Lichess
 
-/**
- * 1. Phrase replacement list; is checked before word replacement list, to avoid jumping to conclusions
- * and misinterpreting individual words
- * 
- * 2. Alternate results: Could use 10+ results from speech recognition, check each for what might be the correct move
- * If we only look for certain words, and don't accept any words for columns, could become mo better
- * 
- * 3. Caliberation: let user initiate a caliberation mode. Would have them say certain well known chess phrases, coordinates, etc.
- * Knowing what the user was intending to say, could record all the alternative interpretations returned
- * by recognition. Then when user dictates a move, catch and replace these phrases appropriately. 
- * Could make recognition experience more consistent for each user regardless of accent/speech features.
- * 
- */
 if(isGamePage){
 
     const LISTEN_KEY_CODE = 17;
@@ -22,14 +9,16 @@ if(isGamePage){
     const HOLD_LISTEN_MESSAGE = "Hold ctrl to dictate";
     const API_SUBMIT_SUCCESS = "Successfully posted move using Board API";
     const API_SUBMIT_FAIL = "API move submission failed: ";
-    const INPUT_BOX_MESSAGE = ' Use Lichess text input box to submit moves with enter key. ---SAN FORMAT WORKS BEST---';
+    const INPUT_BOX_MESSAGE = ' Use Lichess text input box to submit SAN moves with enter key.';
     const TEXT_INPUT_READY = 'Press enter to submit ';
     const TEXT_INPUT_DEFAULT_MESSAGE  = 'Waiting for SAN format move';
     const CONVERSION_FAIL_MESSAGE = 'Failed to Convert move to UCI for API: '
-    const NO_TOKEN_MESSAGE = 
-        "No API token. Open extension options and set a valid API token to use hands-free move submission. " +
-        "The text input box may be used to submit with the 'enter' key.";
+    // const NO_TOKEN_MESSAGE = 
+    //     "No API token. Open extension options and set a valid API token to use hands-free move submission. " +
+    //     "The text input box may be used to submit with the 'enter' key.";
     
+    const NO_TOKEN_MESSAGE = 'No API token. Add a token from the options page, or use the Lichess text input box.'
+    const FAST_TIME_MESSAGE = 'Dictation available with text input box.'
     //HTML elements. inputBox may not have been created yet; will find using observer
     const display_move = document.createElement('strong');
     const display_listen_status = document.createElement('strong');
@@ -87,7 +76,7 @@ if(isGamePage){
             if(!result.hasOwnProperty('__board_api_token')){
                 display_move.innerHTML = NO_TOKEN_MESSAGE;
                 setupTextInput();
-                resetDisplay();
+                // resetDisplay();
             }
             else {
                 display_move.innerHTML = "Checking Token...";
@@ -121,11 +110,14 @@ if(isGamePage){
                             setupTextInput();
                             console.log(`API Submission: ${res.speed} does not allow API move submission.`);
                             display_move.innerHTML = `No API Submission; ${res.speed} does not allow API move submission.` + INPUT_BOX_MESSAGE;
+
+                            display_move.innerHTML = `${res.speed}: ` + FAST_TIME_MESSAGE;
                         }    
                     });
                 }).catch((res) => {
                     setupTextInput();
                     display_move.innerHTML = 'No API Submission; try submitting a new API token.'  + INPUT_BOX_MESSAGE;
+                    display_move.innerHTML = 'Token failed. '  + FAST_TIME_MESSAGE;
                     console.log(`API token fetch failed: ${res['error']}. add new API token in options.`);
                 });
             }
