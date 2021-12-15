@@ -174,7 +174,7 @@ if(isGamePage){
         // recognition.grammars = speechRecognitionGrammarList;
 
         recognition =  new SpeechRecognition();
-        recognition.lang = 'en-US';
+        recognition.lang = navigator.language || navigator.userLanguage;
         recognition.interimResults = false;
     
         recognition.onresult = parseSpeech;
