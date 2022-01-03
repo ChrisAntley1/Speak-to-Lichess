@@ -40,11 +40,9 @@ Speak to Lichess is open source. Feedback welcome here on Github or at speak2lic
 
 ## Adding Your API Token
 
-You will need to create a Lichess API token for true hands-free voice control (https://lichess.org/account/oauth/token). The options page of this extension will have a link directly to the token creation page with the correct parameters already set. Do not add any additional permissions when creating your token. Simply press the blue 'submit' button and copy the generated token. Return to the options page and paste in your token; then press 'enter' or the 'submit' button. The red icon will turn green if a valid token is provided, and you should see you your username.
+You will need to create a Lichess API token for hands-free voice control (https://lichess.org/account/oauth/token). The options page will have a link directly to the Lichess token creation page with the correct parameters already set. Do NOT add any additional permissions when creating your token, and do NOT share your token with others. Simply press the blue 'submit' button and copy the generated token. Return to the options page and paste in your token; press 'enter' or the 'submit' button. The red icon will turn green if a valid token is provided, and you should see your username displayed. 
 
-The 'delete stored token' button will remove your token from the extension. 
-
-NOTE, however, that the token is still valid for your Lichess account. If you feel your token has been compromised, make sure to delete it on Lichess as well: https://lichess.org/account/oauth/token
+IMPORTANT: The 'delete stored token' button will remove your token from this extension. HOWEVER, the token is still valid for your Lichess account. Make sure to delete it from Lichess as well, especially if you believe it has been compromised: https://lichess.org/account/oauth/token
 
 **--WARNING: Do not add additional permissions to your token! Token is stored in plain text!--**
 
@@ -52,17 +50,17 @@ Read more about the Lichess Board API here: https://lichess.org/blog/XlRW5REAAB8
 
 ## Using this Extension
 
-When getting started, play a rapid, classical, or correspondence game against the computer first to get a feel for the speech recognition and properly dictating moves. Be sure to read the 'Successful Dictation' section below.
+Start by playing a rapid, classical, or correspondence game against the computer to get a feel for speech recognition and properly dictating moves. Be sure to read the 'Successful Dictation' section below.
 
-The 'ctrl' key is used for either 'toggle' or 'push-to-talk' recording. You should see the message to the right of the board change to 'listening...' when the extension is recording. Clearly state your move. When you are finished speaking, the extension will attempt to create a valid chess move. You should see a 'success' or 'failure' message below the board. You can also view the console (f12) for more info.
+The 'ctrl' key is used for either 'toggle' or 'push-to-talk' recording. You should see the message to the right of the board change to 'listening...'. Clearly state your move. When you are finished speaking, the extension will attempt to create a valid chess move. You should see a 'success' or 'failure' message below the board. You can also view the console (f12) for more info.
 
-Correctly interprets 'capture', 'take', 'short', 'long', 'castle', 'promote', and 'equals' into chess notation. Note that supplemental words such as 'capture' and 'promote' are not necessary.
+Correctly interprets 'capture', 'take', 'short', 'long', 'castle', 'promote', and 'equals' into proper chess notation. Note that supplemental words such as 'capture' and 'promote' are not necessary.
 
 **The word 'to' will always be interpreted as '2'; for example, 'knight to delta four' will ALWAYS be interpreted as 'N2d4'.**
 
 ## Successful Dictation
 
-**To specify a column, you will have much more success saying a word that begins with that letter, such as 'delta' for the d column, than you will saying the actual letter. The speech processing service has a very difficult time discerning individual letters.**
+**To specify a column, you will have much more success saying a word that begins with that letter than the actual letter, such as 'delta' for the d column. The speech processing service has a very difficult time discerning individual letters.**
 
 Examples:
 
@@ -74,15 +72,15 @@ Examples:
 
 'fetch eight Queen' -> f8=Q
 
-**Using words to represent column letters is NOT required. However you will likely have very mixed results.**
+**You CAN attempt to use the letters themselves, but in my experience it's not worth the headache.**
 
 ## Word Correction
 
-You may come across a word that is frequently mistaken for another word by the recognition service. For example, 'rook' is almost always interpreted as 'Brooke'. The extension tracks a word-correction list to help provide a more consistent experience. ('Brooke' is already corrected by default)
+You may come across a word that is frequently mistaken for another word by the recognition service. For example, 'rook' is almost always interpreted as 'Brooke'. The extension tracks a word-correction list to help provide a more consistent experience. ('Brooke' is already corrected by default.)
 
-Pin the extension to your Chrome toolbar, and click the icon to open the popup menu. Here you can specify the word that is giving you trouble and the word or phrase that you wish to be heard instead. In the options page you may view your corrected-words list, search for words being replaced/ being substituted in, and delete word entries. 
+Pin the extension to your Chrome toolbar, and click the icon to open the popup menu. Here you can specify which word is a mistake ('Brooke') and which word or phrase should be heard instead ('rook'). In the options page, you may view your corrected-words list, search for words being replaced/ being substituted in, and delete word entries. 
 
-Users that wish to use a language other than English should be able to replace English piece names with piece names in their preferred language using word-correction. For example, a Spanish-speaking player could tell the extension that any time it hears 'torre', to instead interpret it as 'rook'. 
+Users that wish to use a language other than English should be able to replace English piece names with the names in their preferred language using word-correction. For example, a Spanish-speaking player could tell the extension that any time it hears 'torre', to instead interpret it as 'rook'. 
 
 NOTE: You can use any word you want to identify a piece (e.g. 'noon' for knight, 'rail' for rook, etc.) with ONE exception: bishops. Any word that starts with 'b' other than 'bishop' will be interpreted as a pawn move; for example, 'bagel alpha four' will be interpreted as 'ba4' and is ALWAYS considered a pawn move- even if this is a legal move for your bishop. This arises because of the coordinate set and Bishop sharing the letter 'b' in notation. 
 
@@ -90,7 +88,7 @@ You can get around this by replacing your preferred word with 'bishop' in word c
 
 *The extension comes preloaded with some problematic words already replaced (including 'Brooke').
 
-Technical stuff/why word correction is necessary: The Web Speech API currently uses the SpeechGrammar interface (https://developer.mozilla.org/en-US/docs/Web/API/SpeechGrammar). This interface represents a set of words or patterns of words that the recognition service should look for specifically. This would allow us to set a list of well known words to represent columns and receive consistent recognition results. Unfortunately, the recognition service provided by Chrome ignores this list. See the 'Handling errors and unrecognized speech' section of this page: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API/Using_the_Web_Speech_API. 
+Why word correction is necessary: The Web Speech API currently uses the SpeechGrammar interface (https://developer.mozilla.org/en-US/docs/Web/API/SpeechGrammar). This interface contains a set of words or patterns of words that the recognition service should look for specifically. If working as expected, this would allow us to set a list of well known words to represent columns and receive consistent recognition results. Unfortunately, the recognition service provided by Chrome/Google ignores this list. See the 'Handling errors and unrecognized speech' section of this page: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API/Using_the_Web_Speech_API. 
 
 More command examples, and words that are generally interpreted consistently, can be found here: https://docs.google.com/spreadsheets/d/1g6cGDRYvjGPj2gqeEMUVYwbZG3xjz_SrX_2q9z0Tsxo/edit?usp=sharing
 
