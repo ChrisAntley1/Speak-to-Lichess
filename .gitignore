@@ -1,3 +1,5 @@
 todo.txt
-.vscode/settings.json
+.vscode
 goals.txt
+/node_modules
+package-lock.json
