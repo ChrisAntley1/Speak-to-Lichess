@@ -1,20 +1,23 @@
 
 let command = document.getElementById('command');
-let trouble_input = document.getElementById('trouble_input');
-let correct_input = document.getElementById('correct_input');
+let troubleInput = document.getElementById('trouble_input');
+let correctInput = document.getElementById('correct_input');
 let submit = document.getElementById('submit');
 let manage = document.getElementById('manage');
 let displayResult = document.getElementById('display_result');
 let hold_radio = document.getElementById('hold');
 let toggle_radio = document.getElementById('toggle');
 let replaceForm = document.getElementById('replace_form');
+
 let word_replacement_list;
 let toggle_listen;
 let last_command;
 
+let ignoreList = ['last_command', '__toggle', '__board_api_token'];
+
 accessStorage();
 createEventListeners();
-trouble_input.focus();
+troubleInput.focus();
 
 
 function accessStorage(){
@@ -60,19 +63,24 @@ function createEventListeners(){
 function submitPhrase(e){
 
     e.preventDefault();
-    let trouble_word = trouble_input.value;
-    let correct_phrase = correct_input.value; 
+    let trouble_word = troubleInput.value;
+    let correct_phrase = correctInput.value; 
     if(trouble_word == null || trouble_word == undefined || trouble_word.length == 0) return;
     if(correct_phrase == null || correct_phrase == undefined || correct_phrase.length == 0) return;
 
-    if(!trouble_word.match(/^[a-z0-9]+$/i)){
-        trouble_input.value = '';
-        displayResult.innerHTML = "Replacement word must be alphanumeric."
+    if(ignoreList.includes(trouble_word)){
+        troubleInput.value = '';
+        displayMessage.innerHTML = "Reserved string. Why are you even trying to use this??"
         return;
+    }
+    if (/[],!;:"<>().?"'\/]/.test(trouble_word)) {
+        troubleInput.value = '';
+        displayResult.innerHTML = "Word includes certain punctuation which is not allowed."
+        return false;
     }
 
     if(trouble_word.includes(' ')){
-        trouble_input.value = '';
+        troubleInput.value = '';
         displayResult.innerHTML = "Replacement word must be a single word and contain no spaces."
         return;
     }
@@ -87,8 +95,8 @@ function submitPhrase(e){
 
         displayResult.innerHTML = updateOrAdd + trouble_word + " will now be reinterpreted as: " + correct_phrase;
         
-        correct_input.value = '';
-        trouble_input.value = '';
+        correctInput.value = '';
+        troubleInput.value = '';
 
     }
 }
@@ -100,12 +108,17 @@ function openOptions(){
 
 function checkProposedPhrase(phrase){
 
-    if (/[,;:"<>.'?\-]/.test(phrase)) {
-        correct_input.value = '';
-        displayResult.innerHTML = "Replacement phrase must not include punctuation. Use space ' ' to seperate words."
+    if (/[],!;:"<>().?"'\/]/.test(phrase)) {
+        correctInput.value = '';
+        displayResult.innerHTML = "Phrase includes certain punctuation which is not allowed."
         return false;
     }
-    
+    if(ignoreList.includes(phrase)){
+        correctInput.value = '';
+        displayMessage.innerHTML = "Reserved string. Why are you even trying to use this??"
+        return;
+    }
+
     //would not catch all possible hanging spaces
     else if (phrase.endsWith(' ')){
         return phrase.subString(0, phrase.length-1);

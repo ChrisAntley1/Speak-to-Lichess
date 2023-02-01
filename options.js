@@ -26,7 +26,6 @@ let word_replacement_list;
 let replacement_word_keys;
 let board_api_token;
 
-//ignore list should no longer be needed
 let ignoreList = ['last_command', '__toggle', '__board_api_token'];
 
 getAndDrawTable();
@@ -128,10 +127,15 @@ function submitPhrase(e){
     if(trouble_word == null || trouble_word == undefined || trouble_word.length == 0) return;
     if(correct_phrase == null || correct_phrase == undefined || correct_phrase.length == 0) return;
     
-    if(!trouble_word.match(/^[a-z0-9]+$/i)){
+    if(ignoreList.includes(trouble_word)){
         troubleInput.value = '';
-        displayMessage.innerHTML = "Replacement word must be alphanumeric."
+        displayMessage.innerHTML = "Reserved string. Why are you even trying to use this??"
         return;
+    }
+    if (/[],!;:"<>().?"'\/]/.test(trouble_word)) {
+        troubleInput.value = '';
+        displayResult.innerHTML = "Word includes certain punctuation which is not allowed."
+        return false;
     }
 
     if(trouble_word.includes(' ')){
@@ -139,10 +143,12 @@ function submitPhrase(e){
         displayMessage.innerHTML = "Replacement word must be a single word and contain no spaces."
         return;
     }
-    let phrase_updated = word_replacement_list.hasOwnProperty(trouble_word);
+    console.log(checkProposedPhrase(correct_phrase));
 
     if(correct_phrase = checkProposedPhrase(correct_phrase)){
-    
+        
+        let phrase_updated = word_replacement_list.hasOwnProperty(trouble_word);
+
         word_replacement_list[trouble_word] = correct_phrase;
         chrome.storage.local.set({'word_replacement_list': word_replacement_list});
 
@@ -161,12 +167,18 @@ function submitPhrase(e){
 
 function checkProposedPhrase(phrase){
 
-    if (/[,;:"<>.'?\-]/.test(phrase)) {
+    console.log(ignoreList.includes(phrase));
+    if(ignoreList.includes(phrase)){
         correctInput.value = '';
-        displayMessage.innerHTML = "Replacement phrase cannot not include punctuation. Use space ' ' to seperate words."
+        displayMessage.innerHTML = "Reserved string. Why are you even trying to use this??"
+        return;
+    }
+    if (/[],!;:"<>().?"'\/]/.test(phrase)) {
+        correctInput.value = '';
+        displayResult.innerHTML = "Phrase includes certain punctuation which is not allowed."
         return false;
     }
-    
+
     //would not catch all possible hanging spaces
     else if (phrase.endsWith(' ')){
         return phrase.subString(0, phrase.length-1);
