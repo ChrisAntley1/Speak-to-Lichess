@@ -1,8 +1,12 @@
+// import { Chess } from 'chess.js'
 
 //Main extension script. Only runs if *probably* on a game page on Lichess
 
 if(isGamePage){
-
+    // const chess = new Chess(
+    //     '1q3b2/PPPPPPPP/8/8/8/5k2/8/3K4 w - - 0 1'
+    //   );
+    // chess.ascii();
     const LISTEN_KEY_CODE = 17;
     const DEFAULT_DISPLAY_MESSAGE = "Dictated move information will appear here.";
     const TOGGLE_LISTEN_MESSAGE = "Press ctrl to toggle dictation on or off";

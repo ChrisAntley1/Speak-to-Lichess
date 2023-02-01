@@ -1,27 +1,27 @@
 {
     "name": "Speak to Lichess",
-    "version": "2.1.3",
+    "version": "2.2.0",
     "manifest_version": 3,
-    "description": "Use voice control to play Lichess games!",
-    "options_page": "options.html",
+    "description": "Voice control for playing chess on Lichess.org",
+    "options_page": "src/options/options.html",
     "host_permissions": ["*://*.lichess.org/*"],
     "content_scripts": [
       {
         "matches": ["*://*.lichess.org/*"],
-        "js": ["locationCheck.js", "TextProcessor.js", "boardState.js", "APIRequests.js", "main.js"],
+        "js": ["src/locationCheck.js", "src/TextProcessor.js", "src/boardState.js", "src/APIRequests.js", "src/main.js"],
         "run_at": "document_end"
       }
     ],
     
     "background": {
-        "service_worker": "background.js"
+        "service_worker": "src/background.js"
     },
 
     "action": {
       "default_icon": {
         "128": "/images/yellow_chess_talk_128.png"
       },
-      "default_popup": "popup.html",
+      "default_popup": "src/popup/popup.html",
       "default_title": "Quick Settings"
     },
 

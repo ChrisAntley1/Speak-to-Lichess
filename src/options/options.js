@@ -267,7 +267,7 @@ async function testToken(token, isNewToken){
                     tokenMessage.innerHTML = 'Success!';
                 } 
                 tokenStatus.innerHTML = VALID_TOKEN_MESSAGE + res['username'] +".";
-                statusImage.src = "images/greenChess512.png";
+                statusImage.src = "../../images/greenChess512.png";
             }
         });
 }
@@ -278,6 +278,6 @@ function deleteToken(e){
     
     tokenMessage.innerHTML = 'Removed token from local storage (if one existed). You should alse delete this token on Lichess: https://lichess.org/account/oauth/token';
     tokenStatus.innerHTML = NO_TOKEN_MESSAGE;
-    statusImage.src = "images/redChess512.png";
+    statusImage.src = "../../images/redChess512.png";
 }
 
