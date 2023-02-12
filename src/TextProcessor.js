@@ -2,10 +2,10 @@
 //The text processing portion of the extension. Currently exists as a class, but there's really no need for this...
 const EXCLUDE_LIST = ['__board_api_token', '__toggle'];
 
-class TextProcessor {
+export default class TextProcessor {
 
     word_replacement_list;
-    numberMap;
+    numberMap = 1;
     chessTermMap;
 
     constructor(){
@@ -18,28 +18,35 @@ class TextProcessor {
         this.setReplacementList();
     }
 
+    parseSpeechText(text){
+        let componentWords = this.processRawInput(text);
+        let processedPhrase = componentWords.join(' ');
+        let chessMove = this.extractChessMove(componentWords);
+        
+        return {    
+            phrase: processedPhrase, 
+            components: componentWords,
+            move: chessMove
+        };
+    }
+    processRawInput(text){
 
-    processSpeechInput(speechText){
-
-        let filteredText = this.filterRawInput(speechText);
-
-        //save the phrase to show the user in popup what phrase was heard (before replacing any words)
-        chrome.storage.local.set({last_command: filteredText});
-
+        let filteredText = this.filterText(text);
         return this.replaceWords(filteredText.split(' '));
     }
 
-    filterRawInput(speechText){
+    filterText(text){
     
         //replace any capital letters;
         //put a space between 'letter-number' instances;
         //replace any punctuation with a space. 
-
-        let filteredText = speechText.toLowerCase();
+        let filteredText = text.toLowerCase();
     
         //this creates an extra space; doesn't seem to cause problems
         filteredText = filteredText.replace(/([^0-9])([0-9])/g, '$1 $2');
         filteredText = filteredText.replace(/([0-9])([^0-9])/g, '$1 $2');
+        
+        //TODO maybe don't check for apostrophies, dashes
         filteredText = filteredText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ');
     
         while(filteredText.includes('  ')){
@@ -59,7 +66,7 @@ class TextProcessor {
         return chessMove;
     }
 
-    replaceWords(wordArray){
+    replaceWords(wordList){
     
         let result = [];
         let replacementPhrase = '';
@@ -67,7 +74,7 @@ class TextProcessor {
         if(word_replacement_list == undefined)
             throw 'word_replacement_list is undefined!';
         
-        for(const word of wordArray){
+        for(const word of wordList){
             if(word_replacement_list[word] != null && word_replacement_list[word] != undefined){
     
                 //split replacement phrase. if just a single word, replacementPhrase will be an array of length 1; 
@@ -95,7 +102,11 @@ class TextProcessor {
         }
     
         //Not a known term or a number; get first character
-        return word.charAt(0);
+        let result = word.charAt(0);
+        if (result.match(/[kqrn]/))
+            result = result.toUpperCase();
+        
+        return result;
     }
     
     setReplacementList(){
@@ -104,34 +115,33 @@ class TextProcessor {
         });
     }
 
-    updateReplacementList(){
-        this.setReplacementList();
-    }
-
     createKeyWordMaps(){
-        this.numberMap = new Map();
-        this.chessTermMap = new Map();
+        let numberMap = new Map();
+        let chessTermMap = new Map();
 
-        this.numberMap.set('one', '1');
-        this.numberMap.set('two', '2');
-        this.numberMap.set('three', '3');
-        this.numberMap.set('four', '4');
-        this.numberMap.set('five', '5');
-        this.numberMap.set('six', '6');
-        this.numberMap.set('seven', '7');
-        this.numberMap.set('eight', '8');
+        numberMap.set('one', '1');
+        numberMap.set('two', '2');
+        numberMap.set('three', '3');
+        numberMap.set('four', '4');
+        numberMap.set('five', '5');
+        numberMap.set('six', '6');
+        numberMap.set('seven', '7');
+        numberMap.set('eight', '8');
     
-        this.chessTermMap.set('king', 'K');
-        this.chessTermMap.set('queen', 'Q');
-        this.chessTermMap.set('rook', 'R');
-        this.chessTermMap.set('bishop', 'B');
-        this.chessTermMap.set('knight', 'N');
-        this.chessTermMap.set('capture', 'x');
-        this.chessTermMap.set('take', 'x');
-        this.chessTermMap.set('promote', '=');
-        this.chessTermMap.set('equals', '=');
-        this.chessTermMap.set('castle', '0-0');
-        this.chessTermMap.set('long', '0-');
-        this.chessTermMap.set('short', '');
+        chessTermMap.set('king', 'K');
+        chessTermMap.set('queen', 'Q');
+        chessTermMap.set('rook', 'R');
+        chessTermMap.set('bishop', 'B');
+        chessTermMap.set('knight', 'N');
+        chessTermMap.set('capture', 'x');
+        chessTermMap.set('take', 'x');
+        chessTermMap.set('promote', '=');
+        chessTermMap.set('equals', '=');
+        chessTermMap.set('castle', 'O-O');
+        chessTermMap.set('long', 'O-');
+        chessTermMap.set('short', '');
+
+        this.numberMap = numberMap;
+        this.chessTermMap = chessTermMap;
     }
 }

@@ -5,14 +5,15 @@
     "description": "Voice control for playing chess on Lichess.org",
     "options_page": "src/options/options.html",
     "host_permissions": ["*://*.lichess.org/*"],
+
     "content_scripts": [
       {
         "matches": ["*://*.lichess.org/*"],
-        "js": ["src/locationCheck.js", "src/TextProcessor.js", "src/boardState.js", "src/APIRequests.js", "src/main.js"],
+        "js": [ "dist/bundle.js"],
         "run_at": "document_end"
       }
     ],
-    
+
     "background": {
         "service_worker": "src/background.js"
     },
@@ -32,4 +33,5 @@
     "icons": {
       "128": "/images/yellow_chess_talk_128.png"
     }
+      
   }

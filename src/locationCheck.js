@@ -4,7 +4,7 @@ const lichessLocation = location.href
                     .replace('lichess.org/', '')
                     .replace('lichess.org', '');
 
- function checkIfGamePage(location){
+function checkIfGamePage(location){
         
     //locations with 8 or 12 alphanumeric characters
     const KNOWN_LOCATIONS = [
@@ -37,3 +37,5 @@ const lichessLocation = location.href
 }
 
 const isGamePage = checkIfGamePage(lichessLocation);
+
+module.exports = { isGamePage, lichessLocation};

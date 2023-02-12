@@ -12,6 +12,7 @@ let userPieceMap;
 let kingSideCastle;
 let queenSideCastle;
 
+
 let board;
 
 let castleRookMoveMap = new Map();
@@ -23,7 +24,7 @@ castleRookMoveMap.set('e1g1', 'h1f1');
 
 const columns = ['-','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
-function setInitialGameState(color){
+export function setInitialGameState(color){
     
     setStartingPosition();
     userColor = color;
@@ -174,34 +175,11 @@ function updateUserPiece(previousSquare, newSquare){
     userPieceMap.set(newSquare, piece);
 }
 
-function getUCIFromSAN(sanMove){
 
-    //this trimmedMove business feels weird but it works
-    let trimmedMove = trimSAN(sanMove);
-    let resultMove = sanMove;
-    const firstChar = sanMove.charAt(0);
-
-    if(/[a-h]/.test(firstChar)){
-        
-        resultMove = getPawnMove(trimmedMove);
-
-        //Special bishop handling check; still undecided
-        // if(resultMove == trimmedMove && firstChar === 'b')
-        //     resultMove = getPieceMove(trimmedMove);
-    }
-    
-    //checks for lowercase as well, for now
-    else if(/[QRBNKqrnk]/.test(firstChar)) resultMove = getPieceMove(trimmedMove);
-
-    else if(sanMove === '0-0' || sanMove === '0-0-0') resultMove = getCastleMove(trimmedMove);
-
-    if(resultMove === trimmedMove) return sanMove;
-    
-    return resultMove;
-}
 
 function getPawnMove(sanMove){
 
+    console.log(`${sanMove} is here in get pawn move`);
     let destination = sanMove.match(/[a-h][1-8]/);
 
     if(destination == null) return sanMove;
@@ -500,4 +478,30 @@ function isBlocked(start, dest){
 
 function trimSAN(sanMove){
     return sanMove.replace('x', '').replace('=', '');
+}
+
+export default function getUCIFromSAN(sanMove){
+
+    //this trimmedMove business feels weird but it works
+    let trimmedMove = trimSAN(sanMove);
+    let resultMove = sanMove;
+    const firstChar = sanMove.charAt(0);
+
+    if(/[a-h]/.test(firstChar)){
+        
+        resultMove = getPawnMove(trimmedMove);
+
+        //Special bishop handling check; still undecided
+        // if(resultMove == trimmedMove && firstChar === 'b')
+        //     resultMove = getPieceMove(trimmedMove);
+    }
+    
+    //checks for lowercase as well, for now
+    else if(/[QRBNKqrnk]/.test(firstChar)) resultMove = getPieceMove(trimmedMove);
+
+    else if(sanMove === '0-0' || sanMove === '0-0-0') resultMove = getCastleMove(trimmedMove);
+
+    if(resultMove === trimmedMove) return sanMove;
+    
+    return resultMove;
 }

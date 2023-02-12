@@ -1,13 +1,23 @@
-// import { Chess } from 'chess.js'
+import { Chess } from 'chess.js';
+import { isGamePage, lichessLocation} from './locationCheck.js';
+import TextProcessor from './TextProcessor.js';
+import {    testToken,
+            setAPIToken,
+            postMove, 
+            readBoardData,
+            checkIfActiveGame,
+            streamGameData } from './APIRequests.js';
+import SANtoUCI, {setInitialGameState} from './boardState.js';
+
+var SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
+
 
 //Main extension script. Only runs if *probably* on a game page on Lichess
-
 if(isGamePage){
-    // const chess = new Chess(
-    //     '1q3b2/PPPPPPPP/8/8/8/5k2/8/3K4 w - - 0 1'
-    //   );
-    // chess.ascii();
     const LISTEN_KEY_CODE = 17;
+    const _MOVES_DATA_IDENTIFIER = "\"moves\":";
+    const REBUILDING_BOARD_STATE = 'updateGameState: either more than 1 new move received, or takeback has occured; building board state from starting position...';
+
     const DEFAULT_DISPLAY_MESSAGE = "Dictated move information will appear here.";
     const TOGGLE_LISTEN_MESSAGE = "Press ctrl to toggle dictation on or off";
     const HOLD_LISTEN_MESSAGE = "Hold ctrl to dictate";
@@ -16,13 +26,14 @@ if(isGamePage){
     const INPUT_BOX_MESSAGE = ' Use Lichess text input box to submit SAN moves with enter key.';
     const TEXT_INPUT_READY = 'Press enter to submit ';
     const TEXT_INPUT_DEFAULT_MESSAGE  = 'Waiting for SAN format move';
-    const CONVERSION_FAIL_MESSAGE = 'Failed to Convert move to UCI for API: '
+    const CONVERSION_FAIL_MESSAGE = 'Failed to Convert move to UCI for API: ';
     // const NO_TOKEN_MESSAGE = 
     //     "No API token. Open extension options and set a valid API token to use hands-free move submission. " +
     //     "The text input box may be used to submit with the 'enter' key.";
     
-    const NO_TOKEN_MESSAGE = 'No API token. Add a token from the options page, or use the Lichess text input box.'
-    const FAST_TIME_MESSAGE = 'Dictation available with text input box.'
+    
+    const NO_TOKEN_MESSAGE = 'No API token. Add a token from the options page, or use the Lichess text input box.';
+    const FAST_TIME_MESSAGE = 'Dictation available with text input box.';
     //HTML elements. inputBox may not have been created yet; will find using observer
     const display_move = document.createElement('strong');
     const display_listen_status = document.createElement('strong');
@@ -40,19 +51,22 @@ if(isGamePage){
     let use_text_input = false;    
     let text_input_move = '';
 
+    let sanSloppyCapture = true;
     //Maps for catching and handling special commands
-    let [specialCommandMap, elementNameMap] = createMaps();
+    let [specialCommands, gameCommands] = createCommandMaps();
     
     //Speech Recognition
-    var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
-    let recognition;
-
+    let recognition = setupRecognition();
+    ;
     //Text processor
     let processor = new TextProcessor();
 
+    //Board tracker and movelist
+    let gameBoard = new Chess();
+    let moveList = [];
+
     //Initialization
     setupSubmission();
-    setupRecognition();
 
     //document observer; observes DOM until inputBox (and a couple other elements) have been located.
     let observer = new MutationObserver(waitForPageElements);
@@ -92,13 +106,13 @@ if(isGamePage){
                     display_move.innerHTML = DEFAULT_DISPLAY_MESSAGE;
 
                     checkIfActiveGame().then((res) =>{
-                        
-                        const color = res.color.charAt(0);
-                        
-                        setInitialGameState(color);
-                        streamGameData();
+                        console.log('active game check results:');
+                        console.log(res);
+                        // const color = res.color.charAt(0);
+                        console.log(`API moves allowed! Setting up game stream and board tracking...`);
 
-                        console.log(`${res.speed} allows API moves, setting up game state streaming...`);
+                        setupBoardTracking(res);
+                        // setInitialGameState(color);
 
                     }).catch((res) =>{
 
@@ -142,29 +156,62 @@ if(isGamePage){
                     is_listening = false;
                     recognition.stop();
                 } 
-                else if (item != 'last_command' && item != '__board_api_token') processor.updateReplacementList();
+                else if (item != 'last_command' && item != '__board_api_token') processor.setReplacementList();
             }
         });    
     };
-
-    function createMaps(){
-        commandMap = new Map();
-        commandMap.set('new game', findNewGame);
-        commandMap.set('rage quit', rageQuit);
-
-        nameMap = new Map();
-        nameMap.set('resign', 'fbt resign');
-        nameMap.set('offer draw', 'fbt draw-yes');
-        nameMap.set('abort', 'fbt abort');
-        nameMap.set('accept', 'accept');
-        nameMap.set('decline', 'decline');
-        nameMap.set('take back', 'fbt takeback-yes');
-        nameMap.set('rematch', 'fbt rematch white');
-        nameMap.set('flip board', 'fbt flip');
-        nameMap.set('analyze game', 'fbt analysis');
-
-        return [commandMap, nameMap];
+    function setupBoardTracking(res){
+        gameBoard = new Chess(res.fen);
+        console.log(gameBoard.ascii());
+        streamGameData(parseBoardData);
     }
+
+    function parseBoardData(value){
+        let line = new TextDecoder().decode(value);
+        console.log('parsing board data...');
+        console.log(line);
+        if(line.length > 0 && line.includes(_MOVES_DATA_IDENTIFIER)){
+    
+            let newMoves = line.substring(line.indexOf(_MOVES_DATA_IDENTIFIER) + _MOVES_DATA_IDENTIFIER.length + 1).split('\"')[0].split(' ');
+    
+            if(newMoves.toString() !== moveList.toString())
+                updateGameState(newMoves);
+        }
+    }
+
+    function updateGameState(newMoves){
+        console.log('updating game state...');
+        if(newMoves.length - moveList.length == 1 && isMoveListValid(newMoves) == true){
+            const newMove = newMoves[newMoves.length - 1];
+            console.log(gameBoard.move(newMove));
+            // movePiece(newMove);
+            console.log('titties');
+        }
+        
+        //TODO handle takebacks again
+        else {
+            console.log(REBUILDING_BOARD_STATE);
+            console.log('EXCEPT NOT ACTUALLY x.x');
+            // setInitialGameState(userColor);
+            // for(move of newMoves)
+            //     movePiece(move);
+        }
+    
+        moveList = newMoves;
+    
+        //setting board back to starting position creates issue where moveList ends up with a single move ""
+        if(newMoves.length == 1 && newMoves[0] === '')
+            moveList = [];    
+    }
+
+    function isMoveListValid(newMoves){
+
+        for(let i = moveList.length - 1; i>= 0; i--)
+            if(newMoves[i] !== moveList[i]) return false;
+        
+        return true;
+    }
+    
 
     //Speech Recognition
     function setupRecognition(){
@@ -177,84 +224,120 @@ if(isGamePage){
         // speechRecognitionGrammarList.addFromString(grammar, 1);
         // recognition.grammars = speechRecognitionGrammarList;
 
-        recognition =  new SpeechRecognition();
-        recognition.lang = navigator.language || navigator.userLanguage;
-        recognition.interimResults = false;
+        let newRec =  new SpeechRecognition();
+        console.log(newRec);
+        newRec.lang = navigator.language || navigator.userLanguage;
+        newRec.interimResults = false;
     
-        recognition.onresult = parseSpeech;
+        newRec.onresult = speechHandler;
     
-        recognition.onspeechend = function() {
-            recognition.stop();
+        newRec.onspeechend = function() {
+            newRec.stop();
         };
 
-        recognition.onerror = function(event) {
-            console.log('Speech recognition error detected: ' + event.error);
+        newRec.onerror = function(event) {
+            console.log('Speech Recognition error detected: ' + event.error);
         };
         
-        recognition.addEventListener('end', function() {
-            if (is_listening == true) recognition.start();
+        newRec.addEventListener('end', function() { 
+            if (is_listening == true) newRec.start();
         });
+
+        console.log('Recognition setup complete...');
+
+        return newRec;
     }
 
-    function parseSpeech(event){
-
+    function speechHandler(event){
         const speechText = event.results[event.results.length - 1][0].transcript;
 
         if(speechText == undefined || speechText == null || speechText.length == 0)
             return;
+        
+        //store command in last_command, to display in popup window
+        chrome.storage.local.set({last_command: speechText});
+
+        let result = processor.parseSpeechText(speechText);
+        let phrase = result.phrase;
+        let components = result.components;
+        let chessMove = result.move;
 
         console.log(`Raw voice input: ${speechText}`);
-
-        let componentWords = processor.processSpeechInput(speechText);
-        let result_command = componentWords.join(' ');
-        let result_chess_move = '';
-        console.log(`Processed: ${result_command}`);
-
-        //store command in last_command, to display in popup window
-        chrome.storage.local.set({last_command: result_command});
+        console.log(`Processed: ${phrase}`);
 
         //check if spoken command is special command for controlling UI
-        if(specialCommandMap.has(result_command))
-            specialCommandMap.get(result_command)();
-
-        else if (elementNameMap.has(result_command))
-            clickButton(elementNameMap.get(result_command));
-        
-        //Phrase was not a special command; now attempt to process into a chess move
-        else {
+        if(specialCommands.has(phrase))
+            specialCommands.get(phrase)();
             
-            result_chess_move = processor.extractChessMove(componentWords);
-
-            if(result_chess_move.length < 2)
-                display_move.innerHTML = `Invalid move: ${result_chess_move}`;
+        //check if spoken command is special command for controlling UI
+        else if (gameCommands.has(phrase))
+            clickButton(gameCommands.get(phrase));
+        
+        //check and process the chess move that the TextProcessor created
+        else {
+            //TODO this is weird. guess it's more efficient tho
+            if(chessMove.length < 2)
+                display_move.innerHTML = `Invalid move: ${chessMove}`;
             
             //if using API submission
             else if(use_text_input == false){
                 
-                if(isUCIFormat(result_chess_move) == false)
-                    result_chess_move = getUCIFromSAN(result_chess_move);
+                let moveResult = movePiece(chessMove);
+                if (moveResult == null) moveResult = sloppyMovePiece(chessMove);
+
+                if(moveResult == null){
+                    display_move.innerHTML = CONVERSION_FAIL_MESSAGE + `${chessMove} (${phrase}).`;
+                }
+
+                else {
+                    gameBoard.undo();
+                    apiSubmitMove(moveResult.lan);
+                }
+                // if(isUCIFormat(chessMove) == false)
+                //     chessMove = SANtoUCI(chessMove);
                 
-                //if still not UCI Format, display error to user
-                if(isUCIFormat(result_chess_move) == false)
-                    display_move.innerHTML = CONVERSION_FAIL_MESSAGE + `${result_chess_move} (${result_command}).`;
+                // if(isUCIFormat(chessMove) == false)
                 
-                else apiSubmitMove(result_chess_move);
+                // else apiSubmitMove(chessMove);
             }
 
-            //else using text input submission
+            //else using text input submission. Just place move in textBox regardless of validity; user will see (hopefully)
             else {
-                text_input_move = result_chess_move;
+                text_input_move = chessMove;
                 display_move.innerHTML = TEXT_INPUT_READY + text_input_move;
             }
+
         }
     }
-  
-    async function apiSubmitMove(resultMove){
+    function movePiece(move) {
+        // Here we submit the move JUST to get the UCI interpretation from our gameBoard.
+        // We immediately revert it and rely on updates from the Lichess Board API to make
+        // permanent updates to the gameBoard. 
+        let result = null;
+        try {
+            result = gameBoard.move(move, { strict: false });
+        }
 
-        display_move.innerHTML = "Result Move: " + resultMove + ". submitting with Board API fetch request...";
+        catch(err) {
+            console.log(err);
+        }
+        return result;
+    }
 
-        postMove(resultMove).then(()=>{
-            display_move.innerHTML = `${resultMove}: ` + API_SUBMIT_SUCCESS;
+    function sloppyMovePiece(move){
+        let legalMoves = gameBoard.moves();
+        for (let i = 0; i < legalMoves.length; i++){
+            if(move === legalMoves[i].replace('x',''))
+                return gameBoard.move(legalMoves[i]);
+        }
+        return null;
+    }
+    async function apiSubmitMove(move){
+
+        display_move.innerHTML = "Result Move: " + move + ". submitting with Board API fetch request...";
+
+        postMove(move).then(()=>{
+            display_move.innerHTML = `${move}: ` + API_SUBMIT_SUCCESS;
             resetDisplay();
         }).catch((res)=>{
             display_move.innerHTML = API_SUBMIT_FAIL + res.error;
@@ -396,7 +479,7 @@ if(isGamePage){
             if (ui_element === 'fbt resign') clickButton('fbt yes');
             if (ui_element === 'fbt draw-yes') clickButton('fbt yes draw-yes');
         }
-
+        //TODO this don't exist lol
         result_UI_element = '';
     }
 
@@ -439,4 +522,24 @@ if(isGamePage){
     function getRandomArbitrary(min, max) {
         return Math.floor(Math.random() * (max - min) + min);
     }
+
+    function createCommandMaps(){
+        let specialCommands = new Map();
+        specialCommands.set('new game', findNewGame);
+        specialCommands.set('rage quit', rageQuit);
+
+        let gameCommands = new Map();
+        gameCommands.set('resign', 'fbt resign');
+        gameCommands.set('offer draw', 'fbt draw-yes');
+        gameCommands.set('abort', 'fbt abort');
+        gameCommands.set('accept', 'accept');
+        gameCommands.set('decline', 'decline');
+        gameCommands.set('take back', 'fbt takeback-yes');
+        gameCommands.set('rematch', 'fbt rematch white');
+        gameCommands.set('flip board', 'fbt flip');
+        gameCommands.set('analyze game', 'fbt analysis');
+
+        return [specialCommands, gameCommands];
+    }
+
 }

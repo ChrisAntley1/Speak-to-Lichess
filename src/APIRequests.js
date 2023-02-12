@@ -1,11 +1,12 @@
 
-const _MOVES_DATA_IDENTIFIER = "\"moves\":";
+import {lichessLocation} from './locationCheck.js';
+
 const API_ADDRESS_TEMPLATE = "https://lichess.org/api/board/game/--GAME_ID--/move/--UCI_MOVE--".replace('--GAME_ID--', lichessLocation);
 
 //user's personal Board API compatible token. Only needs Board API permissions
 let board_api_token = '';
 
-async function testToken(token){
+export async function testToken(token){
     //still throws 401 error in console if invalid token, there's probably some way to catch this    
     return new Promise((resolve, reject) =>{
         fetch('https://lichess.org/api/account', {
@@ -25,7 +26,7 @@ async function testToken(token){
     });
 }
 
-async function checkIfActiveGame(){
+export async function checkIfActiveGame(){
     
     return new Promise(async (resolve, reject) =>{
 
@@ -42,7 +43,7 @@ async function checkIfActiveGame(){
         let gameList = await response.json();
         let isActiveGame = false;
         
-        for(game_info of gameList.nowPlaying){
+        for(let game_info of gameList.nowPlaying){
 
             if(game_info.fullId === lichessLocation || game_info.gameId === lichessLocation){
                 
@@ -54,7 +55,10 @@ async function checkIfActiveGame(){
     
                 if(legalGameSpeeds.includes(speed))
                     resolve(game_info);
-    
+                
+                // Other ways for a game to be a direct challenge? also computer games?
+                if(speed == 'blitz' && game_info.source == 'friend')
+                    resolve(game_info);
                 else reject(game_info);
             }
         }
@@ -62,8 +66,8 @@ async function checkIfActiveGame(){
     });
 }
 
-async function streamGameData(){
-    
+export async function streamGameData(parseData){
+    console.log('streaming game data...');
     let fetchRequestObject = {
         headers: {
             'Authorization': 'Bearer ' + board_api_token
@@ -81,7 +85,7 @@ async function streamGameData(){
                 while (true){
                     const {done, value} = await reader.read();
 
-                    readBoardData(value);
+                    parseData(value);
 
                     if(done) break;
                     
@@ -96,21 +100,7 @@ async function streamGameData(){
     });
 }
 
-async function readBoardData(value){
-    let line = new TextDecoder().decode(value);
-
-    if(line.length > 0 && line.includes(_MOVES_DATA_IDENTIFIER)){
-
-        let newMovesArray = line.substring(line.indexOf(_MOVES_DATA_IDENTIFIER) + _MOVES_DATA_IDENTIFIER.length + 1).split('\"')[0].split(' ');
-
-        if(newMovesArray.toString() !== movesList.toString()){
-
-            updateGameState(newMovesArray);
-        }
-    }
-}
-
-async function postMove(chessMove){
+export async function postMove(chessMove){
     
     let api_url = API_ADDRESS_TEMPLATE.replace('--UCI_MOVE--', chessMove);
     let fetchRequestObject = {
@@ -133,6 +123,14 @@ async function postMove(chessMove){
     });
 }
 
-function setAPIToken(token){
+export function setAPIToken(token){
     board_api_token = token;
 }
+
+// module.exports = {  testToken,
+//                     setAPIToken,
+//                     postMove, 
+//                     readBoardData,
+//                     checkIfActiveGame,
+//                     streamGameData };
+
