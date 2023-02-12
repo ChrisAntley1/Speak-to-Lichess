@@ -3,6 +3,8 @@ let word_replacement_list = {
 
     "night": "knight",
     "knights": "knight",
+    "nightcapture": "knight capture",
+
     "brooke": "rook",
     "brook": "rook",
     "rick": "rook",
@@ -10,7 +12,7 @@ let word_replacement_list = {
     "takes": "take",
     "captures": "capture",
     "clean": "queen",
-    
+
     "won": "1",
 
     "to": "2",
